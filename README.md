@@ -22,5 +22,5 @@ The long-term vision includes adapting it into a free, open-source app for Andro
 ## Additonal info
 
 - Server runs on port 8080 and the client runs on port 3000 .
-- In the future we plan to provide a docker container for ease of deployment/
+- In the future we plan to provide a docker container for ease of deployment.
 
