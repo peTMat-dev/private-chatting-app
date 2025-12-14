@@ -6,8 +6,8 @@ The long-term vision includes adapting it into a free, open-source app for Andro
 
 ## Stack
 
-Frontend: nextjs + bootstrap + typescript
-Backend:  expressjs + typescript
+- Frontend: nextjs + bootstrap + typescript
+- Backend:  expressjs + typescript
 
 ## How to run 
 
