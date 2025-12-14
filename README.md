@@ -19,6 +19,9 @@ The long-term vision includes adapting it into a free, open-source app for Andro
 6. Make sure to do this for both the client and server directories.
 7. Visit port `localhost:3000` to see the server in action
 
+> [!TIP]
+> You can alternativly run the scripts run-dev.bat or run-dev.sh depending if you are on windows or linux (make sure pnpm is installed)
+
 ## Additonal info
 
 - Server runs on port 8080 and the client runs on port 3000 .
