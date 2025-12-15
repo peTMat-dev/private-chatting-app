@@ -20,7 +20,7 @@ The long-term vision includes adapting it into a free, open-source app for Andro
 7. Visit port `localhost:3000` to see the server in action
 
 > [!TIP]
-> You can alternativly run the scripts run-dev.bat or run-dev.sh depending if you are on windows or linux (make sure pnpm is installed)
+> You can alternativly run the scripts `run-dev.bat` or `run-dev.sh` depending if you are on windows or linux (make sure pnpm is installed)
 
 ## Additonal info
 
