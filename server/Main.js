@@ -35,18 +35,10 @@ function checkDB(){
 setInterval(checkDB,20000);
 
 app.get('/users', async (req, res) => {
-  try {
-    const [rows] = await conPool.query('SELECT username_user_id FROM user_main_details');
-    
-    res.json({
-      success: true,
-      count: rows.length,
-      data: rows
-    });
-  } catch (err) {
-    console.error('DB ERROR:', err);
-    res.status(500).json({ success: false, error: err.message });
-  }
+    pool.query('SELECT username_user_id FROM user_main_details', (err, rows) => {
+    if (err) return res.json({ success: false, error: err.message });
+    res.json({ success: true, count: rows.length, data: rows });
+  });
 });
 
 
