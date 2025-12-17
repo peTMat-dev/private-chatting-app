@@ -36,7 +36,7 @@ setInterval(checkDB,20000);
 
 app.get('/users', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT username_user_id FROM user_main_details');
+    const [rows] = await conPool.query('SELECT username_user_id FROM user_main_details');
     
     res.json({
       success: true,
