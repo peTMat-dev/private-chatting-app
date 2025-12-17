@@ -36,24 +36,18 @@ setInterval(checkDB,20000);
 
 app.get('/users', async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      'SELECT username_user_id FROM user_main_details'
-    );
-
+    const [rows] = await pool.query('SELECT username_user_id FROM user_main_details');
+    
     res.json({
       success: true,
       count: rows.length,
       data: rows
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      success: false,
-      error: 'Database error'
-    });
+    console.error('DB ERROR:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
-
 
 
 app.get("/",(req,res)=>{
