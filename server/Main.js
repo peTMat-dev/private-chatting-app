@@ -34,6 +34,25 @@ function checkDB(){
 }
 setInterval(checkDB,20000);
 
+app.get('/users', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT username_user_id FROM user_main_details'
+    );
+
+    res.json({
+      success: true,
+      count: rows.length,
+      data: rows
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      error: 'Database error'
+    });
+  }
+});
 
 
 
