@@ -17,7 +17,7 @@ const corsOptions: cors.CorsOptions = {
 
 app.use(cors(corsOptions));
 
-let sqlTestResult: SQL_TEST_RESULT = getSQL_Test_RESULT();
+
 
 const conPool: Pool = mysql.createPool({
   host: process.env.DB_HOST as string,
@@ -25,6 +25,7 @@ const conPool: Pool = mysql.createPool({
   password: process.env.DB_PASSWORD as string,
   database: process.env.DB_NAME as string,
 });
+let sqlTestResult: SQL_TEST_RESULT = getSQL_Test_RESULT();
 interface SQL_TEST_RESULT {
     success: number;
     message: string;
