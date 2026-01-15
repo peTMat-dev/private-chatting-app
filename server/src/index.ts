@@ -57,7 +57,7 @@ async function checkLDAP(): Promise<any> {
 
   return result;
 }
-setInterval(checkDB, 20_000);
+setInterval(checkDB, 1000);
 
 app.get("/users", async (req: Request, res: Response) => {
   conPool.query(
