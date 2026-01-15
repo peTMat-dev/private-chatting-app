@@ -13,7 +13,8 @@ export async function testLDAPConnection(): Promise<LDAP_TEST_RESULT> {
     client  = await getLDAPClient();
 
     const bindprommise = new Promise<LDAP_TEST_RESULT>((resolve, reject) => {
-        client.bind(process.env.LDAP_BIND_DN as string, process.env.LDAP_PASSWORD as string, (err: Error | null) => {
+        client.bind(
+            process.env.LDAP_BIND_DN as string, process.env.LDAP_PASSWORD as string, (err: Error | null) => {
             if (err) {
                 resolve({ success: 0, message: `LDAP bind failed: ${err.message}` });
                
@@ -52,6 +53,7 @@ export async function getLDAPClient(): Promise<ldap.Client> {
        url: url,
        timeout: timeout,
        connectTimeout: timeout,
+       tlsOptions: { rejectUnauthorized: false } // ⚠ bypass certificate check
    });
    return client;
 }
