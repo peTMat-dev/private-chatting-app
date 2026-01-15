@@ -48,7 +48,7 @@ setInterval(checkDB, 20_000);
 
 app.get("/users", async (req: Request, res: Response) => {
   conPool.query(
-    "SELECT username_user_id FROM user_main_details",
+    "SELECT username_id FROM user_main_details",
     (err: { message: any; }, rows: any[]) => {
       if (err) {
         return res.json({ success: false, error: err.message });
@@ -63,7 +63,7 @@ app.get("/users", async (req: Request, res: Response) => {
   );
 });
 
-app.get("/", (req: Request, res: Response) => {
+app.get("/", async (req: Request, res: Response) => {
   res.json({
     "Api-Server": 200,
     "Database-Connection": isAlive,
