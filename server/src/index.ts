@@ -17,7 +17,7 @@ const corsOptions: cors.CorsOptions = {
 
 app.use(cors(corsOptions));
 
-let isAlive: number = 400;
+let result: SQL_TEST_RESULT = { success: 400, message: "Database not checked yet" };
 
 const conPool: Pool = mysql.createPool({
   host: process.env.DB_HOST as string,
@@ -25,14 +25,19 @@ const conPool: Pool = mysql.createPool({
   password: process.env.DB_PASSWORD as string,
   database: process.env.DB_NAME as string,
 });
-
+interface SQL_TEST_RESULT {
+    success: number;
+    message: string;
+}
 // checking if the database is alive
 function checkDB(): void {
+
+  let result: SQL_TEST_RESULT;
   conPool.query("SELECT 1", (err: any) => {
     if (err) {
-      isAlive = 400;
+      result = { success: 400,message: err.message};
     } else {
-      isAlive = 200;
+      result = { success: 1, message: "Database connection successful" };
     }
   });
 }
@@ -66,8 +71,8 @@ app.get("/users", async (req: Request, res: Response) => {
 app.get("/", async (req: Request, res: Response) => {
   res.json({
     "Api-Server": 200,
-    "Database-Connection": isAlive,
-    "lDAP-Connection":  checkLDAP(),
+    "Database-Connection": result,
+    "lDAP-Connection": await checkLDAP(),
   });
 });
 
