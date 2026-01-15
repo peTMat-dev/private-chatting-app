@@ -7,7 +7,7 @@ import cors from "cors";
 
 
 // Homemade imports
-import { testLDAPConnection } from "./services/ldap_service";
+import { LDAP_getUser, testLDAPConnection } from "./services/ldap_service";
 
 const app = express();
 
@@ -37,7 +37,7 @@ function checkDB(): void {
     if (err) {
       sqlTestResult= { success: 400,message: err.message};
     } else {
-      sqlTestResult = { success: 1, message: "Database connection successful" };
+      sqlTestResult = { success: 200, message: "Database connection successful" };
     }
   });
  
@@ -48,7 +48,7 @@ function getSQL_Test_RESULT(): SQL_TEST_RESULT{
     if (err) {
       SQL_result= { success: 400,message: err.message};
     } else {
-      SQL_result = { success: 1, message: "Database connection successful" };
+      SQL_result = { success: 200, message: "Database connection successful" };
     }
   });
   return SQL_result;
@@ -81,7 +81,14 @@ app.get("/users", async (req: Request, res: Response) => {
     }
   );
 });
-
+app.get("/ldap-users", async (req: Request, res: Response) => {
+  // This is a placeholder implementation
+  res.json({
+    success: true,  
+    count: 0,
+    data: await LDAP_getUser(),
+  });
+});
 app.get("/", async (req: Request, res: Response) => {
   res.json({
     "Api-Server": 200,
