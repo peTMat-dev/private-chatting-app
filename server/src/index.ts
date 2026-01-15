@@ -25,7 +25,7 @@ const conPool: Pool = mysql.createPool({
   password: process.env.DB_PASSWORD as string,
   database: process.env.DB_NAME as string,
 });
-let sqlTestResult: SQL_TEST_RESULT = getSQL_Test_RESULT();
+let sqlTestResult: SQL_TEST_RESULT = { success: 400, message: "Database not checked yet" };
 interface SQL_TEST_RESULT {
     success: number;
     message: string;
@@ -33,7 +33,13 @@ interface SQL_TEST_RESULT {
 // checking if the database is alive
 function checkDB(): void {
 
-  sqlTestResult = getSQL_Test_RESULT();
+  conPool.query("SELECT 1", (err: any) => {
+    if (err) {
+      sqlTestResult= { success: 400,message: err.message};
+    } else {
+      sqlTestResult = { success: 1, message: "Database connection successful" };
+    }
+  });
  
 }
 function getSQL_Test_RESULT(): SQL_TEST_RESULT{
@@ -57,7 +63,7 @@ async function checkLDAP(): Promise<any> {
 
   return result;
 }
-setInterval(checkDB, 1000);
+setInterval(checkDB, 4000);
 
 app.get("/users", async (req: Request, res: Response) => {
   conPool.query(
