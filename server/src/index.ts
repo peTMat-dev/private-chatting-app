@@ -17,7 +17,7 @@ const corsOptions: cors.CorsOptions = {
 
 app.use(cors(corsOptions));
 
-let result: SQL_TEST_RESULT = { success: 400, message: "Database not checked yet" };
+let sqlTestResult: SQL_TEST_RESULT = getSQL_Test_RESULT();
 
 const conPool: Pool = mysql.createPool({
   host: process.env.DB_HOST as string,
@@ -32,15 +32,22 @@ interface SQL_TEST_RESULT {
 // checking if the database is alive
 function checkDB(): void {
 
-  let result: SQL_TEST_RESULT;
+  sqlTestResult = getSQL_Test_RESULT();
+ 
+}
+function getSQL_Test_RESULT(): SQL_TEST_RESULT{
+  let SQL_result: SQL_TEST_RESULT  = { success: 400, message: "Database not checked yet" };
   conPool.query("SELECT 1", (err: any) => {
     if (err) {
-      result = { success: 400,message: err.message};
+      SQL_result= { success: 400,message: err.message};
     } else {
-      result = { success: 1, message: "Database connection successful" };
+      SQL_result = { success: 1, message: "Database connection successful" };
     }
   });
+  return SQL_result;
 }
+
+
 async function checkLDAP(): Promise<any> {
   let ldapstatus = 400;
   let ldapmessage = "LDAP connection failed";
@@ -71,7 +78,7 @@ app.get("/users", async (req: Request, res: Response) => {
 app.get("/", async (req: Request, res: Response) => {
   res.json({
     "Api-Server": 200,
-    "Database-Connection": result,
+    "Database-Connection": sqlTestResult,
     "lDAP-Connection": await checkLDAP(),
   });
 });
