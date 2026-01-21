@@ -1,0 +1,102 @@
+import dotenv from "dotenv";
+dotenv.config();
+
+import mysql, { Pool } from "mysql";
+import express, { Request, Response } from "express";
+import cors from "cors";
+
+
+// Homemade imports
+import { LDAP_getUser, testLDAPConnection } from "./services/ldap_service";
+
+const app = express();
+
+const corsOptions: cors.CorsOptions = {
+  origin: ["http://localhost:5173"],
+};
+
+app.use(cors(corsOptions));
+
+
+
+const conPool: Pool = mysql.createPool({
+  host: process.env.DB_HOST as string,
+  user: process.env.DB_USER as string,
+  password: process.env.DB_PASSWORD as string,
+  database: process.env.DB_NAME as string,
+});
+let sqlTestResult: SQL_TEST_RESULT = { success: 400, message: "Database not checked yet" };
+interface SQL_TEST_RESULT {
+    success: number;
+    message: string;
+}
+// checking if the database is alive
+function checkDB(): void {
+
+  conPool.query("SELECT 1", (err: any) => {
+    if (err) {
+      sqlTestResult= { success: 400,message: err.message};
+    } else {
+      sqlTestResult = { success: 200, message: "Database connection successful" };
+    }
+  });
+ 
+}
+function getSQL_Test_RESULT(): SQL_TEST_RESULT{
+  let SQL_result: SQL_TEST_RESULT  = { success: 400, message: "Database not checked yet" };
+  conPool.query("SELECT 1", (err: any) => {
+    if (err) {
+      SQL_result= { success: 400,message: err.message};
+    } else {
+      SQL_result = { success: 200, message: "Database connection successful" };
+    }
+  });
+  return SQL_result;
+}
+
+
+async function checkLDAP(): Promise<any> {
+  let ldapstatus = 400;
+  let ldapmessage = "LDAP connection failed";
+
+  const result = await testLDAPConnection();
+
+  return result;
+}
+setInterval(checkDB, 4000);
+
+app.get("/users", async (req: Request, res: Response) => {
+  conPool.query(
+    "SELECT username_id FROM user_main_details",
+    (err: { message: any; }, rows: any[]) => {
+      if (err) {
+        return res.json({ success: false, error: err.message });
+      }
+
+      res.json({
+        success: true,
+        count: (rows as any[]).length,
+        data: rows,
+      });
+    }
+  );
+});
+app.get("/ldap-users", async (req: Request, res: Response) => {
+  // This is a placeholder implementation
+  res.json({
+    success: true,  
+    count: 0,
+    data: await LDAP_getUser(),
+  });
+});
+app.get("/", async (req: Request, res: Response) => {
+  res.json({
+    "Api-Server": 200,
+    "Database-Connection": sqlTestResult,
+    "lDAP-Connection": await checkLDAP(),
+  });
+});
+
+app.listen(8080, () => {
+  console.log("Server has started on port 8080");
+});

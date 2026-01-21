@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    /* Language + runtime */
+    "target": "ES2020",
+    "lib": ["ES2020"],
+    "module": "CommonJS",
+    "moduleResolution": "node",
+
+    /* Project structure */
+    "rootDir": "src",
+    "outDir": "dist",
+
+    /* Interop */
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Type safety */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+
+    /* Build quality */
+    "skipLibCheck": true,
+    "sourceMap": true,
+
+    /* Dev ergonomics */
+    "resolveJsonModule": true
+  },
+
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
