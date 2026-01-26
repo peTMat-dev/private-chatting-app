@@ -1,0 +1,4 @@
+dn: uid=Adam_testuser,ou=users,dc=contaboserver,dc=net
+changetype: modify
+add: objectClass
+objectClass: resetTokenAux

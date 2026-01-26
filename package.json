@@ -1,5 +1,6 @@
 {
 	"dependencies": {
+		"argon2": "^0.44.0",
 		"bootstrap": "^5.3.8",
 		"ldapjs": "^3.0.7"
 	},

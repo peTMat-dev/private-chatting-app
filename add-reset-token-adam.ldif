@@ -1,0 +1,7 @@
+dn: uid=Adam_testuser,ou=users,dc=contaboserver,dc=net
+changetype: modify
+add: resetToken
+resetToken: testtoken456
+-
+add: resetTokenExpiry
+resetTokenExpiry: 2026-01-24T00:00:00Z

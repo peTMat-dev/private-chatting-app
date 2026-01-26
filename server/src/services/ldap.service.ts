@@ -1,5 +1,24 @@
+export async function findLdapUserByEmail(email: string) {
+  const client = new Client({
+    url: env.ldap.url,
+    tlsOptions: { rejectUnauthorized: env.ldap.rejectUnauthorized },
+  });
+  try {
+    await client.bind(env.ldap.bindDn, env.ldap.bindPassword);
+    const opts: SearchOptions = {
+      scope: "sub",
+      filter: `(mail=${email})`,
+      attributes: ["dn", "mail", "uid"], // adjust attributes as needed
+    };
+    const { searchEntries } = await client.search(env.ldap.usersBaseDn, opts);
+    return searchEntries.length > 0 ? searchEntries[0] : null;
+  } finally {
+    await client.unbind();
+  }
+}
 import { Attribute, Change, Client, SearchOptions } from "ldapts";
 import crypto from "crypto";
+import argon2 from "argon2";
 import { env } from "../config/env";
 
 export interface LdapUserAttributes {
@@ -77,7 +96,7 @@ export async function createLdapUser(attributes: LdapUserAttributes): Promise<vo
       cn: attributes.cn,
       displayName: attributes.displayName,
       mail: attributes.mail,
-      objectClass: attributes.objectClass ?? ["inetOrgPerson", "top"],
+      objectClass: attributes.objectClass ?? ["inetOrgPerson", "top", "resetTokenAux"],
       userPassword: attributes.userPassword,
     } as Record<string, string | string[]>;
 
@@ -164,13 +183,10 @@ const bindAsServiceAccount = async (client: Client) => {
 export const buildUserDn = (uid: string) => `uid=${uid},${env.ldap.usersBaseDn}`;
 export const buildGroupDn = (cn: string) => `cn=${cn},${env.ldap.groupsBaseDn}`;
 
-export const createSshaPassword = (password: string): string => {
-  const salt = crypto.randomBytes(4);
-  const hash = crypto.createHash("sha1");
-  hash.update(Buffer.from(password));
-  hash.update(salt);
-  const digest = Buffer.concat([hash.digest(), salt]);
-  return `{SSHA}${digest.toString("base64")}`;
+
+// Argon2 password hashing (async)
+export const createArgon2Password = async (password: string): Promise<string> => {
+  return await argon2.hash(password);
 };
 
 export const serializeLdapUser = (
@@ -204,7 +220,7 @@ export const serializeLdapUser = (
     displayName: resolvedDisplay,
     mail: email.toLowerCase(),
     userPassword: hashedPassword,
-    objectClass: ["inetOrgPerson", "top"],
+    objectClass: ["inetOrgPerson", "top", "resetTokenAux"],
   };
 };
 

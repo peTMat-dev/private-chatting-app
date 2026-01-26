@@ -1,12 +1,13 @@
-import { OkPacket } from "mysql";
-import { env } from "../config/env";
-import {
+import { 
+  findLdapUserByEmail,
   buildUserDn,
   createLdapUser,
-  createSshaPassword,
+  createArgon2Password,
   ensureGroupMembership,
-  serializeLdapUser,
+  serializeLdapUser
 } from "./ldap.service";
+import { OkPacket } from "mysql";
+import { env } from "../config/env";
 import { query, queryWithConnection, withTransaction } from "./db";
 
 export interface DbUserRecord {
@@ -73,9 +74,8 @@ export const updateLastLogin = async (user: DbUserRecord): Promise<void> => {
   await query<OkPacket>(`UPDATE ${table} SET last_login_at = NOW() WHERE user_id = ?`, [user.userId]);
 };
 
-export const findUserByEmail = async (_email: string): Promise<DbUserRecord | null> => {
-  // Email field is not stored in user_main_details, so skip lookup for now.
-  return null;
+export const findUserByEmail = async (email: string) => {
+  return await findLdapUserByEmail(email);
 };
 
 export const storePasswordResetToken = async (
@@ -83,12 +83,67 @@ export const storePasswordResetToken = async (
   token: string,
   expiresAt: string
 ): Promise<void> => {
-  await query<OkPacket>(
-    `INSERT INTO ${env.db.passwordResetTable} (email, token, expires_at, created_at)
-     VALUES (?, ?, ?, NOW())
-     ON DUPLICATE KEY UPDATE token = VALUES(token), expires_at = VALUES(expires_at), created_at = NOW()`,
-    [email, token, expiresAt]
-  );
+  // Store reset token and expiry in LDAP user entry
+  const user = await findLdapUserByEmail(email);
+  if (!user || !user.dn || !user.uid) {
+    throw new Error("User not found in LDAP");
+  }
+  const client = new (require("ldapts").Client)({
+    url: require("../config/env").env.ldap.url,
+    tlsOptions: { rejectUnauthorized: require("../config/env").env.ldap.rejectUnauthorized },
+  });
+  try {
+    await client.bind(require("../config/env").env.ldap.bindDn, require("../config/env").env.ldap.bindPassword);
+    // Prepare changes for resetToken and resetTokenExpiry attributes
+    const changes = [
+      new (require("ldapts").Change)({
+        operation: "replace",
+        modification: new (require("ldapts").Attribute)({
+          type: "resetToken",
+          values: [token],
+        }),
+      }),
+      new (require("ldapts").Change)({
+        operation: "replace",
+        modification: new (require("ldapts").Attribute)({
+          type: "resetTokenExpiry",
+          values: [expiresAt],
+        }),
+      }),
+    ];
+    await client.modify(user.dn, changes);
+  } finally {
+    await client.unbind();
+  }
+
+  // Insert into cubcha_v1.password_resets table using user_main_details.user_id
+  // Ensure user.uid is a string for SQL query
+  let ldapUid: string | undefined = undefined;
+  const normalizeUidValue = (value: unknown): string | undefined => {
+    if (typeof value === "string") {
+      return value;
+    }
+    if (Buffer.isBuffer(value)) {
+      return value.toString();
+    }
+    return undefined;
+  };
+  ldapUid = normalizeUidValue(user.uid);
+  if (!ldapUid && Array.isArray(user.uid) && user.uid.length > 0) {
+    ldapUid = normalizeUidValue(user.uid[0]);
+  }
+  if (ldapUid) {
+    const [sqlUser] = await query<{ user_id: number }>(
+      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
+      [ldapUid]
+    );
+    if (sqlUser && sqlUser.user_id) {
+      await query(
+        "INSERT INTO password_resets (user_id, resettoken, resettokenexpiry, resetused) VALUES (?, TRUE, ?, FALSE)",
+        [sqlUser.user_id, expiresAt]
+      );
+    }
+  }
 };
 
 export const registerUserInDefaultGroup = async (payload: RegistrationInput): Promise<void> => {
@@ -99,11 +154,11 @@ export const registerUserInDefaultGroup = async (payload: RegistrationInput): Pr
        VALUES (?, ?, NOW())`,
       [payload.username, payload.displayName]
     );
-
     return userInsert.insertId;
   });
 
-  const hashedPassword = createSshaPassword(payload.password);
+  // Use Argon2 for password hashing
+  const hashedPassword = await createArgon2Password(payload.password);
   const ldapAttributes = serializeLdapUser(
     {
       username: payload.username,
