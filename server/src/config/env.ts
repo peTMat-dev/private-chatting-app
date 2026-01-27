@@ -19,6 +19,14 @@ const listFromEnv = (value: string | undefined, fallback: string[]): string[] =>
     .filter((item) => item.length > 0);
 };
 
+const numberFromEnv = (value: string | undefined, fallback: number): number => {
+  if (!value) {
+    return fallback;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
 export const env = {
   db: {
     host: process.env.DB_HOST ?? "localhost",
@@ -53,5 +61,15 @@ export const env = {
     clientOrigins: listFromEnv(process.env.CLIENT_ORIGINS, ["http://localhost:3000"]),
     allowGroupCreation: boolFromEnv(process.env.ALLOW_GROUP_CREATION, false),
     resetPasswordBaseUrl: process.env.RESET_PASSWORD_BASE_URL ?? "",
+    exposeResetUrl: boolFromEnv(process.env.EXPOSE_RESET_URL, false),
+  },
+  mail: {
+    enabled: boolFromEnv(process.env.MAIL_ENABLED, false),
+    host: process.env.MAIL_HOST ?? "",
+    port: numberFromEnv(process.env.MAIL_PORT, 587),
+    secure: boolFromEnv(process.env.MAIL_SECURE, false),
+    user: process.env.MAIL_USER ?? "",
+    pass: process.env.MAIL_PASS ?? "",
+    from: process.env.MAIL_FROM ?? "",
   },
 };
