@@ -185,8 +185,17 @@ export const buildGroupDn = (cn: string) => `cn=${cn},${env.ldap.groupsBaseDn}`;
 
 
 // Argon2 password hashing (async)
+// Match OpenLDAP's Argon2 overlay defaults so slapd can verify stored hashes.
+const ARGON2_MODULE_PARAMS = {
+  type: argon2.argon2id,
+  memoryCost: 65536,
+  timeCost: 2,
+  parallelism: 1,
+};
+
 export const createArgon2Password = async (password: string): Promise<string> => {
-  return await argon2.hash(password);
+  const hash = await argon2.hash(password, ARGON2_MODULE_PARAMS);
+  return `{ARGON2}${hash}`;
 };
 
 export const serializeLdapUser = (
