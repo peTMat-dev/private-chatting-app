@@ -52,5 +52,6 @@ export const env = {
   app: {
     clientOrigins: listFromEnv(process.env.CLIENT_ORIGINS, ["http://localhost:3000"]),
     allowGroupCreation: boolFromEnv(process.env.ALLOW_GROUP_CREATION, false),
+    resetPasswordBaseUrl: process.env.RESET_PASSWORD_BASE_URL ?? "",
   },
 };

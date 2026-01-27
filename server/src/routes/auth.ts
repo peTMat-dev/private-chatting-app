@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import crypto from "crypto";
 import { bindUser } from "../services/ldap.service";
+import { env } from "../config/env";
 import {
   RegistrationInput,
   findUserByEmail,
@@ -71,6 +72,13 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
       const token = crypto.randomBytes(32).toString("hex");
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
       await storePasswordResetToken(upperEmail, token, toMySqlDateTime(expiresAt));
+      const resetUrl = buildResetUrl(token);
+      res.json({
+        success: true,
+        message: "If the email exists, reset instructions have been queued.",
+        resetUrl,
+      });
+      return;
     }
     res.json({
       success: true,
@@ -111,6 +119,17 @@ const validateRegistrationPayload = (payload: RegistrationInput): string[] => {
 
 const toMySqlDateTime = (date: Date): string => {
   return date.toISOString().slice(0, 19).replace("T", " ");
+};
+
+const normalizeBaseUrl = (value: string): string => value.replace(/\/+$/, "");
+
+const buildResetUrl = (token: string): string => {
+  const baseFromEnv = env.app.resetPasswordBaseUrl;
+  const fallback = env.app.clientOrigins[0] ?? "";
+  const base = normalizeBaseUrl(baseFromEnv || fallback);
+  const path = "/reset-password";
+  const query = `token=${encodeURIComponent(token)}`;
+  return base ? `${base}${path}?${query}` : `${path}?${query}`;
 };
 
 export default router;
