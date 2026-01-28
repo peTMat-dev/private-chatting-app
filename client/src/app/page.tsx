@@ -108,7 +108,7 @@ export default function AuthScreen() {
 				return;
 			}
 			showToast({ title: "Welcome back", body: data.message ?? "Redirecting..." });
-			router.push("/");
+			router.push("/chats");
 		} catch (error) {
 			showToast({ title: "Login failed", body: (error as Error).message });
 		} finally {
@@ -172,18 +172,15 @@ export default function AuthScreen() {
 
 	return (
 		<div className="mobile-auth-screen">
-			<section className="hero-panel">
+			<div className="hero-panel">
 				<div className="hero-content">
 					<div className="status-pill">
 						<span>Mobile Auth</span>
 					</div>
-					<h1 className="hero-title">Encrypted chat, neon calm.</h1>
-					<p className="hero-copy">
-						Sign in or register inside a matte-black canvas where every accent glows electric green.
-						Every approved user is routed into the chat_groups container automatically.
-					</p>
+					<h1 className="cubcha-heading">CubCha v1.0</h1>
+					<p className="cubcha-subtext">instructions will come here later - in development.</p>
 				</div>
-			</section>
+			</div>
 
 			<section className="auth-stack">
 				<article className="auth-card">
