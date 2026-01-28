@@ -7,6 +7,7 @@ import {
   RegistrationInput,
   findUserByEmail,
   findUserByIdentifier,
+  isUsernameTaken,
   registerUserInDefaultGroup,
   resetPasswordWithToken,
   storePasswordResetToken,
@@ -44,14 +45,17 @@ router.post("/register", async (req: Request, res: Response) => {
   }
 
   try {
-    const existingUser = await findUserByIdentifier(payload.username);
-    if (existingUser) {
-      return res.status(409).json({ success: false, error: "Username already exists" });
-    }
+    // Check username and email conflicts in parallel to report all at once.
+    const [usernameTaken, emailOwner] = await Promise.all([
+      isUsernameTaken(payload.username),
+      findUserByEmail(payload.email),
+    ]);
 
-    const emailOwner = await findUserByEmail(payload.email);
-    if (emailOwner) {
-      return res.status(409).json({ success: false, error: "Email already registered" });
+    const conflictErrors: string[] = [];
+    if (usernameTaken) conflictErrors.push("Username already exists");
+    if (emailOwner) conflictErrors.push("Email already registered");
+    if (conflictErrors.length > 0) {
+      return res.status(409).json({ success: false, errors: conflictErrors });
     }
 
     await registerUserInDefaultGroup(payload);

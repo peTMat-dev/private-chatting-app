@@ -1,5 +1,6 @@
 import {
   findLdapUserByEmail,
+  findLdapUserByUid,
   buildUserDn,
   createLdapUser,
   createArgon2Password,
@@ -77,6 +78,15 @@ export const updateLastLogin = async (user: DbUserRecord): Promise<void> => {
 
 export const findUserByEmail = async (email: string) => {
   return await findLdapUserByEmail(email);
+};
+
+export const isUsernameTaken = async (username: string): Promise<boolean> => {
+  const normalized = username.trim();
+  if (!normalized) return false;
+  const inDb = await findUserByIdentifier(normalized);
+  if (inDb) return true;
+  const inLdap = await findLdapUserByUid(normalized);
+  return !!inLdap;
 };
 
 export const storePasswordResetToken = async (

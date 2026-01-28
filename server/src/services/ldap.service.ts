@@ -16,6 +16,25 @@ export async function findLdapUserByEmail(email: string) {
     await client.unbind();
   }
 }
+
+export async function findLdapUserByUid(uid: string) {
+  const client = new Client({
+    url: env.ldap.url,
+    tlsOptions: { rejectUnauthorized: env.ldap.rejectUnauthorized },
+  });
+  try {
+    await client.bind(env.ldap.bindDn, env.ldap.bindPassword);
+    const opts: SearchOptions = {
+      scope: "sub",
+      filter: `(uid=${uid})`,
+      attributes: ["dn", "uid", "mail"],
+    };
+    const { searchEntries } = await client.search(env.ldap.usersBaseDn, opts);
+    return searchEntries.length > 0 ? searchEntries[0] : null;
+  } finally {
+    await client.unbind();
+  }
+}
 import { Attribute, Change, Client, SearchOptions } from "ldapts";
 import crypto from "crypto";
 import argon2 from "argon2";

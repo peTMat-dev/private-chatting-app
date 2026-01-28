@@ -140,7 +140,7 @@ export default function AuthScreen() {
 		try {
 			const { ok, data } = await postJson("/auth/register", payload);
 			if (!ok || !data.success) {
-				const detail = data.errors?.[0] ?? data.error ?? "Registration failed";
+				const detail = data.errors?.join("; ") ?? data.error ?? "Registration failed";
 				showToast({ title: "Registration", body: detail });
 				return;
 			}
