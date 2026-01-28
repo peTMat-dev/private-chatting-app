@@ -108,6 +108,12 @@ export default function AuthScreen() {
 				return;
 			}
 			showToast({ title: "Welcome back", body: data.message ?? "Redirecting..." });
+			try {
+				// persist username for chats fetch
+				if (data.user?.username) {
+					localStorage.setItem("cubcha_username", data.user.username);
+				}
+			} catch {}
 			router.push("/chats");
 		} catch (error) {
 			showToast({ title: "Login failed", body: (error as Error).message });

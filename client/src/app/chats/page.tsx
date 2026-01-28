@@ -1,48 +1,104 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Contact from "../components/Contact";
 
 type ContactSummary = {
-  id: string;
+  id: number | string;
   name: string;
   lastMessage: string;
 };
 
+type ApiChatsResponse = {
+  success: boolean;
+  count?: number;
+  data?: Array<{ id: number; name: string; lastMessage: string }>;
+  error?: string;
+};
+
+const ENV_API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+const resolveApiBaseUrl = (): string => {
+  if (ENV_API_BASE) return ENV_API_BASE.replace(/\/+$/, "");
+  if (typeof window !== "undefined") return window.location.origin.replace(/\/+$/, "");
+  return "";
+};
+const buildApiUrl = (path: string): string => {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const base = resolveApiBaseUrl();
+  return base ? `${base}${normalizedPath}` : normalizedPath;
+};
+
 export default function ChatsListPage() {
   const router = useRouter();
+  const [contacts, setContacts] = useState<ContactSummary[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  // No active chats yet; keep empty to show the empty state
-  const contacts: ContactSummary[] = [];
+  const username = useMemo(() => {
+    try {
+      return localStorage.getItem("cubcha_username") || "";
+    } catch {
+      return "";
+    }
+  }, []);
 
-  const openChat = (id: string) => {
-    // Navigate to a dedicated chat page (to be implemented later)
+  useEffect(() => {
+    let aborted = false;
+    const fetchChats = async () => {
+      if (!username) {
+        router.replace("/");
+        return;
+      }
+      try {
+        const url = buildApiUrl(`/chats?username=${encodeURIComponent(username)}`);
+        const res = await fetch(url, { headers: { "Accept": "application/json" } });
+        const data = (await res.json()) as ApiChatsResponse;
+        if (!res.ok || !data.success) {
+          if (!aborted) setError(data.error || "Unable to load chats");
+          return;
+        }
+        const list: ContactSummary[] = (data.data || []).map((d) => ({
+          id: d.id,
+          name: d.name,
+          lastMessage: d.lastMessage || "",
+        }));
+        if (!aborted) setContacts(list);
+      } catch (err) {
+        if (!aborted) setError((err as Error).message);
+      }
+    };
+    fetchChats();
+    return () => {
+      aborted = true;
+    };
+  }, [username, router]);
+
+  const openChat = (id: number | string) => {
     router.push(`/chat/${id}`);
   };
 
   return (
     <div className="mobile-chats-screen">
-      <header className="chats-header">
-        <h1 className="chats-title">Chats</h1>
-      </header>
-
       <section className="chats-list-card">
-        {contacts.length === 0 ? (
+        <div className="chats-card-titlebar">
+          <span className="chats-card-title">Conversations</span>
+        </div>
+        {error ? (
+          <div className="empty-state">
+            <div className="empty-icon" aria-hidden="true" />
+            <h2>Could not load chats</h2>
+            <p>{error}</p>
+          </div>
+        ) : contacts.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon" aria-hidden="true" />
             <h2>No active chats yet</h2>
-            <p>
-              When users message you, they’ll appear here as a simple list.
-            </p>
+            <p>When users message you, they’ll appear here.</p>
           </div>
         ) : (
-          <ul className="list-group list-group-flush">
+          <ul className="list-group list-group-flush chats-list">
             {contacts.map((c) => (
-              <Contact
-                key={c.id}
-                contact_name={c.name}
-                onClick={() => openChat(c.id)}
-              >
+              <Contact key={c.id} contact_name={c.name} onClick={() => openChat(c.id)}>
                 {c.lastMessage}
               </Contact>
             ))}

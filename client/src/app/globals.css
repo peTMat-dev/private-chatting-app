@@ -387,10 +387,32 @@ a:hover {
   overflow: hidden;
 }
 
+.chats-card-titlebar {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(3, 160, 98, 0.2);
+  text-align: center;
+}
+
+.chats-card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: rgba(3, 160, 98, 0.7);
+}
+
 .list-group-item.flex {
   background: transparent;
   border-color: rgba(3, 160, 98, 0.2);
   color: var(--color-green);
+}
+
+.chats-list .list-group-item {
+  border-color: rgba(3, 160, 98, 0.2);
+  border-bottom: 1px solid rgba(3, 160, 98, 0.2);
+}
+
+.chats-list .list-group-item:last-child {
+  border-bottom: none;
 }
 
 .contact-header {
