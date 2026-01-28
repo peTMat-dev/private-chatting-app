@@ -67,6 +67,7 @@ export default function AuthScreen() {
 
 	const [loginForm, setLoginForm] = useState({ username: "", password: "" });
 	const [registerForm, setRegisterForm] = useState(buildEmptyRegisterForm);
+	const [registerErrors, setRegisterErrors] = useState<string[] | null>(null);
 	const [forgotEmail, setForgotEmail] = useState("");
 
 	useEffect(() => {
@@ -125,7 +126,8 @@ export default function AuthScreen() {
 	const handleRegister = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		if (registerForm.password !== registerForm.confirmPassword) {
-			showToast({ title: "Mismatch", body: "Passwords must match" });
+			const msg = "Passwords must match";
+			setRegisterErrors([msg]);
 			return;
 		}
 		setLoading((prev) => ({ ...prev, register: true }));
@@ -140,14 +142,16 @@ export default function AuthScreen() {
 		try {
 			const { ok, data } = await postJson("/auth/register", payload);
 			if (!ok || !data.success) {
-				const detail = data.errors?.join("; ") ?? data.error ?? "Registration failed";
-				showToast({ title: "Registration", body: detail });
+				const errs = data.errors ?? (data.error ? [data.error] : ["Registration failed"]);
+				setRegisterErrors(errs);
 				return;
 			}
 			showToast({ title: "Registration", body: data.message ?? "Account created" });
 			setRegisterForm(buildEmptyRegisterForm());
+			setRegisterErrors(null);
 		} catch (error) {
-			showToast({ title: "Registration", body: (error as Error).message });
+			const msg = (error as Error).message;
+			setRegisterErrors([msg]);
 		} finally {
 			setLoading((prev) => ({ ...prev, register: false }));
 		}
@@ -242,6 +246,15 @@ export default function AuthScreen() {
 						No extra group decisions needed.
 					</p>
 					<form onSubmit={handleRegister} className="d-flex flex-column gap-3">
+					{registerErrors && registerErrors.length > 0 && (
+						<div className="auth-alert" role="alert" aria-live="polite">
+							<ul className="mb-0">
+								{registerErrors.map((e, i) => (
+									<li key={i}>{e}</li>
+								))}
+							</ul>
+						</div>
+					)}
 						<div className="row g-3">
 							<div className="col-12 col-sm-6">
 								<label htmlFor="reg-first" className="auth-label">
