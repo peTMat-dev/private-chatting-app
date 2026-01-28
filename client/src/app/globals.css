@@ -5,11 +5,12 @@
   --color-black: #020202;
   --color-panel: #050505;
   --color-panel-muted: #0b0b0b;
-  --color-green: #03A062;
-  --color-green-strong: #03A062;
-  --color-green-soft: #03A062;
-  --shadow-strong: 0 0 40px rgba(3, 160, 98, 0.4);
-  --shadow-soft: 0 0 20px rgba(3, 160, 98, 0.2);
+  --color-green: #06ec90; /* accent */
+  --color-green-strong: #06ec90;
+  --color-green-soft: #06ec90;
+  --color-form-text: #67c6a0; /* headings + labels in forms */
+  --shadow-strong: 0 0 40px rgba(6, 236, 144, 0.4);
+  --shadow-soft: 0 0 20px rgba(6, 236, 144, 0.2);
   --font-sans: var(--font-geist-sans, "Geist", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
 }
 
@@ -140,7 +141,7 @@ a:hover {
 .auth-card h2,
 .register-card h3,
 .drawer-panel h4 {
-  color: var(--color-green-strong);
+  color: var(--color-form-text);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-size: 0.85rem;
@@ -169,7 +170,7 @@ a:hover {
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: rgba(3, 160, 98, 0.85);
+  color: var(--color-form-text);
   margin-bottom: 0.35rem;
   display: inline-block;
 }
