@@ -16,7 +16,7 @@
 
 body {
   background-color: var(--color-black);
-  color: var(--color-green);
+  color: var(--color-form-text);
   font-family: var(--font-sans);
   min-height: 100vh;
   margin: 0;
@@ -99,7 +99,7 @@ a:hover {
 
 .hero-copy {
   font-size: 1rem;
-  color: rgba(3, 160, 98, 0.85);
+  color: var(--color-form-text);
   max-width: 28rem;
 }
 
