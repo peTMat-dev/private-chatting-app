@@ -1,0 +1,3 @@
+dn: ou=groups,dc=contaboserver,dc=net
+objectClass: organizationalUnit
+ou: groups

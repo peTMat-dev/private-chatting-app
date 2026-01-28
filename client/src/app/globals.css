@@ -5,11 +5,11 @@
   --color-black: #020202;
   --color-panel: #050505;
   --color-panel-muted: #0b0b0b;
-  --color-green: #0aff9d;
-  --color-green-strong: #16ffb4;
-  --color-green-soft: #1fff88;
-  --shadow-strong: 0 0 40px rgba(10, 255, 157, 0.4);
-  --shadow-soft: 0 0 20px rgba(10, 255, 157, 0.2);
+  --color-green: #03A062;
+  --color-green-strong: #03A062;
+  --color-green-soft: #03A062;
+  --shadow-strong: 0 0 40px rgba(3, 160, 98, 0.4);
+  --shadow-soft: 0 0 20px rgba(3, 160, 98, 0.2);
   --font-sans: var(--font-geist-sans, "Geist", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
 }
 
@@ -36,17 +36,17 @@ a:hover {
   flex-direction: column;
   gap: 1.5rem;
   padding: 2rem 1.25rem 3rem;
-  background: radial-gradient(circle at top, rgba(10, 255, 157, 0.12), transparent 55%),
+  background: radial-gradient(circle at top, rgba(3, 160, 98, 0.12), transparent 55%),
     var(--color-black);
 }
 
 .hero-panel {
-  background: linear-gradient(135deg, rgba(10, 255, 157, 0.12), rgba(10, 255, 157, 0.02)),
+  background: linear-gradient(135deg, rgba(3, 160, 98, 0.12), rgba(3, 160, 98, 0.02)),
     var(--color-panel);
-  border: 1px solid rgba(10, 255, 157, 0.4);
+  border: 1px solid rgba(3, 160, 98, 0.4);
   border-radius: 1.5rem;
   padding: 2rem;
-  box-shadow: 0 35px 90px rgba(10, 255, 157, 0.25);
+  box-shadow: 0 35px 90px rgba(3, 160, 98, 0.25);
   position: relative;
   overflow: hidden;
 }
@@ -55,7 +55,7 @@ a:hover {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 30% 20%, rgba(22, 255, 180, 0.35), transparent 55%);
+  background: radial-gradient(circle at 30% 20%, rgba(3, 160, 98, 0.35), transparent 55%);
   filter: blur(40px);
   opacity: 0.7;
   pointer-events: none;
@@ -76,7 +76,7 @@ a:hover {
 
 .hero-copy {
   font-size: 1rem;
-  color: rgba(10, 255, 157, 0.85);
+  color: rgba(3, 160, 98, 0.85);
   max-width: 28rem;
 }
 
@@ -90,7 +90,7 @@ a:hover {
 .register-card,
 .drawer-panel {
   background: linear-gradient(145deg, var(--color-panel), var(--color-panel-muted));
-  border: 1px solid rgba(10, 255, 157, 0.4);
+  border: 1px solid rgba(3, 160, 98, 0.4);
   border-radius: 1.25rem;
   padding: 1.5rem;
   box-shadow: var(--shadow-soft);
@@ -108,7 +108,7 @@ a:hover {
 
 .auth-input {
   background: #010101;
-  border: 1px solid rgba(10, 255, 157, 0.5);
+  border: 1px solid rgba(3, 160, 98, 0.5);
   border-radius: 0.9rem;
   color: var(--color-green);
   padding: 0.75rem 1rem;
@@ -120,7 +120,7 @@ a:hover {
 .auth-input:focus {
   outline: none;
   border-color: var(--color-green-strong);
-  box-shadow: 0 0 0 0.2rem rgba(10, 255, 157, 0.25);
+  box-shadow: 0 0 0 0.2rem rgba(3, 160, 98, 0.25);
   color: var(--color-green);
 }
 
@@ -128,7 +128,7 @@ a:hover {
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: rgba(10, 255, 157, 0.85);
+  color: rgba(3, 160, 98, 0.85);
   margin-bottom: 0.35rem;
   display: inline-block;
 }
@@ -136,7 +136,7 @@ a:hover {
 .auth-btn {
   border-radius: 999px;
   background: transparent;
-  border: 1px solid rgba(10, 255, 157, 0.7);
+  border: 1px solid rgba(3, 160, 98, 0.7);
   color: var(--color-green);
   width: 100%;
   padding: 0.85rem;
@@ -152,11 +152,11 @@ a:hover {
   background: var(--color-green);
   color: var(--color-black);
   border-color: var(--color-green);
-  box-shadow: 0 15px 45px rgba(10, 255, 157, 0.35);
+  box-shadow: 0 15px 45px rgba(3, 160, 98, 0.35);
 }
 
 .ghost-btn {
-  border: 1px solid rgba(10, 255, 157, 0.4);
+  border: 1px solid rgba(3, 160, 98, 0.4);
   border-radius: 999px;
   padding: 0.2rem 0.9rem;
   background: transparent;
@@ -198,7 +198,7 @@ a:hover {
 
 .ghost-btn {
   background: transparent;
-  border: 1px solid rgba(10, 255, 157, 0.35);
+  border: 1px solid rgba(3, 160, 98, 0.35);
   color: var(--color-green);
   border-radius: 999px;
   padding: 0.35rem 1rem;
@@ -209,16 +209,16 @@ a:hover {
 
 .ghost-btn:hover {
   color: var(--color-green-strong);
-  border-color: rgba(10, 255, 157, 0.7);
+  border-color: rgba(3, 160, 98, 0.7);
 }
 
 .register-divider {
-  border-top: 1px solid rgba(10, 255, 157, 0.2);
+  border-top: 1px solid rgba(3, 160, 98, 0.2);
   margin: 1rem 0;
 }
 
 .radio-chip {
-  border: 1px solid rgba(10, 255, 157, 0.35);
+  border: 1px solid rgba(3, 160, 98, 0.35);
   border-radius: 999px;
   padding: 0.4rem 1rem;
   display: inline-flex;
@@ -270,7 +270,7 @@ a:hover {
   transform: translateX(100%);
   transition: transform 0.35s ease;
   border-radius: 0;
-  border-left: 1px solid rgba(10, 255, 157, 0.4);
+  border-left: 1px solid rgba(3, 160, 98, 0.4);
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -313,8 +313,8 @@ a:hover {
   text-transform: uppercase;
   font-size: 0.7rem;
   letter-spacing: 0.08em;
-  background: rgba(10, 255, 157, 0.1);
-  border: 1px solid rgba(10, 255, 157, 0.35);
+  background: rgba(3, 160, 98, 0.1);
+  border: 1px solid rgba(3, 160, 98, 0.35);
   border-radius: 999px;
   padding: 0.2rem 0.75rem;
 }
