@@ -68,6 +68,8 @@ export default function AuthScreen() {
 	const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 	const [toast, setToast] = useState<ToastMessage | null>(null);
 	const [activeFace, setActiveFace] = useState<CubeFace>(resetToken ? "left" : "front");
+	// Track cumulative horizontal rotation in 90° steps to preserve direction
+	const [yTicks, setYTicks] = useState<number>(resetToken ? 1 : 0);
 	const [loading, setLoading] = useState({ login: false, register: false, forgot: false });
 
 	const [loginForm, setLoginForm] = useState({ username: "", password: "" });
@@ -114,43 +116,31 @@ export default function AuthScreen() {
 
 	const showToast = (message: ToastMessage) => setToast(message);
 
-	const getCubeRotation = (face: CubeFace) => {
+	const facesByTicks: CubeFace[] = ["front", "left", "back", "right"];
+
+	const rotation = useMemo(() => {
 		const baseX = -5;
 		const baseY = -15;
-		switch (face) {
-			case "right":
-				return { x: baseX, y: baseY - 90 };
-			case "left":
-				return { x: baseX, y: baseY + 90 };
-			case "back":
-				return { x: baseX, y: baseY + 180 };
-			case "top":
-				return { x: baseX - 90, y: baseY };
-			case "front":
-		default:
-				return { x: baseX, y: baseY };
-		}
-	};
-
-	const rotation = useMemo(() => getCubeRotation(activeFace), [activeFace]);
+		const x = activeFace === "top" ? baseX - 90 : baseX;
+		const y = baseY + yTicks * 90;
+		return { x, y };
+	}, [activeFace, yTicks]);
 
 	const goLeft = () => {
-		setActiveFace((prev) => {
-			if (prev === "front") return "left";
-			if (prev === "left") return "back";
-			if (prev === "back") return "right";
-			if (prev === "right") return "front";
-			return prev;
+		if (activeFace === "top") return;
+		setYTicks((t) => {
+			const next = t + 1;
+			setActiveFace(facesByTicks[((next % 4) + 4) % 4]);
+			return next;
 		});
 	};
 
 	const goRight = () => {
-		setActiveFace((prev) => {
-			if (prev === "front") return "right";
-			if (prev === "right") return "back";
-			if (prev === "back") return "left";
-			if (prev === "left") return "front";
-			return prev;
+		if (activeFace === "top") return;
+		setYTicks((t) => {
+			const next = t - 1;
+			setActiveFace(facesByTicks[((next % 4) + 4) % 4]);
+			return next;
 		});
 	};
 
@@ -166,6 +156,21 @@ export default function AuthScreen() {
 			if (prev === "top") return "front";
 			return prev;
 		});
+	};
+
+	// Helper to set face and keep ticks in sync
+	const setFace = (face: CubeFace) => {
+		setActiveFace(face);
+		if (face !== "top") {
+			const map: Record<CubeFace, number> = {
+				front: 0,
+				left: 1,
+				back: 2,
+				right: 3,
+				top: yTicks, // unchanged
+			};
+			setYTicks(map[face]);
+		}
 	};
 
 	const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -331,7 +336,7 @@ export default function AuthScreen() {
 			setResetPassword("");
 			setResetConfirmPassword("");
 			setTimeout(() => {
-				setActiveFace("front");
+				setFace("front");
 				router.push("/");
 			}, 1200);
 		} catch (error) {
@@ -346,10 +351,10 @@ export default function AuthScreen() {
 			className="mobile-auth-screen"
 			tabIndex={0}
 			onKeyDown={handleKeyDown}
-			onTouchStart={handleTouchStart}
-			onTouchEnd={handleTouchEnd}
-		>
-			<div className="auth-cube-stage">
+				onTouchStart={handleTouchStart}
+				onTouchEnd={handleTouchEnd}
+			>
+				<div className="auth-cube-stage">
 				<div
 					className="auth-cube"
 					style={{
@@ -367,9 +372,10 @@ export default function AuthScreen() {
 							</div>
 						</div>
 						<section className="auth-stack">
-							<article className="auth-card">
-								<h2>Sign In</h2>
-								<form onSubmit={handleLogin} className="d-flex flex-column gap-3">
+							<article className="auth-card cube-face-panel">
+								<div className="cube-face-content">
+									<h2>Sign In</h2>
+									<form onSubmit={handleLogin} className="d-flex flex-column gap-3">
 									<div>
 										<label htmlFor="login-username" className="auth-label">
 											Username
@@ -402,27 +408,34 @@ export default function AuthScreen() {
 									<button type="submit" className="auth-btn" disabled={loginDisabled}>
 										{loading.login ? "Authenticating" : "Sign In"}
 									</button>
-								</form>
-								<div className="auth-links">
-									<button type="button" onClick={() => setActiveFace("left")}>
+									</form>
+									<div className="auth-links">
+									<button type="button" onClick={() => setFace("left")}>
 										Forgot your password?
 									</button>
-									<button type="button" onClick={() => setActiveFace("right")}>
+									<button type="button" onClick={() => setFace("right")}>
 										Sign up!
 									</button>
+								</div>
 								</div>
 							</article>
 						</section>
 					</section>
 
 					<section className="cube-face cube-face-right">
-						<article className="register-card" id="register-card">
-							<h3>Register</h3>
-							<p className="hero-copy">
-								Submit your details and we will queue your account for inclusion in chat_groups.
-								No extra group decisions needed.
-							</p>
-							<form onSubmit={handleRegister} className="d-flex flex-column gap-3">
+						<article className="register-card cube-face-panel" id="register-card">
+							<div className="cube-face-content">
+								<div className="cube-face-header">
+									<h3>Register</h3>
+									<button
+										className="ghost-btn"
+										type="button"
+													onClick={() => setFace("front")}
+									>
+										Back to login
+									</button>
+								</div>
+								<form onSubmit={handleRegister} className="d-flex flex-column gap-2">
 								{registerErrors && registerErrors.length > 0 && (
 									<div className="auth-alert" role="alert" aria-live="polite">
 										<ul className="mb-0">
@@ -432,7 +445,7 @@ export default function AuthScreen() {
 										</ul>
 									</div>
 								)}
-								<div className="row g-3">
+								<div className="row g-2">
 									<div className="col-12 col-sm-6">
 										<label htmlFor="reg-first" className="auth-label">
 											First name
@@ -461,7 +474,7 @@ export default function AuthScreen() {
 									</div>
 								</div>
 
-								<div className="row g-3">
+								<div className="row g-2">
 									<div className="col-12 col-sm-6">
 										<label htmlFor="reg-display" className="auth-label">
 											Display name
@@ -508,7 +521,7 @@ export default function AuthScreen() {
 									/>
 								</div>
 
-								<div className="row g-3">
+								<div className="row g-2">
 									<div className="col-12 col-sm-6">
 										<label htmlFor="reg-pass" className="auth-label">
 											Password
@@ -543,23 +556,27 @@ export default function AuthScreen() {
 									{loading.register ? "Submitting" : "Submit request"}
 								</button>
 							</form>
-							<button
-								className="ghost-btn mt-3"
-								type="button"
-								onClick={() => setActiveFace("front")}
-							>
-								Back to login
-							</button>
+							</div>
 						</article>
 					</section>
 
 					<section className="cube-face cube-face-left">
-						<article className="auth-card">
-							<h2>Reset password</h2>
-							{resetToken ? (
-								<>
-									<p className="hero-copy">Enter a new password for your account.</p>
-									<form onSubmit={handleTokenReset} className="d-flex flex-column gap-3 mt-2">
+						<article className="auth-card cube-face-panel">
+							<div className="cube-face-content">
+								<div className="cube-face-header">
+									<h2>Reset password</h2>
+									<button
+										className="ghost-btn"
+										type="button"
+													onClick={() => setFace("front")}
+									>
+										Back to login
+									</button>
+								</div>
+								{resetToken ? (
+									<>
+										<p className="hero-copy">Enter a new password for your account.</p>
+										<form onSubmit={handleTokenReset} className="d-flex flex-column gap-3 mt-2">
 										<div>
 											<label htmlFor="reset-pass" className="auth-label">
 												New password
@@ -586,15 +603,15 @@ export default function AuthScreen() {
 												placeholder="••••••••"
 											/>
 										</div>
-										<button type="submit" className="auth-btn" disabled={resetDisabled}>
+											<button type="submit" className="auth-btn" disabled={resetDisabled}>
 											{loading.forgot ? "Updating" : "Reset password"}
 										</button>
-									</form>
-								</>
-							) : (
-								<>
-									<p className="hero-copy">Send a reset link to your email.</p>
-									<form onSubmit={handleForgot} className="d-flex flex-column gap-3 mt-2">
+										</form>
+									</>
+								) : (
+									<>
+										<p className="hero-copy">Send a reset link to your email.</p>
+										<form onSubmit={handleForgot} className="d-flex flex-column gap-3 mt-2">
 										<div>
 											<label htmlFor="forgot-email" className="auth-label">
 												Email
@@ -608,40 +625,38 @@ export default function AuthScreen() {
 												placeholder="EMAIL@EXAMPLE.COM"
 											/>
 										</div>
-										<button type="submit" className="auth-btn" disabled={forgotDisabled}>
+											<button type="submit" className="auth-btn" disabled={forgotDisabled}>
 											{loading.forgot ? "Sending" : "Send reset link"}
 										</button>
-									</form>
-								</>
-							)}
-							<button
-								className="ghost-btn mt-3"
-								type="button"
-								onClick={() => setActiveFace("front")}
-							>
-								Back to login
-							</button>
+										</form>
+									</>
+								)}
+							</div>
 						</article>
 					</section>
 
 					<section className="cube-face cube-face-back">
-						<article className="auth-card">
-							<h2>Change language</h2>
-							<p className="hero-copy">
-								Language preferences are in development.
-							</p>
-							<button
-								className="ghost-btn mt-3"
-								type="button"
-								onClick={() => setActiveFace("front")}
-							>
-								Back to login
-							</button>
+						<article className="auth-card cube-face-panel">
+							<div className="cube-face-content">
+								<div className="cube-face-header">
+									<h2>Change language</h2>
+									<button
+										className="ghost-btn"
+										type="button"
+													onClick={() => setFace("front")}
+									>
+										Back to login
+									</button>
+								</div>
+								<p className="hero-copy">
+									Language preferences are in development.
+								</p>
+							</div>
 						</article>
 					</section>
 
 					<section className="cube-face cube-face-top">
-						<article className="auth-card">
+						<article className="auth-card cube-face-panel">
 							<h2>Logout</h2>
 							<p className="hero-copy">
 								Logout flow placeholder. This will end your session when implemented.
@@ -658,7 +673,7 @@ export default function AuthScreen() {
 							<button
 								className="ghost-btn mt-3"
 								type="button"
-								onClick={() => setActiveFace("front")}
+													onClick={() => setFace("front")}
 							>
 								Cancel
 							</button>

@@ -45,7 +45,7 @@ a:hover {
   background: linear-gradient(135deg, rgba(3, 160, 98, 0.12), rgba(3, 160, 98, 0.02)),
     var(--color-panel);
   border: 1px solid rgba(3, 160, 98, 0.4);
-  border-radius: 1.5rem;
+  border-radius: 0;
   padding: 2rem;
   box-shadow: 0 35px 90px rgba(3, 160, 98, 0.25);
   position: relative;
@@ -88,7 +88,8 @@ a:hover {
 }
 
 .mobile-auth-screen {
-  margin-top: 1.2rem;
+  margin-top: 0;
+  overflow-x: hidden;
 }
 
 .cubcha-subtext {
@@ -119,8 +120,8 @@ a:hover {
 
 .auth-cube {
   position: relative;
-  width: min(420px, 100%);
-  height: 420px;
+  width: min(340px, 85vw);
+  height: min(480px, 72vh);
   transform-style: preserve-3d;
   transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -134,24 +135,60 @@ a:hover {
   gap: 1rem;
 }
 
+.cube-face-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.cube-face-panel form {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.cube-face-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.cube-face-header h2,
+.cube-face-header h3 {
+  margin: 0;
+}
+
+.cube-face-content {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.cube-face-content .row {
+  margin-left: 0;
+  margin-right: 0;
+}
+
 .cube-face-front {
-  transform: translateZ(210px);
+  transform: translateZ(170px);
 }
 
 .cube-face-right {
-  transform: rotateY(90deg) translateZ(210px);
+  transform: rotateY(90deg) translateZ(170px);
 }
 
 .cube-face-left {
-  transform: rotateY(-90deg) translateZ(210px);
+  transform: rotateY(-90deg) translateZ(170px);
 }
 
 .cube-face-back {
-  transform: rotateY(180deg) translateZ(210px);
+  transform: rotateY(180deg) translateZ(170px);
 }
 
 .cube-face-top {
-  transform: rotateX(90deg) translateZ(210px);
+  transform: rotateX(90deg) translateZ(170px);
 }
 
 .auth-card,
@@ -159,7 +196,7 @@ a:hover {
 .drawer-panel {
   background: linear-gradient(145deg, var(--color-panel), var(--color-panel-muted));
   border: 1px solid rgba(3, 160, 98, 0.4);
-  border-radius: 1.25rem;
+  border-radius: 0;
   padding: 1.5rem;
   box-shadow: var(--shadow-soft);
 }
@@ -408,8 +445,15 @@ a:hover {
 
 @media (min-width: 768px) {
   .mobile-auth-screen {
-    max-width: 540px;
+    max-width: 520px;
     margin: 0 auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobile-auth-screen {
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 }
 
