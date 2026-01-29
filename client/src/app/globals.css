@@ -22,6 +22,19 @@ body {
   margin: 0;
 }
 
+/* Visually hidden but accessible text */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
 a {
   color: var(--color-green);
   text-decoration: none;
@@ -135,6 +148,12 @@ a:hover {
   gap: 1rem;
 }
 
+/* Ensure the front face stack fills the full face height */
+.cube-face-front .auth-stack {
+  flex: 1;
+  min-height: 0;
+}
+
 .cube-face-panel {
   height: 100%;
   display: flex;
@@ -145,6 +164,12 @@ a:hover {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+/* Register face: no scrollbar unless content truly overflows */
+.cube-face-right .cube-face-panel form {
+  flex: initial;
+  overflow-y: visible;
 }
 
 .cube-face-header {
@@ -164,6 +189,10 @@ a:hover {
   width: 100%;
   max-width: 320px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0; /* allow inner form to scroll */
 }
 
 .cube-face-content .row {
@@ -199,6 +228,20 @@ a:hover {
   border-radius: 0;
   padding: 1.5rem;
   box-shadow: var(--shadow-soft);
+}
+
+/* Front face: integrate hero heading inside the card */
+.hero-in-card {
+  margin-bottom: 0.25rem;
+}
+
+.auth-card .cubcha-heading {
+  font-size: 1.35rem;
+  margin-bottom: 0.2rem;
+}
+
+.auth-card .cubcha-subtext {
+  margin-bottom: 0.75rem;
 }
 
 /* In-card alert for form errors: stays contained and readable on all screens */

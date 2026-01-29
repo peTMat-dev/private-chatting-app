@@ -362,19 +362,17 @@ export default function AuthScreen() {
 					}}
 				>
 					<section className="cube-face cube-face-front">
-						<div className="hero-panel">
-							<div className="hero-content">
-								<div className="status-pill">
-									<span>Mobile Auth</span>
-								</div>
-								<h1 className="cubcha-heading">CubCha v1.0</h1>
-								<p className="cubcha-subtext">instructions will come here later - in development.</p>
-							</div>
-						</div>
 						<section className="auth-stack">
 							<article className="auth-card cube-face-panel">
 								<div className="cube-face-content">
-									<h2>Sign In</h2>
+									<div className="hero-in-card">
+										<div className="status-pill">
+											<span>Mobile Auth</span>
+										</div>
+										<h1 className="cubcha-heading">CubCha v1.0</h1>
+										<p className="cubcha-subtext">instructions will come here later - in development.</p>
+									</div>
+									<h2 className="sr-only">Sign In</h2>
 									<form onSubmit={handleLogin} className="d-flex flex-column gap-3">
 									<div>
 										<label htmlFor="login-username" className="auth-label">
