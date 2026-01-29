@@ -159,7 +159,7 @@ const buildResetUrl = (token: string): string => {
   const baseFromEnv = env.app.resetPasswordBaseUrl;
   const fallback = env.app.clientOrigins[0] ?? "";
   const base = normalizeBaseUrl(baseFromEnv || fallback);
-  const path = "/reset-password";
+  const path = "/";
   const query = `token=${encodeURIComponent(token)}`;
   return base ? `${base}${path}?${query}` : `${path}?${query}`;
 };

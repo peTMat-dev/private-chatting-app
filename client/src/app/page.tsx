@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, TouchEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type ApiResponse = {
 	success: boolean;
@@ -63,15 +63,19 @@ const postJson = async (
 
 export default function AuthScreen() {
 	const router = useRouter();
+	const searchParams = useSearchParams();
+	const resetToken = searchParams.get("token") ?? "";
 	const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 	const [toast, setToast] = useState<ToastMessage | null>(null);
-	const [activeFace, setActiveFace] = useState<CubeFace>("front");
+	const [activeFace, setActiveFace] = useState<CubeFace>(resetToken ? "left" : "front");
 	const [loading, setLoading] = useState({ login: false, register: false, forgot: false });
 
 	const [loginForm, setLoginForm] = useState({ username: "", password: "" });
 	const [registerForm, setRegisterForm] = useState(buildEmptyRegisterForm);
 	const [registerErrors, setRegisterErrors] = useState<string[] | null>(null);
 	const [forgotEmail, setForgotEmail] = useState("");
+	const [resetPassword, setResetPassword] = useState("");
+	const [resetConfirmPassword, setResetConfirmPassword] = useState("");
 
 	useEffect(() => {
 		if (!toast) return;
@@ -99,6 +103,14 @@ export default function AuthScreen() {
 		() => loading.forgot || !forgotEmail || !forgotEmail.includes("@"),
 		[loading.forgot, forgotEmail]
 	);
+
+	const resetDisabled = useMemo(() => {
+		if (loading.forgot) return true;
+		if (!resetToken) return true;
+		if (!resetPassword || resetPassword.length < 6) return true;
+		if (resetPassword !== resetConfirmPassword) return true;
+		return false;
+	}, [loading.forgot, resetToken, resetPassword, resetConfirmPassword]);
 
 	const showToast = (message: ToastMessage) => setToast(message);
 
@@ -282,8 +294,46 @@ export default function AuthScreen() {
 				return;
 			}
 			showToast({ title: "Reset sent", body: data.message ?? "Check your inbox" });
-			setDrawerOpen(false);
 			setForgotEmail("");
+		} catch (error) {
+			showToast({ title: "Reset failed", body: (error as Error).message });
+		} finally {
+			setLoading((prev) => ({ ...prev, forgot: false }));
+		}
+	};
+
+	const handleTokenReset = async (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		if (!resetToken) {
+			showToast({ title: "Reset failed", body: "Token is missing" });
+			return;
+		}
+		if (resetPassword !== resetConfirmPassword) {
+			showToast({ title: "Reset failed", body: "Passwords must match" });
+			return;
+		}
+
+		setLoading((prev) => ({ ...prev, forgot: true }));
+		try {
+			const { ok, data } = await postJson("/auth/reset-password", {
+				token: resetToken,
+				password: resetPassword,
+			});
+			if (!ok || !data.success) {
+				const detail = data.errors?.[0] ?? data.error ?? "Unable to reset password";
+				showToast({ title: "Reset failed", body: detail });
+				return;
+			}
+			showToast({
+				title: "Password updated",
+				body: data.message ?? "Sign in with your new password",
+			});
+			setResetPassword("");
+			setResetConfirmPassword("");
+			setTimeout(() => {
+				setActiveFace("front");
+				router.push("/");
+			}, 1200);
 		} catch (error) {
 			showToast({ title: "Reset failed", body: (error as Error).message });
 		} finally {
@@ -506,25 +556,64 @@ export default function AuthScreen() {
 					<section className="cube-face cube-face-left">
 						<article className="auth-card">
 							<h2>Reset password</h2>
-							<p className="hero-copy">Send a reset link to your email.</p>
-							<form onSubmit={handleForgot} className="d-flex flex-column gap-3 mt-2">
-								<div>
-									<label htmlFor="forgot-email" className="auth-label">
-										Email
-									</label>
-									<input
-										id="forgot-email"
-										type="email"
-										className="auth-input"
-										value={forgotEmail}
-										onChange={(event) => setForgotEmail(event.target.value)}
-										placeholder="EMAIL@EXAMPLE.COM"
-									/>
-								</div>
-								<button type="submit" className="auth-btn" disabled={forgotDisabled}>
-									{loading.forgot ? "Sending" : "Send reset link"}
-								</button>
-							</form>
+							{resetToken ? (
+								<>
+									<p className="hero-copy">Enter a new password for your account.</p>
+									<form onSubmit={handleTokenReset} className="d-flex flex-column gap-3 mt-2">
+										<div>
+											<label htmlFor="reset-pass" className="auth-label">
+												New password
+											</label>
+											<input
+												id="reset-pass"
+												type="password"
+												className="auth-input"
+												value={resetPassword}
+												onChange={(event) => setResetPassword(event.target.value)}
+												placeholder="••••••••"
+											/>
+										</div>
+										<div>
+											<label htmlFor="reset-confirm" className="auth-label">
+												Confirm password
+											</label>
+											<input
+												id="reset-confirm"
+												type="password"
+												className="auth-input"
+												value={resetConfirmPassword}
+												onChange={(event) => setResetConfirmPassword(event.target.value)}
+												placeholder="••••••••"
+											/>
+										</div>
+										<button type="submit" className="auth-btn" disabled={resetDisabled}>
+											{loading.forgot ? "Updating" : "Reset password"}
+										</button>
+									</form>
+								</>
+							) : (
+								<>
+									<p className="hero-copy">Send a reset link to your email.</p>
+									<form onSubmit={handleForgot} className="d-flex flex-column gap-3 mt-2">
+										<div>
+											<label htmlFor="forgot-email" className="auth-label">
+												Email
+											</label>
+											<input
+												id="forgot-email"
+												type="email"
+												className="auth-input"
+												value={forgotEmail}
+												onChange={(event) => setForgotEmail(event.target.value)}
+												placeholder="EMAIL@EXAMPLE.COM"
+											/>
+										</div>
+										<button type="submit" className="auth-btn" disabled={forgotDisabled}>
+											{loading.forgot ? "Sending" : "Send reset link"}
+										</button>
+									</form>
+								</>
+							)}
 							<button
 								className="ghost-btn mt-3"
 								type="button"
