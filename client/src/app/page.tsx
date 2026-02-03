@@ -247,7 +247,7 @@ export default function AuthScreen() {
 					localStorage.setItem("cubcha_username", data.user.username);
 				}
 			} catch {}
-			router.push("/chats");
+			router.push("/home");
 		} catch (error) {
 			showToast({ title: "Login failed", body: (error as Error).message });
 		} finally {
