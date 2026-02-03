@@ -59,6 +59,8 @@ const checkLDAPWithTimeout = async (timeoutMs = 5000) => {
 app.use("/auth", authRouter);
 app.use("/chats", chatsRouter);
 
+// Debug endpoint removed
+
 app.get("/users", async (_req: Request, res: Response) => {
   try {
     type Row = { ldap_uid_id: string; display_name: string };

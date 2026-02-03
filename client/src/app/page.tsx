@@ -9,6 +9,8 @@ type ApiResponse = {
 	message?: string;
 	error?: string;
 	errors?: string[];
+	// present for /auth/forgot-password when EXPOSE_RESET_URL=true on the server
+	resetUrl?: string;
 };
 
 type ToastMessage = {
