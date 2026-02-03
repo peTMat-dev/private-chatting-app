@@ -100,7 +100,7 @@ export default function HomeCube() {
 
   return (
     <div
-      className="mobile-auth-screen"
+      className="mobile-auth-screen fade-in"
       tabIndex={0}
       onKeyDown={handleKeyDown}
       onTouchStart={handleTouchStart}

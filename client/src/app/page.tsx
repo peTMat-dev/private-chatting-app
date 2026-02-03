@@ -158,6 +158,50 @@ export default function AuthScreen() {
 		});
 	};
 
+	// Continuous spin while logging in; ensure at least 3 full spins before redirect
+	const [pendingRedirect, setPendingRedirect] = useState(false);
+	const [fadeOut, setFadeOut] = useState(false);
+	const spinIntervalRef = useRef<number | null>(null);
+	const spinTicksRef = useRef(0);
+	const requiredSpinTicks = 12; // 3 full rotations (4 ticks per rotation)
+
+	useEffect(() => {
+		const shouldSpin = loading.login || pendingRedirect;
+		if (shouldSpin && spinIntervalRef.current == null) {
+			spinTicksRef.current = 0; // reset counter on spin start
+			const step = () => {
+				setYTicks((t) => {
+					const next = t + 1;
+					setActiveFace(facesByTicks[((next % 4) + 4) % 4]);
+					return next;
+				});
+				spinTicksRef.current += 1;
+				if (pendingRedirect && spinTicksRef.current >= requiredSpinTicks) {
+					if (spinIntervalRef.current != null) {
+						window.clearInterval(spinIntervalRef.current);
+						spinIntervalRef.current = null;
+					}
+					setPendingRedirect(false);
+					// Trigger fade-out before navigating to menu cube
+					setFadeOut(true);
+					window.setTimeout(() => {
+						router.push("/home");
+					}, 350);
+				}
+			};
+			spinIntervalRef.current = window.setInterval(step, 375); // 25% faster than 500ms
+		} else if (!shouldSpin && spinIntervalRef.current != null) {
+			window.clearInterval(spinIntervalRef.current);
+			spinIntervalRef.current = null;
+		}
+		return () => {
+			if (spinIntervalRef.current != null) {
+				window.clearInterval(spinIntervalRef.current);
+				spinIntervalRef.current = null;
+			}
+		};
+	}, [loading.login, pendingRedirect, router]);
+
 	// Helper to set face and keep ticks in sync
 	const setFace = (face: CubeFace) => {
 		setActiveFace(face);
@@ -234,6 +278,7 @@ export default function AuthScreen() {
 	const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		setLoading((prev) => ({ ...prev, login: true }));
+		spinTicksRef.current = 0; // ensure spin counter starts fresh
 		try {
 			const { ok, data } = await postJson("/auth/login", loginForm);
 			if (!ok || !data.success) {
@@ -247,7 +292,8 @@ export default function AuthScreen() {
 					localStorage.setItem("cubcha_username", data.user.username);
 				}
 			} catch {}
-			router.push("/home");
+			// Defer redirect until after minimum spins complete
+			setPendingRedirect(true);
 		} catch (error) {
 			showToast({ title: "Login failed", body: (error as Error).message });
 		} finally {
@@ -346,8 +392,8 @@ export default function AuthScreen() {
 	};
 
 	return (
- 		<div
-			className="mobile-auth-screen"
+		<div
+			className={`mobile-auth-screen ${fadeOut ? "fade-out" : ""}`}
 			tabIndex={0}
 			onKeyDown={handleKeyDown}
 				onTouchStart={handleTouchStart}
