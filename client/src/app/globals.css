@@ -103,6 +103,7 @@ a:hover {
 .mobile-auth-screen {
   margin-top: 0;
   overflow-x: hidden;
+  overflow-y: hidden; /* prevent page scroll on auth screen */
 }
 
 .cubcha-subtext {
@@ -134,7 +135,7 @@ a:hover {
 .auth-cube {
   position: relative;
   width: min(340px, 85vw);
-  height: min(480px, 72vh);
+  height: min(520px, 78vh);
   transform-style: preserve-3d;
   transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -169,7 +170,27 @@ a:hover {
 /* Register face: no scrollbar unless content truly overflows */
 .cube-face-right .cube-face-panel form {
   flex: initial;
-  overflow-y: visible;
+  overflow-y: hidden; /* hide internal scrollbars on register */
+}
+.cube-face-right .cube-face-content {
+  overflow: hidden;
+}
+
+/* Condense register face spacing to fit comfortably without scroll */
+.cube-face-right .register-card {
+  padding: 1.25rem;
+}
+.cube-face-right .cube-face-header {
+  margin-bottom: 0.5rem;
+}
+.cube-face-right .register-card form {
+  gap: 0.5rem; /* reduce vertical gaps between fields */
+}
+.cube-face-right .auth-input {
+  padding: 0.6rem 0.9rem; /* slightly tighter inputs only on register */
+}
+.cube-face-right .auth-alert {
+  margin: 0.25rem 0 0.5rem;
 }
 
 .cube-face-header {
