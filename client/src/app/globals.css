@@ -145,12 +145,33 @@ a:hover {
   perspective: 1200px;
 }
 
+/* Mobile-only: add side padding to keep left edge visible */
+@media (max-width: 767.98px) {
+  .auth-cube-stage {
+    width: 100%;
+    padding-left: 1.5rem; /* mobile gutter so left rim stays visible */
+    padding-right: 0.75rem;
+    box-sizing: border-box;
+  }
+}
+
 .auth-cube {
+  --cube-width: min(340px, 85vw);
   position: relative;
-  width: min(340px, 85vw);
+  width: var(--cube-width);
   height: min(520px, 78vh);
   transform-style: preserve-3d;
   transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Mobile-only: slightly reduce width so rotated edge doesn't clip */
+@media (max-width: 767.98px) {
+  .auth-cube {
+    --cube-width: min(285px, 72vw);
+    width: var(--cube-width);
+    max-width: calc(100vw - 3rem);
+    margin-left: 0.25rem; /* layout nudge without transform to avoid drift */
+  }
 }
 
 .cube-face {
@@ -260,23 +281,23 @@ a:hover {
 }
 
 .cube-face-front {
-  transform: translateZ(calc(min(340px, 85vw) / 2));
+  transform: translateZ(calc(var(--cube-width) / 2));
 }
 
 .cube-face-right {
-  transform: rotateY(90deg) translateZ(calc(min(340px, 85vw) / 2));
+  transform: rotateY(90deg) translateZ(calc(var(--cube-width) / 2));
 }
 
 .cube-face-left {
-  transform: rotateY(-90deg) translateZ(calc(min(340px, 85vw) / 2));
+  transform: rotateY(-90deg) translateZ(calc(var(--cube-width) / 2));
 }
 
 .cube-face-back {
-  transform: rotateY(180deg) translateZ(calc(min(340px, 85vw) / 2));
+  transform: rotateY(180deg) translateZ(calc(var(--cube-width) / 2));
 }
 
 .cube-face-top {
-  transform: rotateX(90deg) translateZ(calc(min(340px, 85vw) / 2));
+  transform: rotateX(90deg) translateZ(calc(var(--cube-width) / 2));
 }
 
 .auth-card,
