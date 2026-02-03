@@ -125,7 +125,9 @@ a:hover {
 }
 
 .auth-cube-stage {
-  margin-top: 1.25rem;
+  margin-top: 0;
+  /* Fill viewport minus container vertical padding (2rem top + 3rem bottom) */
+  min-height: calc(100vh - 5rem);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -222,23 +224,23 @@ a:hover {
 }
 
 .cube-face-front {
-  transform: translateZ(170px);
+  transform: translateZ(calc(min(340px, 85vw) / 2));
 }
 
 .cube-face-right {
-  transform: rotateY(90deg) translateZ(170px);
+  transform: rotateY(90deg) translateZ(calc(min(340px, 85vw) / 2));
 }
 
 .cube-face-left {
-  transform: rotateY(-90deg) translateZ(170px);
+  transform: rotateY(-90deg) translateZ(calc(min(340px, 85vw) / 2));
 }
 
 .cube-face-back {
-  transform: rotateY(180deg) translateZ(170px);
+  transform: rotateY(180deg) translateZ(calc(min(340px, 85vw) / 2));
 }
 
 .cube-face-top {
-  transform: rotateX(90deg) translateZ(170px);
+  transform: rotateX(90deg) translateZ(calc(min(340px, 85vw) / 2));
 }
 
 .auth-card,
