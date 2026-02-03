@@ -258,8 +258,7 @@ export default function AuthScreen() {
 	const handleRegister = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		if (registerForm.password !== registerForm.confirmPassword) {
-			const msg = "Passwords must match";
-			setRegisterErrors([msg]);
+			setRegisterErrors(["Passwords must match"]);
 			return;
 		}
 		setLoading((prev) => ({ ...prev, register: true }));

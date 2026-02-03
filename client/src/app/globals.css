@@ -1,3 +1,14 @@
+/* Match vertical spacing on reset password form to sign in/register forms */
+.cube-face-left .auth-card form {
+  gap: 1.1rem;
+}
+.cube-face-left .auth-card form .auth-btn {
+  margin-top: 1.1rem;
+}
+/* Add extra space above the sign in button on the sign in form */
+.cube-face-front .auth-card form .auth-btn {
+  margin-top: 1.1rem;
+}
 @import "tailwindcss";
 @import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -178,6 +189,26 @@ a:hover {
   overflow: hidden;
 }
 
+/* Ensure register form fields stay side by side on mobile */
+@media (max-width: 767.98px) {
+  .cube-face-right .register-card .row.g-2 {
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .cube-face-right .register-card .col-12.col-sm-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+    padding-left: 0;
+    padding-right: 0.5rem;
+    box-sizing: border-box;
+  }
+  .cube-face-right .register-card .col-12.col-sm-6:last-child {
+    padding-right: 0;
+  }
+}
+
 /* Condense register face spacing to fit comfortably without scroll */
 .cube-face-right .register-card {
   padding: 1.25rem;
@@ -186,7 +217,12 @@ a:hover {
   margin-bottom: 0.5rem;
 }
 .cube-face-right .register-card form {
-  gap: 0.5rem; /* reduce vertical gaps between fields */
+  gap: 1.1rem;
+}
+
+/* Add extra space above the register submit button */
+.cube-face-right .register-card form .auth-btn {
+  margin-top: 1.1rem;
 }
 .cube-face-right .auth-input {
   padding: 0.6rem 0.9rem; /* slightly tighter inputs only on register */
