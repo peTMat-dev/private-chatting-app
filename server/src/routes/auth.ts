@@ -12,6 +12,7 @@ import {
   resetPasswordWithToken,
   storePasswordResetToken,
   updateLastLogin,
+  isUserActive,
 } from "../services/user.service";
 
 const router = Router();
@@ -26,6 +27,12 @@ router.post("/login", async (req: Request, res: Response) => {
     const user = await findUserByIdentifier(username);
     if (!user) {
       return res.status(401).json({ success: false, error: "Invalid credentials" });
+    }
+
+    // Verify the user is active in the database (active = 1)
+    const active = await isUserActive(user);
+    if (!active) {
+      return res.status(403).json({ success: false, error: "Account is inactive or removed" });
     }
 
     await bindUser(user.ldapUid, password);

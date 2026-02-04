@@ -216,12 +216,28 @@ export const resetPasswordWithToken = async (token: string, newPassword: string)
   }
 };
 
+export const isUserActive = async (user: DbUserRecord): Promise<boolean> => {
+  // Only primary table is guaranteed to have `active` column
+  if (user.origin !== "primary") {
+    return true;
+  }
+  const rows = await query<{ active: number | boolean }>(
+    `SELECT active FROM ${env.db.primaryUserTable} WHERE user_id = ? LIMIT 1`,
+    [user.userId]
+  );
+  if (rows.length === 0) {
+    return false;
+  }
+  const raw = rows[0].active as unknown;
+  return raw === true || raw === 1 || raw === "1";
+};
+
 export const registerUserInDefaultGroup = async (payload: RegistrationInput): Promise<void> => {
   const userId = await withTransaction(async (connection) => {
     const userInsert = await queryWithConnection<OkPacket>(
       connection,
-      `INSERT INTO ${env.db.primaryUserTable} (ldap_uid_id, display_name, last_login_at)
-       VALUES (?, ?, NOW())`,
+      `INSERT INTO ${env.db.primaryUserTable} (ldap_uid_id, display_name, last_login_at, active)
+       VALUES (?, ?, NOW(), 1)`,
       [payload.username, payload.displayName]
     );
     return userInsert.insertId;
