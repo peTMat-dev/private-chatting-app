@@ -1,35 +1,79 @@
 "use client";
 
-import { useRef, useState, useMemo } from "react";
-// No navigation needed for now; rotation-only menu
-// import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Contact from "../components/Contact";
 
-// Types reused from chats page
 type ContactSummary = {
   id: number | string;
   name: string;
   lastMessage: string;
 };
 
-// No API calls needed yet; using static sample data
+type ApiChatsResponse = {
+  success: boolean;
+  count?: number;
+  data?: Array<{ id: number; name: string; lastMessage: string }>;
+  error?: string;
+};
 
 // Cube faces: front=Chats, left=Contacts, right=Chat view (placeholder), back=Workspace
-
 type CubeFace = "front" | "left" | "right" | "back";
+
+const ENV_API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+const resolveApiBaseUrl = (): string => {
+  if (ENV_API_BASE) return ENV_API_BASE.replace(/\/+$/, "");
+  if (typeof window !== "undefined") return window.location.origin.replace(/\/+$/, "");
+  return "";
+};
+const buildApiUrl = (path: string): string => {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const base = resolveApiBaseUrl();
+  return base ? `${base}${normalizedPath}` : normalizedPath;
+};
 
 export default function HomeCube() {
   const [activeFace, setActiveFace] = useState<CubeFace>("front");
   const [yTicks, setYTicks] = useState<number>(0);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
-  const contacts: ContactSummary[] = useMemo(
-    () => [
-      { id: 101, name: "Alice", lastMessage: "See you soon" },
-      { id: 102, name: "Bob", lastMessage: "Lunch tomorrow?" },
-      { id: 103, name: "Charlie", lastMessage: "Ping me later" },
-    ],
-    []
-  );
+  const [contacts, setContacts] = useState<ContactSummary[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const username = useMemo(() => {
+    try {
+      return localStorage.getItem("cubcha_username") || "";
+    } catch {
+      return "";
+    }
+  }, []);
+
+  useEffect(() => {
+    let aborted = false;
+    const fetchChats = async () => {
+      if (!username) {
+        return;
+      }
+      try {
+        const url = buildApiUrl(`/chats?username=${encodeURIComponent(username)}`);
+        const res = await fetch(url, { headers: { Accept: "application/json" } });
+        const data = (await res.json()) as ApiChatsResponse;
+        if (!res.ok || !data.success) {
+          if (!aborted) setError(data.error || "Unable to load chats");
+          return;
+        }
+        const list: ContactSummary[] = (data.data || []).map((d) => ({
+          id: d.id,
+          name: d.name,
+          lastMessage: d.lastMessage || "",
+        }));
+        if (!aborted) setContacts(list);
+      } catch (err) {
+        if (!aborted) setError((err as Error).message);
+      }
+    };
+    fetchChats();
+    return () => {
+      aborted = true;
+    };
+  }, [username]);
 
   const facesByTicks: CubeFace[] = ["front", "left", "back", "right"];
   const rotation = useMemo(() => {
@@ -95,7 +139,7 @@ export default function HomeCube() {
   const openChat = (_id: number | string) => {
     // Rotation-only for now: move to the right face
     setActiveFace("right");
-    setYTicks((t) => t - 1); // rotate right once
+    setYTicks((t) => t - 1);
   };
 
   return (
@@ -120,7 +164,19 @@ export default function HomeCube() {
                     <h2>List of chats</h2>
                     <button className="ghost-btn" type="button" onClick={goLeft}>Contacts</button>
                   </div>
-                  {
+                  {error ? (
+                    <div className="empty-state">
+                      <div className="empty-icon" aria-hidden="true" />
+                      <h2>Could not load chats</h2>
+                      <p>{error}</p>
+                    </div>
+                  ) : contacts.length === 0 ? (
+                    <div className="empty-state">
+                      <div className="empty-icon" aria-hidden="true" />
+                      <h2>No active chats yet</h2>
+                      <p>When users message you, they’ll appear here.</p>
+                    </div>
+                  ) : (
                     <ul className="list-group list-group-flush chats-list">
                       {contacts.map((c) => (
                         <Contact key={c.id} contact_name={c.name} onClick={() => openChat(c.id)}>
@@ -128,7 +184,7 @@ export default function HomeCube() {
                         </Contact>
                       ))}
                     </ul>
-                  }
+                  )}
                 </div>
               </article>
             </section>
