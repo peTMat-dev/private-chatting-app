@@ -236,8 +236,8 @@ export const registerUserInDefaultGroup = async (payload: RegistrationInput): Pr
   const userId = await withTransaction(async (connection) => {
     const userInsert = await queryWithConnection<OkPacket>(
       connection,
-      `INSERT INTO ${env.db.primaryUserTable} (ldap_uid_id, display_name, last_login_at, active)
-       VALUES (?, ?, NOW(), 1)`,
+      `INSERT INTO ${env.db.primaryUserTable} (ldap_uid_id, display_name, active)
+       VALUES (?, ?, 1)`,
       [payload.username, payload.displayName]
     );
     
@@ -246,8 +246,8 @@ export const registerUserInDefaultGroup = async (payload: RegistrationInput): Pr
     // Insert default settings into user_system_details
     await queryWithConnection<OkPacket>(
       connection,
-      `INSERT INTO user_system_details (user_id, user_language, default_max_chat_participants, public, user_timezone, last_login_at)
-       VALUES (?, 'en', 10, TRUE, 'UTC', NOW())`,
+      `INSERT INTO user_system_details (user_id, user_language, default_max_chat_participants, public, user_timezone)
+       VALUES (?, 'en', 10, TRUE, 'UTC')`,
       [newUserId]
     );
     

@@ -66,7 +66,7 @@ router.post("/register", async (req: Request, res: Response) => {
     }
 
     await registerUserInDefaultGroup(payload);
-    res.json({ success: true, message: "Account created and linked to chat_groups" });
+    res.json({ success: true, message: "Account created successfully" });
   } catch (error) {
     res.status(500).json({ success: false, error: (error as Error).message });
   }

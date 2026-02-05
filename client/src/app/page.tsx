@@ -73,6 +73,7 @@ export default function AuthScreen() {
 	// Track cumulative horizontal rotation in 90° steps to preserve direction
 	const [yTicks, setYTicks] = useState<number>(resetToken ? 1 : 0);
 	const [loading, setLoading] = useState({ login: false, register: false, forgot: false });
+	const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
 	const [loginForm, setLoginForm] = useState({ username: "", password: "" });
 	const [registerForm, setRegisterForm] = useState(buildEmptyRegisterForm);
@@ -325,9 +326,13 @@ export default function AuthScreen() {
 				setRegisterErrors(errs);
 				return;
 			}
-			showToast({ title: "Registration", body: data.message ?? "Account created" });
 			setRegisterForm(buildEmptyRegisterForm());
 			setRegisterErrors(null);
+			setRegistrationSuccess(true);
+			setTimeout(() => {
+				setRegistrationSuccess(false);
+				setFace("front");
+			}, 2000);
 		} catch (error) {
 			const msg = (error as Error).message;
 			setRegisterErrors([msg]);
@@ -481,6 +486,12 @@ export default function AuthScreen() {
 									</button>
 								</div>
 								<form onSubmit={handleRegister} className="d-flex flex-column gap-2">
+								{registrationSuccess && (
+									<div className="auth-success" role="alert" aria-live="polite">
+										<strong>✓ Registration successful!</strong>
+										<p>Redirecting to login...</p>
+									</div>
+								)}
 								{registerErrors && registerErrors.length > 0 && (
 									<div className="auth-alert" role="alert" aria-live="polite">
 										<ul className="mb-0">
