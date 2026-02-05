@@ -40,7 +40,8 @@ router.post("/login", async (req: Request, res: Response) => {
 
     res.json({ success: true, message: "Login successful", user: { username: user.username } });
   } catch (error) {
-    res.status(401).json({ success: false, error: (error as Error).message ?? "Login failed" });
+    // If we reached bindUser, username is valid, so error must be password
+    res.status(401).json({ success: false, error: "Invalid password" });
   }
 });
 

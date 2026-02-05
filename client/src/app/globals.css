@@ -303,6 +303,7 @@ a:hover {
 .auth-card,
 .register-card,
 .drawer-panel {
+  position: relative;
   background: linear-gradient(145deg, var(--color-panel), var(--color-panel-muted));
   border: 1px solid rgba(3, 160, 98, 0.4);
   border-radius: 0;
@@ -345,27 +346,68 @@ a:hover {
 
 /* Success message for registration */
 .auth-success {
-  background: rgba(6, 236, 144, 0.15);
-  border: 1px solid rgba(6, 236, 144, 0.6);
-  color: var(--color-green);
-  padding: 1rem 1.25rem;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 3rem);
+  max-width: 400px;
+  background: rgba(6, 236, 144, 0.95);
+  border: 2px solid rgba(6, 236, 144, 1);
+  color: var(--color-black);
+  padding: 1.5rem 1.5rem;
   border-radius: 0.9rem;
-  margin: 0.5rem 0 0.75rem;
-  box-shadow: 0 0 25px rgba(6, 236, 144, 0.25);
+  box-shadow: 0 0 40px rgba(6, 236, 144, 0.6), 0 8px 32px rgba(0, 0, 0, 0.8);
   text-align: center;
   animation: slideInSuccess 0.3s ease-out;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
 }
 
 .auth-success strong {
   display: block;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   margin-bottom: 0.3rem;
+  font-weight: 700;
 }
 
 .auth-success p {
   margin: 0;
-  font-size: 0.9rem;
-  opacity: 0.85;
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+/* Error message for login failures */
+.auth-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 3rem);
+  max-width: 400px;
+  background: rgba(255, 80, 80, 0.95);
+  border: 2px solid rgba(255, 80, 80, 1);
+  color: var(--color-black);
+  padding: 1.5rem 1.5rem;
+  border-radius: 0.9rem;
+  box-shadow: 0 0 40px rgba(255, 80, 80, 0.6), 0 8px 32px rgba(0, 0, 0, 0.8);
+  text-align: center;
+  animation: slideInSuccess 0.3s ease-out;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.auth-error strong {
+  display: block;
+  font-size: 1.2rem;
+  margin-bottom: 0.3rem;
+  font-weight: 700;
+}
+
+.auth-error p {
+  margin: 0;
+  font-size: 0.95rem;
+  opacity: 0.9;
 }
 
 @keyframes slideInSuccess {

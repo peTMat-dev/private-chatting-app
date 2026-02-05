@@ -74,6 +74,8 @@ export default function AuthScreen() {
 	const [yTicks, setYTicks] = useState<number>(resetToken ? 1 : 0);
 	const [loading, setLoading] = useState({ login: false, register: false, forgot: false });
 	const [registrationSuccess, setRegistrationSuccess] = useState(false);
+	const [loginSuccess, setLoginSuccess] = useState(false);
+	const [loginError, setLoginError] = useState<string | null>(null);
 
 	const [loginForm, setLoginForm] = useState({ username: "", password: "" });
 	const [registerForm, setRegisterForm] = useState(buildEmptyRegisterForm);
@@ -169,7 +171,7 @@ export default function AuthScreen() {
 	const requiredSpinTicks = 12; // 3 full rotations (4 ticks per rotation)
 
 	useEffect(() => {
-		const shouldSpin = loading.login || pendingRedirect;
+		const shouldSpin = pendingRedirect; // Only spin on successful login
 		if (shouldSpin && spinIntervalRef.current == null) {
 			spinTicksRef.current = 0; // reset counter on spin start
 			const step = () => {
@@ -203,7 +205,7 @@ export default function AuthScreen() {
 				spinIntervalRef.current = null;
 			}
 		};
-	}, [loading.login, pendingRedirect, router]);
+	}, [pendingRedirect, router]);
 
 	// Helper to set face and keep ticks in sync
 	const setFace = (face: CubeFace) => {
@@ -285,22 +287,33 @@ export default function AuthScreen() {
 		try {
 			const { ok, data } = await postJson("/auth/login", loginForm);
 			if (!ok || !data.success) {
-				showToast({ title: "Login failed", body: data.error ?? "Check your credentials" });
+				setLoading((prev) => ({ ...prev, login: false }));
+				const errorMsg = data.error ?? "Check your credentials";
+				setLoginError(errorMsg);
+				setTimeout(() => setLoginError(null), 2000);
 				return;
 			}
-			showToast({ title: "Welcome back", body: data.message ?? "Redirecting..." });
 			try {
 				// persist username for chats fetch
 				if (data.user?.username) {
 					localStorage.setItem("cubcha_username", data.user.username);
 				}
 			} catch {}
-			// Defer redirect until after minimum spins complete
-			setPendingRedirect(true);
-		} catch (error) {
-			showToast({ title: "Login failed", body: (error as Error).message });
-		} finally {
+			// Stop loading first to stabilize the UI
 			setLoading((prev) => ({ ...prev, login: false }));
+			// Small delay to ensure render completes
+			await new Promise(resolve => setTimeout(resolve, 50));
+			setLoginSuccess(true);
+			// Wait 1.2 seconds for message to be visible before starting rotation
+			setTimeout(() => {
+				// Defer redirect until after minimum spins complete
+				setPendingRedirect(true);
+			}, 1200);
+		} catch (error) {
+			setLoading((prev) => ({ ...prev, login: false }));
+			const errorMsg = (error as Error).message;
+			setLoginError(errorMsg);
+			setTimeout(() => setLoginError(null), 2000);
 		}
 	};
 
@@ -425,8 +438,8 @@ export default function AuthScreen() {
 										<p className="cubcha-subtext">instructions will come here later - in development.</p>
 									</div>
 									<h2 className="sr-only">Sign In</h2>
-									<form onSubmit={handleLogin} className="d-flex flex-column gap-3">
-									<div>
+								<form onSubmit={handleLogin} className="d-flex flex-column gap-3">
+								<div>
 										<label htmlFor="login-username" className="auth-label">
 											Username
 										</label>
@@ -467,8 +480,15 @@ export default function AuthScreen() {
 										Sign up!
 									</button>
 								</div>
-								</div>
-							</article>
+								</div>							{loginSuccess && (
+								<div className="auth-success" role="alert" aria-live="polite">
+									<strong>✓ Login successful!</strong>
+									<p>Redirecting to home...</p>
+								</div>						)}							{loginError && (
+							<div className="auth-error" role="alert" aria-live="polite">
+								<strong>✗ Login failed</strong>
+								<p>{loginError}</p>
+							</div>							)}							</article>
 						</section>
 					</section>
 
@@ -486,12 +506,7 @@ export default function AuthScreen() {
 									</button>
 								</div>
 								<form onSubmit={handleRegister} className="d-flex flex-column gap-2">
-								{registrationSuccess && (
-									<div className="auth-success" role="alert" aria-live="polite">
-										<strong>✓ Registration successful!</strong>
-										<p>Redirecting to login...</p>
-									</div>
-								)}
+
 								{registerErrors && registerErrors.length > 0 && (
 									<div className="auth-alert" role="alert" aria-live="polite">
 										<ul className="mb-0">
@@ -612,8 +627,12 @@ export default function AuthScreen() {
 									{loading.register ? "Submitting" : "Submit request"}
 								</button>
 							</form>
+							</div>						{registrationSuccess && (
+							<div className="auth-success" role="alert" aria-live="polite">
+								<strong>✓ Registration successful!</strong>
+								<p>Redirecting to login...</p>
 							</div>
-						</article>
+						)}						</article>
 					</section>
 
 					<section className="cube-face cube-face-left">
