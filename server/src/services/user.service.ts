@@ -240,7 +240,18 @@ export const registerUserInDefaultGroup = async (payload: RegistrationInput): Pr
        VALUES (?, ?, NOW(), 1)`,
       [payload.username, payload.displayName]
     );
-    return userInsert.insertId;
+    
+    const newUserId = userInsert.insertId;
+    
+    // Insert default settings into user_system_details
+    await queryWithConnection<OkPacket>(
+      connection,
+      `INSERT INTO user_system_details (user_id, user_language, default_max_chat_participants, public, user_timezone, last_login_at)
+       VALUES (?, 'en', 10, TRUE, 'UTC', NOW())`,
+      [newUserId]
+    );
+    
+    return newUserId;
   });
 
   // Use Argon2 for password hashing

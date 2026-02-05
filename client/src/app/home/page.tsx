@@ -16,7 +16,26 @@ type ApiChatsResponse = {
   error?: string;
 };
 
-// Cube faces: front=Chats, left=Contacts, right=Chat view (placeholder), back=Workspace
+type UserSettings = {
+  user_language: string;
+  default_max_chat_participants: number;
+  public: boolean;
+  user_timezone: string;
+};
+
+type ApiSettingsResponse = {
+  success: boolean;
+  data?: UserSettings;
+  error?: string;
+};
+
+type ApiTimezonesResponse = {
+  success: boolean;
+  data?: Array<{ timezone_name: string; display_name: string }>;
+  error?: string;
+};
+
+// Cube faces: front=Chats, left=Contacts, right=Chat view (placeholder), back=Settings
 type CubeFace = "front" | "left" | "right" | "back";
 
 const ENV_API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
@@ -37,6 +56,11 @@ export default function HomeCube() {
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const [contacts, setContacts] = useState<ContactSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [settings, setSettings] = useState<UserSettings | null>(null);
+  const [timezones, setTimezones] = useState<Array<{ timezone_name: string; display_name: string }>>([]);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [settingsSaved, setSettingsSaved] = useState(false);
   const username = useMemo(() => {
     try {
       return localStorage.getItem("cubcha_username") || "";
@@ -74,6 +98,48 @@ export default function HomeCube() {
       aborted = true;
     };
   }, [username]);
+
+  // Fetch user settings and timezones when navigating to settings face
+  useEffect(() => {
+    if (activeFace !== "back" || !username) return;
+    
+    let aborted = false;
+    
+    const fetchSettings = async () => {
+      try {
+        const url = buildApiUrl(`/settings?username=${encodeURIComponent(username)}`);
+        const res = await fetch(url, { headers: { Accept: "application/json" } });
+        const data = (await res.json()) as ApiSettingsResponse;
+        if (!res.ok || !data.success) {
+          if (!aborted) setSettingsError(data.error || "Unable to load settings");
+          return;
+        }
+        if (!aborted && data.data) setSettings(data.data);
+      } catch (err) {
+        if (!aborted) setSettingsError((err as Error).message);
+      }
+    };
+
+    const fetchTimezones = async () => {
+      try {
+        const url = buildApiUrl("/settings/timezones");
+        const res = await fetch(url, { headers: { Accept: "application/json" } });
+        const data = (await res.json()) as ApiTimezonesResponse;
+        if (res.ok && data.success && data.data) {
+          if (!aborted) setTimezones(data.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch timezones:", err);
+      }
+    };
+
+    fetchSettings();
+    fetchTimezones();
+    
+    return () => {
+      aborted = true;
+    };
+  }, [activeFace, username]);
 
   const facesByTicks: CubeFace[] = ["front", "left", "back", "right"];
   const rotation = useMemo(() => {
@@ -142,6 +208,43 @@ export default function HomeCube() {
     setYTicks((t) => t - 1);
   };
 
+  const handleSaveSettings = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!settings || !username) return;
+
+    setSavingSettings(true);
+    setSettingsError(null);
+    setSettingsSaved(false);
+
+    try {
+      const url = buildApiUrl("/settings");
+      const res = await fetch(url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          ...settings,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setSettingsError(data.error || "Failed to save settings");
+        return;
+      }
+
+      setSettingsSaved(true);
+      setTimeout(() => setSettingsSaved(false), 3000);
+    } catch (err) {
+      setSettingsError((err as Error).message);
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
   return (
     <div
       className="mobile-auth-screen fade-in"
@@ -207,15 +310,111 @@ export default function HomeCube() {
             </article>
           </section>
 
-          {/* Back: Workspace placeholder */}
+          {/* Back: User Settings */}
           <section className="cube-face cube-face-back">
             <article className="auth-card cube-face-panel">
               <div className="cube-face-content">
                 <div className="cube-face-header">
-                  <h2>Workspace</h2>
+                  <h2>User Settings</h2>
                   <button className="ghost-btn" type="button" onClick={goRight}>Back to Chats</button>
                 </div>
-                <p className="hero-copy">Reserved for future features.</p>
+                
+                {settingsError && !settings ? (
+                  <div className="empty-state">
+                    <div className="empty-icon" aria-hidden="true" />
+                    <h3>Could not load settings</h3>
+                    <p>{settingsError}</p>
+                  </div>
+                ) : !settings ? (
+                  <div className="empty-state">
+                    <p>Loading settings...</p>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSaveSettings} className="d-flex flex-column" style={{ gap: "1rem" }}>
+                    {settingsSaved && (
+                      <div className="auth-alert" style={{ background: "rgba(3, 160, 98, 0.12)", border: "1px solid rgba(3, 160, 98, 0.4)" }}>
+                        <strong>Success!</strong> Settings saved successfully.
+                      </div>
+                    )}
+                    
+                    {settingsError && (
+                      <div className="auth-alert">
+                        <strong>Error:</strong> {settingsError}
+                      </div>
+                    )}
+
+                    <div>
+                      <label htmlFor="user-language" className="auth-label" style={{ marginBottom: "0.25rem" }}>
+                        Language <small style={{ color: "var(--color-form-text)", opacity: 0.7, fontSize: "0.75rem", fontWeight: "normal" }}>(e.g., en, es, fr)</small>
+                      </label>
+                      <input
+                        id="user-language"
+                        type="text"
+                        className="auth-input"
+                        value={settings.user_language}
+                        onChange={(e) => setSettings({ ...settings, user_language: e.target.value })}
+                        placeholder="en"
+                        maxLength={32}
+                        style={{ maxWidth: "150px" }}
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="max-participants" className="auth-label" style={{ marginBottom: "0.25rem" }}>
+                        Max Chat Participants <small style={{ color: "var(--color-form-text)", opacity: 0.7, fontSize: "0.75rem", fontWeight: "normal" }}>(2-100)</small>
+                      </label>
+                      <select
+                        id="max-participants"
+                        className="auth-input"
+                        value={settings.default_max_chat_participants}
+                        onChange={(e) => setSettings({ ...settings, default_max_chat_participants: parseInt(e.target.value) })}
+                        style={{ cursor: "pointer", maxWidth: "150px" }}
+                      >
+                        {Array.from({ length: 99 }, (_, i) => i + 2).map((num) => (
+                          <option key={num} value={num}>
+                            {num}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label htmlFor="user-timezone" className="auth-label" style={{ marginBottom: "0.25rem", display: "block" }}>
+                        Timezone
+                      </label>
+                      <select
+                        id="user-timezone"
+                        className="auth-input"
+                        value={settings.user_timezone}
+                        onChange={(e) => setSettings({ ...settings, user_timezone: e.target.value })}
+                        style={{ cursor: "pointer", maxWidth: "150px" }}
+                      >
+                        {timezones.map((tz) => (
+                          <option key={tz.timezone_name} value={tz.timezone_name}>
+                            {tz.display_name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                      <input
+                        id="profile-public"
+                        type="checkbox"
+                        checked={settings.public}
+                        onChange={(e) => setSettings({ ...settings, public: e.target.checked })}
+                        style={{ width: "18px", height: "18px", cursor: "pointer", margin: 0 }}
+                      />
+                      <label htmlFor="profile-public" className="auth-label" style={{ marginBottom: 0, cursor: "pointer" }}>
+                        Make profile public
+                      </label>
+                    </div>
+
+                    <button type="submit" className="auth-btn" disabled={savingSettings} style={{ marginTop: "0.25rem" }}>
+                      {savingSettings ? "Saving..." : "Save Settings"}
+                    </button>
+                  </form>
+                )}
               </div>
             </article>
           </section>
