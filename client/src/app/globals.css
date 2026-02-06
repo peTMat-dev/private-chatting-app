@@ -700,7 +700,9 @@ a:hover {
 .chats-card-titlebar {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid rgba(3, 160, 98, 0.2);
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .chats-card-title {
@@ -708,6 +710,267 @@ a:hover {
   font-weight: 600;
   letter-spacing: 0.03em;
   color: rgba(3, 160, 98, 0.7);
+}
+
+.add-contact-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.add-contact-btn {
+  background: linear-gradient(135deg, rgba(3, 160, 98, 0.2), rgba(3, 160, 98, 0.1));
+  border: 1px solid rgba(3, 160, 98, 0.4);
+  color: var(--color-green);
+  font-size: 0.8rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.add-contact-btn:hover {
+  background: linear-gradient(135deg, rgba(3, 160, 98, 0.3), rgba(3, 160, 98, 0.15));
+  border-color: var(--color-green);
+  box-shadow: 0 0 12px rgba(6, 236, 144, 0.3);
+}
+
+.add-contact-btn .add-icon {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.contact-item {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(3, 160, 98, 0.15) !important;
+  padding: 0.75rem 1rem !important;
+  cursor: default;
+}
+
+.contact-item:last-child {
+  border-bottom: none !important;
+}
+
+.contact-item .contact-header {
+  color: var(--color-green);
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.contact-item .contact-meta {
+  color: rgba(3, 160, 98, 0.5);
+  font-size: 0.75rem;
+}
+
+.sort-btn {
+  background: linear-gradient(135deg, rgba(3, 160, 98, 0.15), rgba(3, 160, 98, 0.05));
+  border: 1px solid rgba(3, 160, 98, 0.3);
+  color: rgba(3, 160, 98, 0.7);
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sort-btn:hover {
+  border-color: rgba(3, 160, 98, 0.5);
+  color: var(--color-green);
+}
+
+.sort-btn.active {
+  background: linear-gradient(135deg, rgba(3, 160, 98, 0.3), rgba(3, 160, 98, 0.2));
+  border-color: var(--color-green);
+  color: var(--color-green);
+  box-shadow: 0 0 8px rgba(6, 236, 144, 0.2);
+}
+
+.user-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.user-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(3, 160, 98, 0.15);
+  background: transparent;
+}
+
+.user-list-item:last-child {
+  border-bottom: none;
+}
+
+.user-list-item .user-name {
+  color: var(--color-green);
+  font-size: 0.9rem;
+}
+
+.user-add-btn {
+  background: linear-gradient(135deg, rgba(3, 160, 98, 0.25), rgba(3, 160, 98, 0.15));
+  border: 1px solid rgba(3, 160, 98, 0.4);
+  color: var(--color-green);
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.user-add-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(3, 160, 98, 0.35), rgba(3, 160, 98, 0.25));
+  border-color: var(--color-green);
+  box-shadow: 0 0 10px rgba(6, 236, 144, 0.3);
+}
+
+.user-add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cube-contact-actions {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(3, 160, 98, 0.15);
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.modal-box {
+  background: linear-gradient(145deg, var(--color-panel), var(--color-panel-muted));
+  border: 1px solid rgba(3, 160, 98, 0.4);
+  border-radius: 0.5rem;
+  max-width: 500px;
+  width: 100%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(6, 236, 144, 0.3);
+}
+
+.modal-header-custom {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(3, 160, 98, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title-custom {
+  color: var(--color-green);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.modal-close-btn {
+  background: transparent;
+  border: 1px solid rgba(3, 160, 98, 0.3);
+  color: var(--color-green);
+  font-size: 1.5rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.modal-close-btn:hover {
+  background: rgba(3, 160, 98, 0.15);
+  border-color: var(--color-green);
+}
+
+.modal-body-custom {
+  padding: 1.25rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer-custom {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid rgba(3, 160, 98, 0.2);
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.modal-action-btn {
+  background: linear-gradient(135deg, rgba(3, 160, 98, 0.25), rgba(3, 160, 98, 0.15));
+  border: 1px solid rgba(3, 160, 98, 0.4);
+  color: var(--color-green);
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.modal-action-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(3, 160, 98, 0.35), rgba(3, 160, 98, 0.25));
+  border-color: var(--color-green);
+  box-shadow: 0 0 10px rgba(6, 236, 144, 0.3);
+}
+
+.modal-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modal-action-btn.secondary {
+  background: transparent;
+  border-color: rgba(3, 160, 98, 0.3);
+}
+
+.modal-action-btn.secondary:hover {
+  background: rgba(3, 160, 98, 0.1);
+}
+
+.modal-message {
+  text-align: center;
+  color: rgba(3, 160, 98, 0.7);
+  padding: 2rem;
+}
+
+.sort-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(3, 160, 98, 0.15);
+}
+
+.sort-label {
+  color: rgba(3, 160, 98, 0.7);
+  font-size: 0.85rem;
+}
+
+.sort-buttons {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .list-group-item.flex {

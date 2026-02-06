@@ -5,6 +5,7 @@ import { env } from "./config/env";
 import authRouter from "./routes/auth";
 import chatsRouter from "./routes/chats";
 import settingsRouter from "./routes/settings";
+import contactsRouter from "./routes/contacts";
 import { query, pool } from "./services/db";
 import { LDAP_getUser, testLDAPConnection } from "./services/ldap.service";
 
@@ -60,6 +61,7 @@ const checkLDAPWithTimeout = async (timeoutMs = 5000) => {
 app.use("/auth", authRouter);
 app.use("/chats", chatsRouter);
 app.use("/settings", settingsRouter);
+app.use("/contacts", contactsRouter);
 
 // Debug endpoint removed
 
