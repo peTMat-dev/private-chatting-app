@@ -918,7 +918,7 @@ export default function HomeCube() {
             className="auth-card" 
             onClick={(e) => e.stopPropagation()} 
             style={{ 
-              position: "absolute",
+              position: "fixed",
               top: "50%",
               left: "50%",
               transform: "translate(-50%, -50%)",
@@ -959,7 +959,7 @@ export default function HomeCube() {
             className="auth-card" 
             onClick={(e) => e.stopPropagation()} 
             style={{ 
-              position: "absolute",
+              position: "fixed",
               top: "50%",
               left: "50%",
               transform: "translate(-50%, -50%)",
