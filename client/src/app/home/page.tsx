@@ -109,6 +109,8 @@ export default function HomeCube() {
   const [showPublicUserSelect, setShowPublicUserSelect] = useState(false);
   const [showRequestInput, setShowRequestInput] = useState(false);
   const [requestDisplayName, setRequestDisplayName] = useState("");
+  const [showMaxParticipantsSelect, setShowMaxParticipantsSelect] = useState(false);
+  const [showTimezoneSelect, setShowTimezoneSelect] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{ show: boolean; message: string; onConfirm: () => void } | null>(null);
   const [alertDialog, setAlertDialog] = useState<{ show: boolean; message: string; title?: string } | null>(null);
   const username = useMemo(() => {
@@ -707,41 +709,69 @@ export default function HomeCube() {
                     </div>
 
                     <div>
-                      <label htmlFor="max-participants" className="auth-label" style={{ marginBottom: "0.25rem" }}>
+                      <label className="auth-label" style={{ marginBottom: "0.25rem" }}>
                         Max Chat Participants <small style={{ color: "var(--color-form-text)", opacity: 0.7, fontSize: "0.75rem", fontWeight: "normal" }}>(2-100)</small>
                       </label>
-                      <select
-                        id="max-participants"
+                      <button
+                        type="button"
                         className="auth-input"
-                        value={settings.default_max_chat_participants}
-                        onChange={(e) => setSettings({ ...settings, default_max_chat_participants: parseInt(e.target.value) })}
-                        style={{ cursor: "pointer", maxWidth: "150px" }}
+                        onClick={() => setShowMaxParticipantsSelect(!showMaxParticipantsSelect)}
+                        style={{ cursor: "pointer", maxWidth: "180px", textAlign: "left" }}
                       >
-                        {Array.from({ length: 99 }, (_, i) => i + 2).map((num) => (
-                          <option key={num} value={num}>
-                            {num}
-                          </option>
-                        ))}
-                      </select>
+                        {settings.default_max_chat_participants}
+                      </button>
+                      
+                      {showMaxParticipantsSelect && (
+                        <select
+                          className="auth-input"
+                          size={6}
+                          style={{ cursor: "pointer", maxWidth: "180px", marginTop: "0.5rem" }}
+                          onChange={(e) => {
+                            setSettings({ ...settings, default_max_chat_participants: parseInt(e.target.value) });
+                            setShowMaxParticipantsSelect(false);
+                          }}
+                          value={settings.default_max_chat_participants}
+                        >
+                          {Array.from({ length: 99 }, (_, i) => i + 2).map((num) => (
+                            <option key={num} value={num}>
+                              {num}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </div>
 
                     <div>
-                      <label htmlFor="user-timezone" className="auth-label" style={{ marginBottom: "0.25rem", display: "block" }}>
+                      <label className="auth-label" style={{ marginBottom: "0.25rem", display: "block" }}>
                         Timezone
                       </label>
-                      <select
-                        id="user-timezone"
+                      <button
+                        type="button"
                         className="auth-input"
-                        value={settings.user_timezone}
-                        onChange={(e) => setSettings({ ...settings, user_timezone: e.target.value })}
-                        style={{ cursor: "pointer", maxWidth: "150px" }}
+                        onClick={() => setShowTimezoneSelect(!showTimezoneSelect)}
+                        style={{ cursor: "pointer", maxWidth: "180px", textAlign: "left" }}
                       >
-                        {timezones.map((tz) => (
-                          <option key={tz.timezone_name} value={tz.timezone_name}>
-                            {tz.display_name}
-                          </option>
-                        ))}
-                      </select>
+                        {timezones.find(tz => tz.timezone_name === settings.user_timezone)?.display_name || settings.user_timezone}
+                      </button>
+                      
+                      {showTimezoneSelect && (
+                        <select
+                          className="auth-input"
+                          size={6}
+                          style={{ cursor: "pointer", maxWidth: "180px", marginTop: "0.5rem" }}
+                          onChange={(e) => {
+                            setSettings({ ...settings, user_timezone: e.target.value });
+                            setShowTimezoneSelect(false);
+                          }}
+                          value={settings.user_timezone}
+                        >
+                          {timezones.map((tz) => (
+                            <option key={tz.timezone_name} value={tz.timezone_name}>
+                              {tz.display_name}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </div>
 
                     <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
