@@ -450,29 +450,19 @@ export default function HomeCube() {
   const handleLogout = () => {
     // Step 1: Move up from TOP face back to previous face
     goUp();
-    // Step 2: After moving back, spin anticlockwise (full 360° rotation)
-    // Note: CSS transition is 700ms, so wait 750ms between each rotation
+    // Step 2: After animation, rotate left and logout
     setTimeout(() => {
-      goLeft(); // 90°
+      goLeft();
       setTimeout(() => {
-        goLeft(); // 180°
-        setTimeout(() => {
-          goLeft(); // 270°
-          setTimeout(() => {
-            goLeft(); // 360° - full rotation complete
-            setTimeout(() => {
-              // Clear session and redirect
-              try {
-                localStorage.removeItem("cubcha_username");
-              } catch (e) {
-                // Ignore storage errors
-              }
-              window.location.href = "/";
-            }, 750); // Wait for final rotation
-          }, 750);
-        }, 750);
-      }, 750);
-    }, 750); // Wait for up movement to complete
+        // Clear session and redirect
+        try {
+          localStorage.removeItem("cubcha_username");
+        } catch (e) {
+          // Ignore storage errors
+        }
+        window.location.href = "/";
+      }, 500); // Wait for rotation to complete
+    }, 500); // Wait for up movement to complete
   };
 
   return (
