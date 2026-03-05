@@ -411,6 +411,24 @@ export default function AuthScreen() {
 		}
 	};
 
+	const handleLogout = () => {
+		// Step 1: Move down from TOP face to previous face
+		goUp();
+		// Step 2: After animation, rotate left and logout
+		setTimeout(() => {
+			goLeft();
+			setTimeout(() => {
+				// Clear session and redirect
+				try {
+					localStorage.removeItem("cubcha_username");
+				} catch (e) {
+					// Ignore storage errors
+				}
+				window.location.href = "/";
+			}, 500); // Wait for rotation to complete
+		}, 500); // Wait for down movement to complete
+	};
+
 	return (
 		<div
 			className={`mobile-auth-screen ${fadeOut ? "fade-out" : ""}`}
@@ -734,14 +752,12 @@ export default function AuthScreen() {
 						<article className="auth-card cube-face-panel">
 							<h2>Logout</h2>
 							<p className="hero-copy">
-								Logout flow placeholder. This will end your session when implemented.
+								Click below to end your session and return to the login page.
 							</p>
 							<button
 								className="auth-btn"
 								type="button"
-								onClick={() =>
-									showToast({ title: "Logout", body: "Logout flow not implemented yet." })
-								}
+								onClick={handleLogout}
 							>
 								Log out
 							</button>

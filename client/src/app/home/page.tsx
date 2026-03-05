@@ -62,8 +62,8 @@ type ApiTimezonesResponse = {
   error?: string;
 };
 
-// Cube faces: front=Chats, left=Contacts, right=Chat view (placeholder), back=Settings
-type CubeFace = "front" | "left" | "right" | "back";
+// Cube faces: front=Chats, left=Contacts, right=Chat view (placeholder), back=Settings, top=Logout
+type CubeFace = "front" | "left" | "right" | "back" | "top";
 
 const ENV_API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 const resolveApiBaseUrl = (): string => {
@@ -226,12 +226,13 @@ export default function HomeCube() {
   const rotation = useMemo(() => {
     const baseX = -5;
     const baseY = -15;
-    const x = baseX;
+    const x = activeFace === "top" ? baseX - 90 : baseX;
     const y = baseY + yTicks * 90;
     return { x, y };
-  }, [yTicks]);
+  }, [activeFace, yTicks]);
 
   const goLeft = () => {
+    if (activeFace === "top") return;
     setYTicks((t) => {
       const next = t + 1;
       setActiveFace(facesByTicks[((next % 4) + 4) % 4]);
@@ -239,10 +240,25 @@ export default function HomeCube() {
     });
   };
   const goRight = () => {
+    if (activeFace === "top") return;
     setYTicks((t) => {
       const next = t - 1;
       setActiveFace(facesByTicks[((next % 4) + 4) % 4]);
       return next;
+    });
+  };
+
+  const goDown = () => {
+    setActiveFace((prev) => {
+      if (prev === "front" || prev === "left" || prev === "right" || prev === "back") return "top";
+      return prev;
+    });
+  };
+
+  const goUp = () => {
+    setActiveFace((prev) => {
+      if (prev === "top") return facesByTicks[((yTicks % 4) + 4) % 4];
+      return prev;
     });
   };
 
@@ -264,6 +280,8 @@ export default function HomeCube() {
     if (absDx < threshold && absDy < threshold) return;
     if (absDx > absDy) {
       if (dx < 0) goLeft(); else goRight();
+    } else {
+      if (dy > 0) goDown(); else goUp();
     }
     touchStartRef.current = null;
   };
@@ -373,6 +391,14 @@ export default function HomeCube() {
         event.preventDefault();
         goRight();
         break;
+      case "ArrowDown":
+        event.preventDefault();
+        goDown();
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        goUp();
+        break;
       default:
         break;
     }
@@ -419,6 +445,34 @@ export default function HomeCube() {
     } finally {
       setSavingSettings(false);
     }
+  };
+
+  const handleLogout = () => {
+    // Step 1: Move up from TOP face back to previous face
+    goUp();
+    // Step 2: After moving back, spin anticlockwise (full 360° rotation)
+    // Note: CSS transition is 700ms, so wait 750ms between each rotation
+    setTimeout(() => {
+      goLeft(); // 90°
+      setTimeout(() => {
+        goLeft(); // 180°
+        setTimeout(() => {
+          goLeft(); // 270°
+          setTimeout(() => {
+            goLeft(); // 360° - full rotation complete
+            setTimeout(() => {
+              // Clear session and redirect
+              try {
+                localStorage.removeItem("cubcha_username");
+              } catch (e) {
+                // Ignore storage errors
+              }
+              window.location.href = "/";
+            }, 750); // Wait for final rotation
+          }, 750);
+        }, 750);
+      }, 750);
+    }, 750); // Wait for up movement to complete
   };
 
   return (
@@ -732,6 +786,30 @@ export default function HomeCube() {
                 </div>
                 <p className="hero-copy">Open a conversation from the Chats face.</p>
               </div>
+            </article>
+          </section>
+
+          {/* Top: Logout */}
+          <section className="cube-face cube-face-top">
+            <article className="auth-card cube-face-panel">
+              <h2>Logout</h2>
+              <p className="hero-copy">
+                Click below to end your session and return to the login page.
+              </p>
+              <button
+                className="auth-btn"
+                type="button"
+                onClick={handleLogout}
+              >
+                Log out
+              </button>
+              <button
+                className="ghost-btn mt-3"
+                type="button"
+                onClick={goUp}
+              >
+                Cancel
+              </button>
             </article>
           </section>
         </div>
