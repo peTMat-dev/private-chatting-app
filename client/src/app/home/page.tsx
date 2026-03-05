@@ -560,32 +560,57 @@ export default function HomeCube() {
                             Z-A
                           </button>
                         </div>
-                        <select
+                        <div
                           className="auth-input"
-                          size={6}
-                          style={{ cursor: "pointer", width: "100%" }}
-                          onChange={(e) => {
-                            const userId = parseInt(e.target.value);
-                            const user = sortedPublicUsers.find(u => u.id === userId);
-                            if (user) {
-                              handleAddPublicUser(user.id, user.displayName);
-                              setShowPublicUserSelect(false);
-                            }
+                          style={{ 
+                            cursor: "pointer", 
+                            width: "100%",
+                            maxHeight: "180px",
+                            overflowY: "auto",
+                            padding: "0",
+                            opacity: loadingPublicUsers ? 0.6 : 1
                           }}
-                          disabled={loadingPublicUsers}
                         >
                           {loadingPublicUsers ? (
-                            <option>Loading users...</option>
+                            <div style={{ padding: "0.75rem", color: "var(--color-green)", textAlign: "center" }}>
+                              Loading users...
+                            </div>
                           ) : sortedPublicUsers.length === 0 ? (
-                            <option>No public users available</option>
+                            <div style={{ padding: "0.75rem", color: "var(--color-green)", textAlign: "center" }}>
+                              No public users available
+                            </div>
                           ) : (
                             sortedPublicUsers.map((user) => (
-                              <option key={user.id} value={user.id}>
+                              <div
+                                key={user.id}
+                                onClick={() => {
+                                  if (!loadingPublicUsers) {
+                                    handleAddPublicUser(user.id, user.displayName);
+                                    setShowPublicUserSelect(false);
+                                  }
+                                }}
+                                style={{
+                                  padding: "0.5rem 0.75rem",
+                                  cursor: loadingPublicUsers ? "default" : "pointer",
+                                  backgroundColor: "transparent",
+                                  color: "var(--color-green)",
+                                  borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                                  transition: "background-color 0.2s"
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!loadingPublicUsers) {
+                                    e.currentTarget.style.backgroundColor = "rgba(3, 160, 98, 0.08)";
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = "transparent";
+                                }}
+                              >
                                 {user.displayName}
-                              </option>
+                              </div>
                             ))
                           )}
-                        </select>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -722,22 +747,48 @@ export default function HomeCube() {
                       </button>
                       
                       {showMaxParticipantsSelect && (
-                        <select
+                        <div
                           className="auth-input"
-                          size={6}
-                          style={{ cursor: "pointer", maxWidth: "180px", marginTop: "0.5rem" }}
-                          onChange={(e) => {
-                            setSettings({ ...settings, default_max_chat_participants: parseInt(e.target.value) });
-                            setShowMaxParticipantsSelect(false);
+                          style={{ 
+                            maxWidth: "180px", 
+                            marginTop: "0.5rem",
+                            maxHeight: "180px",
+                            overflowY: "auto",
+                            padding: "0"
                           }}
-                          value={settings.default_max_chat_participants}
                         >
                           {Array.from({ length: 99 }, (_, i) => i + 2).map((num) => (
-                            <option key={num} value={num}>
+                            <div
+                              key={num}
+                              onClick={() => {
+                                setSettings({ ...settings, default_max_chat_participants: num });
+                                setShowMaxParticipantsSelect(false);
+                              }}
+                              style={{
+                                padding: "0.5rem 0.75rem",
+                                cursor: "pointer",
+                                backgroundColor: settings.default_max_chat_participants === num 
+                                  ? "rgba(3, 160, 98, 0.15)" 
+                                  : "transparent",
+                                color: "var(--color-green)",
+                                borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                                transition: "background-color 0.2s"
+                              }}
+                              onMouseEnter={(e) => {
+                                if (settings.default_max_chat_participants !== num) {
+                                  e.currentTarget.style.backgroundColor = "rgba(3, 160, 98, 0.08)";
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (settings.default_max_chat_participants !== num) {
+                                  e.currentTarget.style.backgroundColor = "transparent";
+                                }
+                              }}
+                            >
                               {num}
-                            </option>
+                            </div>
                           ))}
-                        </select>
+                        </div>
                       )}
                     </div>
 
@@ -755,22 +806,49 @@ export default function HomeCube() {
                       </button>
                       
                       {showTimezoneSelect && (
-                        <select
+                        <div
                           className="auth-input"
-                          size={6}
-                          style={{ cursor: "pointer", maxWidth: "180px", marginTop: "0.5rem" }}
-                          onChange={(e) => {
-                            setSettings({ ...settings, user_timezone: e.target.value });
-                            setShowTimezoneSelect(false);
+                          style={{ 
+                            maxWidth: "180px", 
+                            marginTop: "0.5rem",
+                            maxHeight: "180px",
+                            overflowY: "auto",
+                            padding: "0"
                           }}
-                          value={settings.user_timezone}
                         >
                           {timezones.map((tz) => (
-                            <option key={tz.timezone_name} value={tz.timezone_name}>
+                            <div
+                              key={tz.timezone_name}
+                              onClick={() => {
+                                setSettings({ ...settings, user_timezone: tz.timezone_name });
+                                setShowTimezoneSelect(false);
+                              }}
+                              style={{
+                                padding: "0.5rem 0.75rem",
+                                cursor: "pointer",
+                                backgroundColor: settings.user_timezone === tz.timezone_name 
+                                  ? "rgba(3, 160, 98, 0.15)" 
+                                  : "transparent",
+                                color: "var(--color-green)",
+                                borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                                transition: "background-color 0.2s",
+                                fontSize: "0.85rem"
+                              }}
+                              onMouseEnter={(e) => {
+                                if (settings.user_timezone !== tz.timezone_name) {
+                                  e.currentTarget.style.backgroundColor = "rgba(3, 160, 98, 0.08)";
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (settings.user_timezone !== tz.timezone_name) {
+                                  e.currentTarget.style.backgroundColor = "transparent";
+                                }
+                              }}
+                            >
                               {tz.display_name}
-                            </option>
+                            </div>
                           ))}
-                        </select>
+                        </div>
                       )}
                     </div>
 
