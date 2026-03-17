@@ -9,20 +9,23 @@ USE `cubcha_v1`;
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_main_details` (
     `user_id` SMALLINT PRIMARY KEY NOT NULL AUTO_INCREMENT COMMENT 'Primary key for users',
     `ldap_uid_id` VARCHAR(32) NOT NULL UNIQUE COMMENT 'Unique LDAP user ID (immutable)',
-    `display_name` VARCHAR(64) NOT NULL COMMENT 'Display name surfaced in UI',
-    `last_seen_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Last time user was seen online',
-    `last_login_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Last login timestamp'
+    -- username_id` VARCHAR(32) NOT NULL UNIQUE COMMENT 'Display username (may be shown in UI)',
+    --   BOOLEAN DEFAULT FALSE COMMENT 'Indicates if the user account is disabled',
+    `active` BOOLEAN DEFAULT FALSE COMMENT 'Indicates if the user account is active/disabled',
+    `display_name` VARCHAR(48) NOT NULL COMMENT 'User-chosen public display name',
+    `last_seen_at` TIMESTAMP DEFAULT NULL COMMENT 'Last time user was seen online',
+    `last_login_at` DATETIME DEFAULT NULL COMMENT 'Last login timestamp'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores main user details';
 
 -- Create user system details for profile setting
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_system_details` (
     `user_id` SMALLINT PRIMARY KEY NOT NULL COMMENT 'FK to user_main_details.user_id',
-    `language_user` VARCHAR(32) NOT NULL COMMENT 'Preferred language for UI',
+    `user_language` VARCHAR(32) NOT NULL COMMENT 'Preferred language for UI',
     `default_max_chat_participants` SMALLINT DEFAULT 10 COMMENT 'Default max chat participants for new conversations',
+    `public` BOOLEAN DEFAULT TRUE COMMENT 'Indicates if the user profile is public',
     `user_timezone` VARCHAR(32) DEFAULT 'UTC' COMMENT 'User timezone string',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Profile creation timestamp',
-    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP on UPDATE CURRENT_TIMESTAMP COMMENT 'Last profile update timestamp',
-    `last_login_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Last login timestamp',
+    `updated_at` DATETIME DEFAULT NULL on UPDATE CURRENT_TIMESTAMP COMMENT 'Last profile update timestamp',
     FOREIGN KEY (`user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)
     ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (`user_timezone`) REFERENCES `cubcha_v1`.`timezones`(`timezone_name`)
@@ -189,6 +192,27 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`timezones` (
     `display_name` VARCHAR(64) NOT NULL           -- e.g., 'Amsterdam (UTC+1)'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- Create  password reset token table
+CREATE TABLE IF NOT EXISTS `cubcha_v1`.`password_resets` (
+    `resetoken_id` INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    `user_id` SMALLINT NOT NULL COMMENT 'FK to user_main_details.user_id',
+    `resettoken` BOOLEAN NOT NULL COMMENT 'Password reset token created YES or NO',
+    `resettokenexpiry` DATETIME NOT NULL COMMENT 'Expiry time of the reset token',
+    `resetused` BOOLEAN DEFAULT CURRENT_TIMESTAMP COMMENT 'confirmation if the token was used',
+    
+    FOREIGN KEY (`user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='handles password reset tokens for users';
+
+
+-- Table to track alarm triggers for excessive password resets
+CREATE TABLE IF NOT EXISTS `cubcha_v1`.`password_reset_alarms` (
+    `user_id` SMALLINT PRIMARY KEY COMMENT 'FK to user_main_details.user_id',
+    `alarm_triggered` BOOLEAN DEFAULT FALSE COMMENT 'Whether alarm was triggered',
+    `last_triggered` DATETIME DEFAULT NULL COMMENT 'When alarm was last triggered',
+    FOREIGN KEY (`user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Tracks alarm state for excessive password resets';
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
