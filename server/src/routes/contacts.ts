@@ -6,6 +6,7 @@ const router = Router();
 type PublicUser = {
   user_id: number;
   display_name: string;
+  is_already_contact: number;
 };
 
 type Contact = {
@@ -57,10 +58,25 @@ router.get("/", async (req: Request, res: Response) => {
 });
 
 // GET /contacts/public-users - List all publicly available users
-router.get("/public-users", async (_req: Request, res: Response) => {
+router.get("/public-users", async (req: Request, res: Response) => {
+  const username = String(req.query.username || "").trim();
+  if (!username) {
+    return res.status(400).json({ success: false, error: "username is required" });
+  }
+
   try {
-    // Call stored procedure to get public users
-    const users = await query<PublicUser>("CALL contact_lookup_public_user()");
+    // Get user_id from ldap_uid_id
+    const userRows = await query<{ user_id: number }>(
+      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
+      [username]
+    );
+    if (userRows.length === 0) {
+      return res.status(404).json({ success: false, error: "user not found" });
+    }
+    const userId = userRows[0].user_id;
+
+    // Call stored procedure to get public users with contact status
+    const users = await query<PublicUser>("CALL contact_2lookup_public_user(?)", [userId]);
     
     // MySQL stored procedures return results in nested array
     const publicUsers = Array.isArray(users[0]) ? users[0] : users;
@@ -68,6 +84,7 @@ router.get("/public-users", async (_req: Request, res: Response) => {
     const data = publicUsers.map((u: PublicUser) => ({
       id: u.user_id,
       displayName: u.display_name,
+      isAlreadyContact: Boolean(u.is_already_contact),
     }));
 
     res.json({ success: true, count: data.length, data });

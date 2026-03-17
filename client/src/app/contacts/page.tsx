@@ -13,6 +13,7 @@ type Contact = {
 type PublicUser = {
   id: number;
   displayName: string;
+  isAlreadyContact: boolean;
 };
 
 type ApiResponse = {
@@ -58,14 +59,19 @@ export default function ContactsPage() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [loading, setLoading] = useState(false);
   const [requestDisplayName, setRequestDisplayName] = useState("");
+  const [username, setUsername] = useState<string>("");
 
-  const username = useMemo(() => {
+  useEffect(() => {
     try {
-      return localStorage.getItem("cubcha_username") || "";
+      const storedUsername = localStorage.getItem("cubcha_username") || "";
+      setUsername(storedUsername);
+      if (!storedUsername) {
+        router.replace("/");
+      }
     } catch {
-      return "";
+      router.replace("/");
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (!username) {
@@ -92,9 +98,14 @@ export default function ContactsPage() {
   };
 
   const fetchPublicUsers = async () => {
+    if (!username) {
+      alert("Session expired. Please log in again.");
+      router.replace("/");
+      return;
+    }
     setLoading(true);
     try {
-      const url = buildApiUrl("/contacts/public-users");
+      const url = buildApiUrl(`/contacts/public-users?username=${encodeURIComponent(username)}`);
       const res = await fetch(url, { headers: { Accept: "application/json" } });
       const data = (await res.json()) as ApiResponse;
       if (!res.ok || !data.success) {
@@ -170,6 +181,11 @@ export default function ContactsPage() {
   }, [publicUsers, sortOrder]);
 
   const openPublicModal = () => {
+    if (!username) {
+      alert("Session expired. Please log in again.");
+      router.replace("/");
+      return;
+    }
     setShowPublicModal(true);
     fetchPublicUsers();
   };
@@ -274,13 +290,20 @@ export default function ContactsPage() {
                         key={user.id}
                         className="user-list-item"
                       >
-                        <span className="user-name">{user.displayName}</span>
+                        <span 
+                          className="user-name"
+                          style={{
+                            color: user.isAlreadyContact ? '#00FFFF' : 'inherit'
+                          }}
+                        >
+                          {user.displayName}{user.isAlreadyContact ? " ✓" : ""}
+                        </span>
                         <button
                           className="user-add-btn"
                           onClick={() => handleAddPublicUser(user.id, user.displayName)}
-                          disabled={loading}
+                          disabled={loading || user.isAlreadyContact}
                         >
-                          Add
+                          {user.isAlreadyContact ? "Added" : "Add"}
                         </button>
                       </li>
                     ))}

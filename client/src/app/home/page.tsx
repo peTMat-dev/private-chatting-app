@@ -33,6 +33,7 @@ type ApiContactsResponse = {
 type PublicUser = {
   id: number;
   displayName: string;
+  isAlreadyContact: boolean;
 };
 
 type ApiPublicUsersResponse = {
@@ -177,10 +178,10 @@ export default function HomeCube() {
   }, [username]);
 
   useEffect(() => {
-    if (publicUsers.length === 0) {
+    if (publicUsers.length === 0 && username) {
       fetchPublicUsers();
     }
-  }, []);
+  }, [username, publicUsers.length]);
 
   // Fetch user settings and timezones when navigating to settings face
   useEffect(() => {
@@ -289,9 +290,13 @@ export default function HomeCube() {
   };
 
   const fetchPublicUsers = async () => {
+    if (!username) {
+      setAlertDialog({ show: true, title: "Error", message: "Session expired. Please log in again." });
+      return;
+    }
     setLoadingPublicUsers(true);
     try {
-      const url = buildApiUrl("/contacts/public-users");
+      const url = buildApiUrl(`/contacts/public-users?username=${encodeURIComponent(username)}`);
       const res = await fetch(url, { headers: { Accept: "application/json" } });
       const data = (await res.json()) as ApiPublicUsersResponse;
       if (!res.ok || !data.success) {
@@ -584,21 +589,22 @@ export default function HomeCube() {
                               <div
                                 key={user.id}
                                 onClick={() => {
-                                  if (!loadingPublicUsers) {
+                                  if (!loadingPublicUsers && !user.isAlreadyContact) {
                                     handleAddPublicUser(user.id, user.displayName);
                                     setShowPublicUserSelect(false);
                                   }
                                 }}
                                 style={{
                                   padding: "0.5rem 0.75rem",
-                                  cursor: loadingPublicUsers ? "default" : "pointer",
+                                  cursor: loadingPublicUsers ? "default" : user.isAlreadyContact ? "not-allowed" : "pointer",
                                   backgroundColor: "transparent",
-                                  color: "var(--color-green)",
+                                  color: user.isAlreadyContact ? "#00FFFF" : "var(--color-green)",
                                   borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
-                                  transition: "background-color 0.2s"
+                                  transition: "background-color 0.2s",
+                                  opacity: user.isAlreadyContact ? 0.6 : 1
                                 }}
                                 onMouseEnter={(e) => {
-                                  if (!loadingPublicUsers) {
+                                  if (!loadingPublicUsers && !user.isAlreadyContact) {
                                     e.currentTarget.style.backgroundColor = "rgba(3, 160, 98, 0.08)";
                                   }
                                 }}
@@ -606,7 +612,7 @@ export default function HomeCube() {
                                   e.currentTarget.style.backgroundColor = "transparent";
                                 }}
                               >
-                                {user.displayName}
+                                {user.displayName}{user.isAlreadyContact ? " ✓" : ""}
                               </div>
                             ))
                           )}
