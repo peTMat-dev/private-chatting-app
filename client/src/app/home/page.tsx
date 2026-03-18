@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Contact from "../components/Contact";
+import { buildApiUrl, postJson } from "../../lib/api";
 
 type ContactSummary = {
   id: number | string;
@@ -65,31 +66,6 @@ type ApiTimezonesResponse = {
 
 // Cube faces: front=Chats, left=Contacts, right=Chat view (placeholder), back=Settings, top=Logout
 type CubeFace = "front" | "left" | "right" | "back" | "top";
-
-const ENV_API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
-const resolveApiBaseUrl = (): string => {
-  if (ENV_API_BASE) return ENV_API_BASE.replace(/\/+$/, "");
-  if (typeof window !== "undefined") return window.location.origin.replace(/\/+$/, "");
-  return "";
-};
-const buildApiUrl = (path: string): string => {
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  const base = resolveApiBaseUrl();
-  return base ? `${base}${normalizedPath}` : normalizedPath;
-};
-
-const postJson = async (
-  path: string,
-  payload: unknown
-): Promise<{ ok: boolean; data: any }> => {
-  const response = await fetch(buildApiUrl(path), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  const data = await response.json();
-  return { ok: response.ok, data };
-};
 
 export default function HomeCube() {
   const [activeFace, setActiveFace] = useState<CubeFace>("front");

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Contact from "../components/Contact";
+import { buildApiUrl } from "../../lib/api";
 
 type ContactSummary = {
   id: number | string;
@@ -15,18 +16,6 @@ type ApiChatsResponse = {
   count?: number;
   data?: Array<{ id: number; name: string; lastMessage: string }>;
   error?: string;
-};
-
-const ENV_API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
-const resolveApiBaseUrl = (): string => {
-  if (ENV_API_BASE) return ENV_API_BASE.replace(/\/+$/, "");
-  if (typeof window !== "undefined") return window.location.origin.replace(/\/+$/, "");
-  return "";
-};
-const buildApiUrl = (path: string): string => {
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  const base = resolveApiBaseUrl();
-  return base ? `${base}${normalizedPath}` : normalizedPath;
 };
 
 export default function ChatsListPage() {
