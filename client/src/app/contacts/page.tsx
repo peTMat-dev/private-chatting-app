@@ -120,26 +120,30 @@ export default function ContactsPage() {
     }
   };
 
-  const handleAddPublicUser = async (userId: number, displayName: string) => {
-    if (!confirm(`Add ${displayName} to your contacts?`)) return;
+  const handleAddPublicUser = async (userId: number) => {
+    // Optimistic update — mark as added immediately
+    setPublicUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, isAlreadyContact: true } : u))
+    );
 
-    setLoading(true);
     try {
       const { ok, data } = await postJson("/contacts/add-public", {
         username,
         contactUserId: userId,
       });
       if (!ok || !data.success) {
-        alert(data.error || "Failed to add contact");
+        // Roll back optimistic update on failure
+        setPublicUsers((prev) =>
+          prev.map((u) => (u.id === userId ? { ...u, isAlreadyContact: false } : u))
+        );
         return;
       }
-      alert(data.message || "Contact added successfully!");
-      setShowPublicModal(false);
       fetchContacts();
-    } catch (err) {
-      alert((err as Error).message);
-    } finally {
-      setLoading(false);
+    } catch {
+      // Roll back on error
+      setPublicUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, isAlreadyContact: false } : u))
+      );
     }
   };
 
@@ -300,7 +304,7 @@ export default function ContactsPage() {
                         </span>
                         <button
                           className="user-add-btn"
-                          onClick={() => handleAddPublicUser(user.id, user.displayName)}
+                          onClick={() => handleAddPublicUser(user.id)}
                           disabled={loading || user.isAlreadyContact}
                         >
                           {user.isAlreadyContact ? "Added" : "Add"}

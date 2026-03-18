@@ -313,28 +313,31 @@ export default function HomeCube() {
 
   const handleAddPublicUser = async (userId: number, displayName: string) => {
     if (!userId || !displayName) return;
-    
-    setConfirmDialog({
-      show: true,
-      message: `Add ${displayName} to your contacts?`,
-      onConfirm: async () => {
-        setConfirmDialog(null);
-        try {
-          const { ok, data } = await postJson("/contacts/add-public", {
-            username,
-            contactUserId: userId,
-          });
-          if (!ok || !data.success) {
-            setAlertDialog({ show: true, title: "Error", message: data.error || "Failed to add contact" });
-            return;
-          }
-          setAlertDialog({ show: true, title: "Success", message: data.message || "Contact added successfully!" });
-          fetchUserContacts();
-        } catch (err) {
-          setAlertDialog({ show: true, title: "Error", message: (err as Error).message });
-        }
+
+    // Optimistic update — mark as added immediately
+    setPublicUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, isAlreadyContact: true } : u))
+    );
+
+    try {
+      const { ok, data } = await postJson("/contacts/add-public", {
+        username,
+        contactUserId: userId,
+      });
+      if (!ok || !data.success) {
+        // Roll back on failure
+        setPublicUsers((prev) =>
+          prev.map((u) => (u.id === userId ? { ...u, isAlreadyContact: false } : u))
+        );
+        return;
       }
-    });
+      fetchUserContacts();
+    } catch {
+      // Roll back on error
+      setPublicUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, isAlreadyContact: false } : u))
+      );
+    }
   };
 
   const handleSendRequest = async () => {
@@ -591,7 +594,6 @@ export default function HomeCube() {
                                 onClick={() => {
                                   if (!loadingPublicUsers && !user.isAlreadyContact) {
                                     handleAddPublicUser(user.id, user.displayName);
-                                    setShowPublicUserSelect(false);
                                   }
                                 }}
                                 style={{
