@@ -1,9 +1,8 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import Contact from "../components/Contact";
-import { buildApiUrl } from "../../lib/api";
+export default function ChatsPage() {
+  redirect("/home");
+}
 
 type ContactSummary = {
   id: number | string;

@@ -1,8 +1,8 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { buildApiUrl, postJson } from "../../lib/api";
+export default function ContactsPage() {
+  redirect("/home");
+}
 
 type Contact = {
   id: number;
