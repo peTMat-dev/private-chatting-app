@@ -153,9 +153,12 @@ router.post("/request", async (req: Request, res: Response) => {
     return res.status(400).json({ success: false, error: "displayName is required" });
   }
 
-  // TODO: Implement contact request functionality
+  // TODO: Implement private user contact request functionality
+  // IMPORTANT: This search must ONLY match users where public = false (user_settings).
+  // Users with public = true already appear in the Public User panel — the two lists
+  // must be mutually exclusive. Query must include: WHERE public = false AND display_name = ?
   // This would involve:
-  // 1. Looking up user by display_name
+  // 1. Looking up user by display_name WHERE public = false
   // 2. Creating a pending contact request in a requests table
   // 3. Notifying the target user
   

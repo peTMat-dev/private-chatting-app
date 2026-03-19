@@ -523,7 +523,7 @@ export default function HomeCube() {
                       }}
                       style={{ width: "100%" }}
                     >
-                      <span className="add-icon">+</span> {tr.addPublicUser}
+                      {tr.addPublicUser}
                     </button>
                     
                     {showPublicUserSelect && (
@@ -621,7 +621,7 @@ export default function HomeCube() {
                       }}
                       style={{ width: "100%" }}
                     >
-                      <span className="add-icon">+</span> {tr.requestByName}
+                      {tr.requestByName}
                     </button>
                     
                     {showRequestInput && (
