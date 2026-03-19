@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, TouchEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { buildApiUrl, postJson } from "../lib/api";
+import { LANGUAGES, getLang, setLang, t, type LangCode } from "../lib/i18n";
 
 type ApiResponse = {
 	success: boolean;
@@ -53,6 +54,16 @@ export default function AuthScreen() {
 	const [forgotEmail, setForgotEmail] = useState("");
 	const [resetPassword, setResetPassword] = useState("");
 	const [resetConfirmPassword, setResetConfirmPassword] = useState("");
+	const [lang, setLangState] = useState<LangCode>(getLang);
+	const [showLangSelect, setShowLangSelect] = useState(false);
+
+	const handleLangChange = (code: LangCode) => {
+		setLang(code);
+		setLangState(code);
+		setShowLangSelect(false);
+	};
+
+	const tr = t(lang);
 
 	useEffect(() => {
 		if (!toast) return;
@@ -236,15 +247,15 @@ export default function AuthScreen() {
 		}
 		if (absDx > absDy) {
 			if (dx < 0) {
-				goLeft();
-			} else {
 				goRight();
+			} else {
+				goLeft();
 			}
 		} else {
 			if (dy > 0) {
-				goDown();
-			} else {
 				goUp();
+			} else {
+				goDown();
 			}
 		}
 		touchStartRef.current = null;
@@ -420,30 +431,30 @@ export default function AuthScreen() {
 								<div className="cube-face-content">
 									<div className="hero-in-card">
 										<div className="status-pill">
-											<span>Mobile Auth</span>
+											<span>{tr.mobileAuth}</span>
 										</div>
 										<h1 className="cubcha-heading">CubCha v1.0</h1>
-										<p className="cubcha-subtext">instructions will come here later - in development.</p>
+										<p className="cubcha-subtext">{tr.appSubtext}</p>
 									</div>
-									<h2 className="sr-only">Sign In</h2>
+									<h2 className="sr-only">{tr.signIn}</h2>
 								<form onSubmit={handleLogin} className="d-flex flex-column gap-3">
 								<div>
 										<label htmlFor="login-username" className="auth-label">
-											Username
-										</label>
-										<input
-											id="login-username"
-											className="auth-input"
-											value={loginForm.username}
-											onChange={(event) =>
-												setLoginForm((prev) => ({ ...prev, username: event.target.value }))
-											}
-											placeholder="Enter LDAP ID"
+										{tr.username}
+									</label>
+									<input
+										id="login-username"
+										className="auth-input"
+										value={loginForm.username}
+										onChange={(event) =>
+											setLoginForm((prev) => ({ ...prev, username: event.target.value }))
+										}
+										placeholder={tr.enterLdapId}
 										/>
 									</div>
 									<div>
 										<label htmlFor="login-password" className="auth-label">
-											Password
+										{tr.password}
 										</label>
 										<input
 											id="login-password"
@@ -457,24 +468,24 @@ export default function AuthScreen() {
 										/>
 									</div>
 									<button type="submit" className="auth-btn" disabled={loginDisabled}>
-										{loading.login ? "Authenticating" : "Sign In"}
+										{loading.login ? tr.authenticating : tr.signIn}
 									</button>
 									</form>
 									<div className="auth-links">
 									<button type="button" onClick={() => setFace("left")}>
-										Forgot your password?
-									</button>
-									<button type="button" onClick={() => setFace("right")}>
-										Sign up!
+									{tr.forgotPassword}
+								</button>
+								<button type="button" onClick={() => setFace("right")}>
+									{tr.signUp}
 									</button>
 								</div>
 								</div>							{loginSuccess && (
 								<div className="auth-success" role="alert" aria-live="polite">
-									<strong>✓ Login successful!</strong>
-									<p>Redirecting to home...</p>
+									<strong>{tr.loginSuccess}</strong>
+									<p>{tr.redirectingHome}</p>
 								</div>						)}							{loginError && (
 							<div className="auth-error" role="alert" aria-live="polite">
-								<strong>✗ Login failed</strong>
+								<strong>{tr.loginFailed}</strong>
 								<p>{loginError}</p>
 							</div>							)}							</article>
 						</section>
@@ -484,13 +495,13 @@ export default function AuthScreen() {
 						<article className="register-card cube-face-panel" id="register-card">
 							<div className="cube-face-content">
 								<div className="cube-face-header">
-									<h3>Register</h3>
+									<h3>{tr.register}</h3>
 									<button
 										className="ghost-btn"
 										type="button"
 													onClick={() => setFace("front")}
 									>
-										Back to login
+										{tr.backToLogin}
 									</button>
 								</div>
 								<form onSubmit={handleRegister} className="d-flex flex-column gap-2">
@@ -507,7 +518,7 @@ export default function AuthScreen() {
 								<div className="row g-2">
 									<div className="col-12 col-sm-6">
 										<label htmlFor="reg-first" className="auth-label">
-											First name
+										{tr.firstName}
 										</label>
 										<input
 											id="reg-first"
@@ -520,7 +531,7 @@ export default function AuthScreen() {
 									</div>
 									<div className="col-12 col-sm-6">
 										<label htmlFor="reg-last" className="auth-label">
-											Last name
+										{tr.lastName}
 										</label>
 										<input
 											id="reg-last"
@@ -536,54 +547,54 @@ export default function AuthScreen() {
 								<div className="row g-2">
 									<div className="col-12 col-sm-6">
 										<label htmlFor="reg-display" className="auth-label">
-											Display name
-										</label>
-										<input
-											id="reg-display"
-											className="auth-input"
-											value={registerForm.displayName}
-											onChange={(event) =>
-												setRegisterForm((prev) => ({ ...prev, displayName: event.target.value }))
-											}
-											placeholder="Visible in chat"
+										{tr.displayName}
+									</label>
+									<input
+										id="reg-display"
+										className="auth-input"
+										value={registerForm.displayName}
+										onChange={(event) =>
+											setRegisterForm((prev) => ({ ...prev, displayName: event.target.value }))
+										}
+										placeholder={tr.visibleInChat}
 										/>
 									</div>
 									<div className="col-12 col-sm-6">
 										<label htmlFor="reg-username" className="auth-label">
-											Username
-										</label>
-										<input
-											id="reg-username"
-											className="auth-input"
-											value={registerForm.username}
-											onChange={(event) =>
-												setRegisterForm((prev) => ({ ...prev, username: event.target.value }))
-											}
-											placeholder="LDAP UID"
+										{tr.username}
+									</label>
+									<input
+										id="reg-username"
+										className="auth-input"
+										value={registerForm.username}
+										onChange={(event) =>
+											setRegisterForm((prev) => ({ ...prev, username: event.target.value }))
+										}
+										placeholder={tr.ldapUid}
 										/>
 									</div>
 								</div>
 
 								<div>
 									<label htmlFor="reg-email" className="auth-label">
-										Email
-									</label>
-									<input
-										id="reg-email"
-										className="auth-input"
-										type="email"
-										value={registerForm.email}
-										onChange={(event) =>
-											setRegisterForm((prev) => ({ ...prev, email: event.target.value }))
-										}
-										placeholder="Email for notifications"
+									{tr.email}
+								</label>
+								<input
+									id="reg-email"
+									className="auth-input"
+									type="email"
+									value={registerForm.email}
+									onChange={(event) =>
+										setRegisterForm((prev) => ({ ...prev, email: event.target.value }))
+									}
+									placeholder={tr.emailForNotifications}
 									/>
 								</div>
 
 								<div className="row g-2">
 									<div className="col-12 col-sm-6">
 										<label htmlFor="reg-pass" className="auth-label">
-											Password
+										{tr.password}
 										</label>
 										<input
 											id="reg-pass"
@@ -597,7 +608,7 @@ export default function AuthScreen() {
 									</div>
 									<div className="col-12 col-sm-6">
 										<label htmlFor="reg-confirm" className="auth-label">
-											Confirm
+										{tr.confirm}
 										</label>
 										<input
 											id="reg-confirm"
@@ -612,13 +623,13 @@ export default function AuthScreen() {
 								</div>
 
 								<button type="submit" className="auth-btn" disabled={registerDisabled}>
-									{loading.register ? "Submitting" : "Submit request"}
+									{loading.register ? tr.submitting : tr.submitRequest}
 								</button>
 							</form>
 							</div>						{registrationSuccess && (
 							<div className="auth-success" role="alert" aria-live="polite">
-								<strong>✓ Registration successful!</strong>
-								<p>Redirecting to login...</p>
+								<strong>{tr.registrationSuccess}</strong>
+								<p>{tr.redirectingLogin}</p>
 							</div>
 						)}						</article>
 					</section>
@@ -627,22 +638,22 @@ export default function AuthScreen() {
 						<article className="auth-card cube-face-panel">
 							<div className="cube-face-content">
 								<div className="cube-face-header">
-									<h2>Reset password</h2>
+									<h2>{tr.resetPassword}</h2>
 									<button
 										className="ghost-btn"
 										type="button"
 													onClick={() => setFace("front")}
 									>
-										Back to login
+										{tr.backToLogin}
 									</button>
 								</div>
 								{resetToken ? (
 									<>
-										<p className="hero-copy">Enter a new password for your account.</p>
+										<p className="hero-copy">{tr.enterNewPassword}</p>
 										<form onSubmit={handleTokenReset} className="d-flex flex-column gap-3 mt-2">
 										<div>
 											<label htmlFor="reset-pass" className="auth-label">
-												New password
+												{tr.newPassword}
 											</label>
 											<input
 												id="reset-pass"
@@ -655,7 +666,7 @@ export default function AuthScreen() {
 										</div>
 										<div>
 											<label htmlFor="reset-confirm" className="auth-label">
-												Confirm password
+												{tr.confirmPassword}
 											</label>
 											<input
 												id="reset-confirm"
@@ -667,17 +678,17 @@ export default function AuthScreen() {
 											/>
 										</div>
 											<button type="submit" className="auth-btn" disabled={resetDisabled}>
-											{loading.forgot ? "Updating" : "Reset password"}
+												{loading.forgot ? tr.updating : tr.resetPassword}
 										</button>
 										</form>
 									</>
 								) : (
 									<>
-										<p className="hero-copy">Send a reset link to your email.</p>
+										<p className="hero-copy">{tr.sendResetLinkPrompt}</p>
 										<form onSubmit={handleForgot} className="d-flex flex-column gap-3 mt-2">
 										<div>
 											<label htmlFor="forgot-email" className="auth-label">
-												Email
+												{tr.email}
 											</label>
 											<input
 												id="forgot-email"
@@ -689,7 +700,7 @@ export default function AuthScreen() {
 											/>
 										</div>
 											<button type="submit" className="auth-btn" disabled={forgotDisabled}>
-											{loading.forgot ? "Sending" : "Send reset link"}
+												{loading.forgot ? tr.sending : tr.sendResetLink}
 										</button>
 										</form>
 									</>
@@ -702,41 +713,79 @@ export default function AuthScreen() {
 						<article className="auth-card cube-face-panel">
 							<div className="cube-face-content">
 								<div className="cube-face-header">
-									<h2>Change language</h2>
+									<h2>{tr.changeLanguage}</h2>
 									<button
 										className="ghost-btn"
 										type="button"
-													onClick={() => setFace("front")}
+												onClick={() => setFace("front")}
 									>
-										Back to login
+										{tr.backToLogin}
 									</button>
 								</div>
-								<p className="hero-copy">
-									Language preferences are in development.
-								</p>
+								<div>
+									<button
+										type="button"
+										className="auth-input"
+										onClick={() => setShowLangSelect(!showLangSelect)}
+										style={{ cursor: "pointer", maxWidth: "180px", textAlign: "left" }}
+									>
+										{LANGUAGES.find((l) => l.code === lang)?.label}
+									</button>
+									{showLangSelect && (
+										<div
+											className="auth-input"
+											style={{
+												maxWidth: "180px",
+												marginTop: "0.5rem",
+												maxHeight: "220px",
+												overflowY: "auto",
+												padding: "0",
+											}}
+										>
+											{LANGUAGES.map((l) => (
+												<div
+													key={l.code}
+													onClick={() => handleLangChange(l.code)}
+													style={{
+														padding: "0.5rem 0.75rem",
+														cursor: "pointer",
+														backgroundColor: lang === l.code ? "rgba(3, 160, 98, 0.15)" : "transparent",
+														color: lang === l.code ? "#00FFFF" : "var(--color-green)",
+														borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+														transition: "background-color 0.2s",
+													}}
+													onMouseEnter={(e) => { if (lang !== l.code) e.currentTarget.style.backgroundColor = "rgba(3, 160, 98, 0.08)"; }}
+													onMouseLeave={(e) => { if (lang !== l.code) e.currentTarget.style.backgroundColor = "transparent"; }}
+												>
+													{l.label}{lang === l.code ? " ✓" : ""}
+												</div>
+											))}
+										</div>
+									)}
+								</div>
 							</div>
 						</article>
 					</section>
 
 					<section className="cube-face cube-face-top">
 						<article className="auth-card cube-face-panel">
-							<h2>Logout</h2>
+							<h2>{tr.logout}</h2>
 							<p className="hero-copy">
-								Click below to end your session and return to the login page.
+								{tr.logoutPrompt}
 							</p>
 							<button
 								className="auth-btn"
 								type="button"
 								onClick={handleLogout}
 							>
-								Log out
+								{tr.logOut}
 							</button>
 							<button
 								className="ghost-btn mt-3"
 								type="button"
-													onClick={() => setFace("front")}
+												onClick={() => setFace("front")}
 							>
-								Cancel
+								{tr.cancel}
 							</button>
 						</article>
 					</section>

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Contact from "../components/Contact";
 import { buildApiUrl, postJson } from "../../lib/api";
+import { LANGUAGES, getLang, setLang, t, type LangCode } from "../../lib/i18n";
 
 type ContactSummary = {
   id: number | string;
@@ -88,6 +89,8 @@ export default function HomeCube() {
   const [requestDisplayName, setRequestDisplayName] = useState("");
   const [showMaxParticipantsSelect, setShowMaxParticipantsSelect] = useState(false);
   const [showTimezoneSelect, setShowTimezoneSelect] = useState(false);
+  const [lang, setLangState] = useState<LangCode>(getLang);
+  const [showLangSelect, setShowLangSelect] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{ show: boolean; message: string; onConfirm: () => void } | null>(null);
   const [alertDialog, setAlertDialog] = useState<{ show: boolean; message: string; title?: string } | null>(null);
   const username = useMemo(() => {
@@ -258,9 +261,9 @@ export default function HomeCube() {
     const threshold = 40;
     if (absDx < threshold && absDy < threshold) return;
     if (absDx > absDy) {
-      if (dx < 0) goLeft(); else goRight();
+      if (dx < 0) goRight(); else goLeft();
     } else {
-      if (dy > 0) goDown(); else goUp();
+      if (dy > 0) goUp(); else goDown();
     }
     touchStartRef.current = null;
   };
@@ -433,6 +436,13 @@ export default function HomeCube() {
     }
   };
 
+  const handleLangChange = (code: LangCode) => {
+    setLang(code);
+    setLangState(code);
+    if (settings) setSettings({ ...settings, user_language: code });
+    setShowLangSelect(false);
+  };
+
   const handleLogout = () => {
     // Step 1: Move up from TOP face back to previous face
     goUp();
@@ -450,6 +460,8 @@ export default function HomeCube() {
       }, 500); // Wait for rotation to complete
     }, 500); // Wait for up movement to complete
   };
+
+  const tr = t(lang);
 
   return (
     <div
@@ -470,20 +482,20 @@ export default function HomeCube() {
               <article className="auth-card cube-face-panel">
                 <div className="cube-face-content">
                   <div className="cube-face-header">
-                    <h2>List of chats</h2>
-                    <button className="ghost-btn" type="button" onClick={goLeft}>Contacts</button>
+                    <h2>{tr.chats}</h2>
+                    <button className="ghost-btn" type="button" onClick={goLeft}>{tr.contacts}</button>
                   </div>
                   {error ? (
                     <div className="empty-state">
                       <div className="empty-icon" aria-hidden="true" />
-                      <h2>Could not load chats</h2>
+                      <h2>{tr.couldNotLoadChats}</h2>
                       <p>{error}</p>
                     </div>
                   ) : contacts.length === 0 ? (
                     <div className="empty-state">
                       <div className="empty-icon" aria-hidden="true" />
-                      <h2>No active chats yet</h2>
-                      <p>When users message you, they’ll appear here.</p>
+                      <h2>{tr.noChatsYet}</h2>
+                      <p>{tr.addContactsToStart}</p>
                     </div>
                   ) : (
                     <ul className="list-group list-group-flush chats-list">
@@ -504,8 +516,8 @@ export default function HomeCube() {
             <article className="auth-card cube-face-panel">
               <div className="cube-face-content">
                 <div className="cube-face-header">
-                  <h2>Contacts</h2>
-                  <button className="ghost-btn" type="button" onClick={goRight}>Back to Chats</button>
+                  <h2>{tr.contacts}</h2>
+                  <button className="ghost-btn" type="button" onClick={goRight}>{tr.backToChats}</button>
                 </div>
                 
                 <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid rgba(3, 160, 98, 0.15)" }}>
@@ -521,7 +533,7 @@ export default function HomeCube() {
                       }}
                       style={{ width: "100%" }}
                     >
-                      <span className="add-icon">+</span> Add Public User
+                      <span className="add-icon">+</span> {tr.addPublicUser}
                     </button>
                     
                     {showPublicUserSelect && (
@@ -557,11 +569,11 @@ export default function HomeCube() {
                         >
                           {loadingPublicUsers ? (
                             <div style={{ padding: "0.75rem", color: "var(--color-green)", textAlign: "center" }}>
-                              Loading users...
+                              {tr.loadingUsers}
                             </div>
                           ) : sortedPublicUsers.length === 0 ? (
                             <div style={{ padding: "0.75rem", color: "var(--color-green)", textAlign: "center" }}>
-                              No public users available
+                              {tr.noPublicUsers}
                             </div>
                           ) : (
                             sortedPublicUsers.map((user) => (
@@ -608,7 +620,7 @@ export default function HomeCube() {
                       }}
                       style={{ width: "100%" }}
                     >
-                      <span className="add-icon">+</span> Request by Name
+                      <span className="add-icon">+</span> {tr.requestByName}
                     </button>
                     
                     {showRequestInput && (
@@ -616,7 +628,7 @@ export default function HomeCube() {
                         <input
                           type="text"
                           className="auth-input"
-                          placeholder="Enter display name"
+                          placeholder={tr.enterDisplayName}
                           value={requestDisplayName}
                           onChange={(e) => setRequestDisplayName(e.target.value)}
                           style={{ marginBottom: "0.5rem" }}
@@ -630,10 +642,10 @@ export default function HomeCube() {
                           disabled={!requestDisplayName.trim()}
                           style={{ width: "100%" }}
                         >
-                          Send Request
+                          {tr.sendRequest}
                         </button>
                         <p style={{ fontSize: "0.7rem", color: "rgba(3, 160, 98, 0.5)", margin: "0.5rem 0 0 0", textAlign: "center" }}>
-                          Note: Backend not yet implemented
+                          {tr.backendNotImplemented}
                         </p>
                       </div>
                     )}
@@ -643,14 +655,14 @@ export default function HomeCube() {
                 {contactsError ? (
                   <div className="empty-state">
                     <div className="empty-icon" aria-hidden="true" />
-                    <h2>Could not load contacts</h2>
+                    <h2>{tr.couldNotLoadContacts}</h2>
                     <p>{contactsError}</p>
                   </div>
                 ) : userContacts.length === 0 ? (
                   <div className="empty-state">
                     <div className="empty-icon" aria-hidden="true" />
-                    <h2>No contacts yet</h2>
-                    <p>Use the buttons above to add contacts.</p>
+                    <h2>{tr.noContactsYet}</h2>
+                    <p>{tr.useButtonsAbove}</p>
                   </div>
                 ) : (
                   <ul className="list-group list-group-flush chats-list" style={{ maxHeight: "300px", overflowY: "auto" }}>
@@ -658,7 +670,7 @@ export default function HomeCube() {
                       <li key={c.id} className="list-group-item contact-item">
                         <div className="contact-header">{c.displayName}</div>
                         <div className="contact-meta">
-                          Added: {new Date(c.addedAt).toLocaleDateString()}
+                          {tr.addedDate} {new Date(c.addedAt).toLocaleDateString()}
                         </div>
                       </li>
                     ))}
@@ -673,25 +685,25 @@ export default function HomeCube() {
             <article className="auth-card cube-face-panel">
               <div className="cube-face-content">
                 <div className="cube-face-header">
-                  <h2>User Settings</h2>
-                  <button className="ghost-btn" type="button" onClick={goRight}>Back to Chats</button>
+                  <h2>{tr.userSettings}</h2>
+                  <button className="ghost-btn" type="button" onClick={goRight}>{tr.backToChats}</button>
                 </div>
                 
                 {settingsError && !settings ? (
                   <div className="empty-state">
                     <div className="empty-icon" aria-hidden="true" />
-                    <h3>Could not load settings</h3>
+                    <h3>{tr.couldNotLoadSettings}</h3>
                     <p>{settingsError}</p>
                   </div>
                 ) : !settings ? (
                   <div className="empty-state">
-                    <p>Loading settings...</p>
+                    <p>{tr.loadingSettings}</p>
                   </div>
                 ) : (
                   <form onSubmit={handleSaveSettings} className="d-flex flex-column" style={{ gap: "1rem" }}>
                     {settingsSaved && (
                       <div className="auth-alert" style={{ background: "rgba(3, 160, 98, 0.12)", border: "1px solid rgba(3, 160, 98, 0.4)" }}>
-                        <strong>Success!</strong> Settings saved successfully.
+                        <strong>{tr.settingsSaved}</strong> {tr.settingsSavedMsg}
                       </div>
                     )}
                     
@@ -703,23 +715,53 @@ export default function HomeCube() {
 
                     <div>
                       <label htmlFor="user-language" className="auth-label" style={{ marginBottom: "0.25rem" }}>
-                        Language <small style={{ color: "var(--color-form-text)", opacity: 0.7, fontSize: "0.75rem", fontWeight: "normal" }}>(e.g., en, es, fr)</small>
+                        {tr.language}
                       </label>
-                      <input
+                      <button
                         id="user-language"
-                        type="text"
+                        type="button"
                         className="auth-input"
-                        value={settings.user_language}
-                        onChange={(e) => setSettings({ ...settings, user_language: e.target.value })}
-                        placeholder="en"
-                        maxLength={32}
-                        style={{ maxWidth: "150px" }}
-                      />
+                        onClick={() => setShowLangSelect(!showLangSelect)}
+                        style={{ cursor: "pointer", maxWidth: "180px", textAlign: "left" }}
+                      >
+                        {LANGUAGES.find((l) => l.code === lang)?.label}
+                      </button>
+                      {showLangSelect && (
+                        <div
+                          className="auth-input"
+                          style={{
+                            maxWidth: "180px",
+                            marginTop: "0.5rem",
+                            maxHeight: "220px",
+                            overflowY: "auto",
+                            padding: "0",
+                          }}
+                        >
+                          {LANGUAGES.map((l) => (
+                            <div
+                              key={l.code}
+                              onClick={() => handleLangChange(l.code)}
+                              style={{
+                                padding: "0.5rem 0.75rem",
+                                cursor: "pointer",
+                                backgroundColor: lang === l.code ? "rgba(3, 160, 98, 0.15)" : "transparent",
+                                color: lang === l.code ? "#00FFFF" : "var(--color-green)",
+                                borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                                transition: "background-color 0.2s",
+                              }}
+                              onMouseEnter={(e) => { if (lang !== l.code) e.currentTarget.style.backgroundColor = "rgba(3, 160, 98, 0.08)"; }}
+                              onMouseLeave={(e) => { if (lang !== l.code) e.currentTarget.style.backgroundColor = "transparent"; }}
+                            >
+                              {l.label}{lang === l.code ? " ✓" : ""}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     <div>
                       <label className="auth-label" style={{ marginBottom: "0.25rem" }}>
-                        Max Chat Participants <small style={{ color: "var(--color-form-text)", opacity: 0.7, fontSize: "0.75rem", fontWeight: "normal" }}>(2-100)</small>
+                        {tr.maxChatParticipants} <small style={{ color: "var(--color-form-text)", opacity: 0.7, fontSize: "0.75rem", fontWeight: "normal" }}>(2-100)</small>
                       </label>
                       <button
                         type="button"
@@ -778,7 +820,7 @@ export default function HomeCube() {
 
                     <div>
                       <label className="auth-label" style={{ marginBottom: "0.25rem", display: "block" }}>
-                        Timezone
+                        {tr.timezone}
                       </label>
                       <button
                         type="button"
@@ -845,12 +887,12 @@ export default function HomeCube() {
                         style={{ width: "18px", height: "18px", cursor: "pointer", margin: 0 }}
                       />
                       <label htmlFor="profile-public" className="auth-label" style={{ marginBottom: 0, cursor: "pointer" }}>
-                        Make profile public
+                        {tr.makeProfilePublic}
                       </label>
                     </div>
 
                     <button type="submit" className="auth-btn" disabled={savingSettings} style={{ marginTop: "0.25rem" }}>
-                      {savingSettings ? "Saving..." : "Save Settings"}
+                    {savingSettings ? tr.saving : tr.saveSettings}
                     </button>
                   </form>
                 )}
@@ -863,10 +905,10 @@ export default function HomeCube() {
             <article className="auth-card cube-face-panel">
               <div className="cube-face-content">
                 <div className="cube-face-header">
-                  <h2>Chat</h2>
-                  <button className="ghost-btn" type="button" onClick={goLeft}>Contacts</button>
+                  <h2>{tr.chat}</h2>
+                  <button className="ghost-btn" type="button" onClick={goLeft}>{tr.contacts}</button>
                 </div>
-                <p className="hero-copy">Open a conversation from the Chats face.</p>
+                <p className="hero-copy">{tr.openConversation}</p>
               </div>
             </article>
           </section>
@@ -874,23 +916,23 @@ export default function HomeCube() {
           {/* Top: Logout */}
           <section className="cube-face cube-face-top">
             <article className="auth-card cube-face-panel">
-              <h2>Logout</h2>
+              <h2>{tr.logout}</h2>
               <p className="hero-copy">
-                Click below to end your session and return to the login page.
+                {tr.logoutPrompt}
               </p>
               <button
                 className="auth-btn"
                 type="button"
                 onClick={handleLogout}
               >
-                Log out
+                {tr.logOut}
               </button>
               <button
                 className="ghost-btn mt-3"
                 type="button"
                 onClick={goUp}
               >
-                Cancel
+                {tr.cancel}
               </button>
             </article>
           </section>
@@ -923,7 +965,7 @@ export default function HomeCube() {
                   onClick={() => setConfirmDialog(null)}
                   style={{ flex: 1, padding: "0.5rem", fontSize: "0.85rem" }}
                 >
-                  Cancel
+                  {tr.cancel}
                 </button>
                 <button
                   type="button"
@@ -931,7 +973,7 @@ export default function HomeCube() {
                   onClick={confirmDialog.onConfirm}
                   style={{ flex: 1, padding: "0.5rem", fontSize: "0.85rem" }}
                 >
-                  Confirm
+                  {tr.confirmAction}
                 </button>
               </div>
             </div>
@@ -968,7 +1010,7 @@ export default function HomeCube() {
                 onClick={() => setAlertDialog(null)}
                 style={{ width: "100%", padding: "0.5rem", fontSize: "0.85rem" }}
               >
-                OK
+                {tr.ok}
               </button>
             </div>
         )}
