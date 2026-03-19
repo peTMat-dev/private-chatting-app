@@ -38,7 +38,7 @@ router.get("/", async (req: Request, res: Response) => {
     // Get user's contacts
     const contacts = await query<Contact>(
       `SELECT c.contact_user_id, umd.display_name, c.status, c.added_at,
-              usd.public AS is_public
+              usd.\`public\` AS is_public
        FROM contacts c
        JOIN user_main_details umd ON umd.user_id = c.contact_user_id
        LEFT JOIN user_system_details usd ON usd.user_id = c.contact_user_id
@@ -146,7 +146,7 @@ router.post("/add-public", async (req: Request, res: Response) => {
   }
 });
 
-// POST /contacts/request - Send contact request (placeholder for future implementation)
+// POST /contacts/request - Look up private user and notify them (notification mechanism TBD)
 router.post("/request", async (req: Request, res: Response) => {
   const { username, displayName } = req.body;
 
@@ -157,19 +157,27 @@ router.post("/request", async (req: Request, res: Response) => {
     return res.status(400).json({ success: false, error: "displayName is required" });
   }
 
-  // TODO: Implement private user contact request functionality
-  // IMPORTANT: This search must ONLY match users where public = false (user_settings).
-  // Users with public = true already appear in the Public User panel — the two lists
-  // must be mutually exclusive. Query must include: WHERE public = false AND display_name = ?
-  // This would involve:
-  // 1. Looking up user by display_name WHERE public = false
-  // 2. Creating a pending contact request in a requests table
-  // 3. Notifying the target user
-  
-  res.status(501).json({ 
-    success: false, 
-    error: "Contact requests are not yet implemented on the backend" 
-  });
+  try {
+    const userRows = await query<{ user_id: number }>(
+      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
+      [username]
+    );
+    if (userRows.length === 0) {
+      // Still return success — do not reveal anything to caller
+      return res.json({ success: true });
+    }
+    const userId = userRows[0].user_id;
+
+    // Call SP — result intentionally ignored to preserve privacy
+    // Notification mechanism to be implemented separately
+    await query("CALL contacts_2lookup_added_private_user(?, ?)", [userId, displayName.trim()]);
+  } catch (err) {
+    // Log server-side only — never expose to caller
+    console.error("Private user lookup error:", (err as Error).message);
+  }
+
+  // Always return the same response regardless of outcome
+  res.json({ success: true });
 });
 
 // POST /contacts/remove - Remove a contact

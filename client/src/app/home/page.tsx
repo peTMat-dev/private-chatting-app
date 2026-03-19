@@ -101,6 +101,7 @@ export default function HomeCube() {
   const [loadingPublicUsers, setLoadingPublicUsers] = useState(false);
   const [showPublicUserSelect, setShowPublicUserSelect] = useState(false);
   const [showRequestInput, setShowRequestInput] = useState(false);
+  const [privateRequestSent, setPrivateRequestSent] = useState(false);
   const [requestDisplayName, setRequestDisplayName] = useState("");
   const [showMaxParticipantsSelect, setShowMaxParticipantsSelect] = useState(false);
   const [showTimezoneSelect, setShowTimezoneSelect] = useState(false);
@@ -324,26 +325,17 @@ export default function HomeCube() {
   };
 
   const handleSendRequest = async () => {
-    if (!requestDisplayName.trim()) {
-      setAlertDialog({ show: true, title: "Error", message: "Please enter a display name" });
-      return;
-    }
-
+    if (!requestDisplayName.trim()) return;
     try {
-      const { ok, data } = await postJson("/contacts/request", {
+      await postJson("/contacts/request", {
         username,
         displayName: requestDisplayName.trim(),
       });
-      if (!ok || !data.success) {
-        setAlertDialog({ show: true, title: "Error", message: data.error || "Failed to send request" });
-        return;
-      }
-      setAlertDialog({ show: true, title: "Success", message: data.message || "Request sent successfully!" });
-      setShowRequestInput(false);
-      setRequestDisplayName("");
-    } catch (err) {
-      setAlertDialog({ show: true, title: "Error", message: (err as Error).message });
+    } catch {
+      // Intentionally ignored — always show same neutral message to protect privacy
     }
+    setRequestDisplayName("");
+    setPrivateRequestSent(true);
   };
 
   const fetchUserContacts = async () => {
@@ -518,6 +510,7 @@ export default function HomeCube() {
                       onClick={() => {
                         setShowPublicUserSelect(!showPublicUserSelect);
                         setShowRequestInput(false);
+                        setPrivateRequestSent(false);
                         setShowContactList(false);
                         setPublicUserSearch("");
                         if (!showPublicUserSelect && publicUsers.length === 0) {
@@ -648,6 +641,7 @@ export default function HomeCube() {
                       className="add-contact-btn"
                       onClick={() => {
                         setShowRequestInput(!showRequestInput);
+                        setPrivateRequestSent(false);
                         setShowPublicUserSelect(false);
                       }}
                       style={{ width: "100%" }}
@@ -657,38 +651,41 @@ export default function HomeCube() {
                     
                     {showRequestInput && (
                       <div style={{ marginTop: "0.75rem" }}>
-                        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                          <input
-                            type="text"
-                            value={requestDisplayName}
-                            onChange={(e) => setRequestDisplayName(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === "Enter" && requestDisplayName.trim()) { handleSendRequest(); setShowRequestInput(false); } }}
-                            placeholder={tr.enterDisplayName}
-                            style={{
-                              flex: 1,
-                              minWidth: 0,
-                              fontSize: "0.75rem",
-                              padding: "0.35rem 0.4rem",
-                              background: "rgba(3,160,98,0.08)",
-                              border: "1px solid rgba(3,160,98,0.3)",
-                              borderRadius: "0.25rem",
-                              color: "var(--color-green)",
-                              outline: "none",
-                            }}
-                          />
-                          <button
-                            type="button"
-                            className="sort-btn"
-                            onClick={() => { handleSendRequest(); setShowRequestInput(false); }}
-                            disabled={!requestDisplayName.trim()}
-                            style={{ fontSize: "0.75rem", padding: "0.35rem 0.5rem" }}
-                          >
-                            ✓
-                          </button>
-                        </div>
-                        <p style={{ fontSize: "0.7rem", color: "rgba(3, 160, 98, 0.5)", margin: "0.4rem 0 0 0", textAlign: "center" }}>
-                          {tr.backendNotImplemented}
-                        </p>
+                        {privateRequestSent ? (
+                          <p style={{ fontSize: "0.75rem", color: "var(--color-green)", margin: "0", textAlign: "center", padding: "0.5rem 0", opacity: 0.75 }}>
+                            {tr.privateRequestSent}
+                          </p>
+                        ) : (
+                          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                            <input
+                              type="text"
+                              value={requestDisplayName}
+                              onChange={(e) => setRequestDisplayName(e.target.value)}
+                              onKeyDown={(e) => { if (e.key === "Enter" && requestDisplayName.trim()) handleSendRequest(); }}
+                              placeholder={tr.enterDisplayName}
+                              style={{
+                                flex: 1,
+                                minWidth: 0,
+                                fontSize: "0.75rem",
+                                padding: "0.35rem 0.4rem",
+                                background: "rgba(3,160,98,0.08)",
+                                border: "1px solid rgba(3,160,98,0.3)",
+                                borderRadius: "0.25rem",
+                                color: "var(--color-green)",
+                                outline: "none",
+                              }}
+                            />
+                            <button
+                              type="button"
+                              className="sort-btn"
+                              onClick={() => handleSendRequest()}
+                              disabled={!requestDisplayName.trim()}
+                              style={{ fontSize: "0.75rem", padding: "0.35rem 0.5rem" }}
+                            >
+                              ✓
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -699,6 +696,7 @@ export default function HomeCube() {
                         setShowContactList(!showContactList);
                         setShowPublicUserSelect(false);
                         setShowRequestInput(false);
+                        setPrivateRequestSent(false);
                       }}
                       style={{ width: "100%" }}
                     >

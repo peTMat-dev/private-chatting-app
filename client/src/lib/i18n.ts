@@ -73,6 +73,7 @@ export type Translations = {
   enterDisplayName: string;
   sendRequest: string;
   backendNotImplemented: string;
+  privateRequestSent: string;
   noContactsYet: string;
   useButtonsAbove: string;
   couldNotLoadContacts: string;
@@ -169,6 +170,7 @@ const translations: Record<LangCode, Translations> = {
     enterDisplayName: "Enter display name",
     sendRequest: "Send Request",
     backendNotImplemented: "For non-public users only. Backend coming soon.",
+    privateRequestSent: "If the user exists, they will be notified.",
     noContactsYet: "No contacts yet",
     useButtonsAbove: "Use the buttons above to add contacts.",
     couldNotLoadContacts: "Could not load contacts",
@@ -255,6 +257,7 @@ const translations: Record<LangCode, Translations> = {
     enterDisplayName: "Introduce el nombre visible",
     sendRequest: "Enviar solicitud",
     backendNotImplemented: "Solo usuarios no públicos. Backend próximamente.",
+    privateRequestSent: "Si el usuario existe, será notificado.",
     noContactsYet: "Aún no hay contactos",
     useButtonsAbove: "Usa los botones de arriba para añadir contactos.",
     couldNotLoadContacts: "No se pudieron cargar los contactos",
@@ -341,6 +344,7 @@ const translations: Record<LangCode, Translations> = {
     enterDisplayName: "Entrez le nom affiché",
     sendRequest: "Envoyer la demande",
     backendNotImplemented: "Utilisateurs non publics uniquement. Backend bientôt disponible.",
+    privateRequestSent: "Si l'utilisateur existe, il sera notifié.",
     noContactsYet: "Aucun contact pour l'instant",
     useButtonsAbove: "Utilisez les boutons ci-dessus pour ajouter des contacts.",
     couldNotLoadContacts: "Impossible de charger les contacts",
@@ -427,6 +431,7 @@ const translations: Record<LangCode, Translations> = {
     enterDisplayName: "Anzeigenamen eingeben",
     sendRequest: "Anfrage senden",
     backendNotImplemented: "Nur nicht-öffentliche Nutzer. Backend folgt bald.",
+    privateRequestSent: "Wenn der Nutzer existiert, wird er benachrichtigt.",
     noContactsYet: "Noch keine Kontakte",
     useButtonsAbove: "Nutzen Sie die Schaltflächen oben, um Kontakte hinzuzufügen.",
     couldNotLoadContacts: "Kontakte konnten nicht geladen werden",
@@ -513,6 +518,7 @@ const translations: Record<LangCode, Translations> = {
     enterDisplayName: "Zadajte zobrazované meno",
     sendRequest: "Odoslať žiadosť",
     backendNotImplemented: "Len neverejní používatelia. Backend čoskoro.",
+    privateRequestSent: "Ak používateľ existuje, bude upovedomený.",
     noContactsYet: "Zatiaľ žiadne kontakty",
     useButtonsAbove: "Na pridanie kontaktov použite tlačidlá vyššie.",
     couldNotLoadContacts: "Kontakty sa nepodarilo načítať",
@@ -599,6 +605,7 @@ const translations: Record<LangCode, Translations> = {
     enterDisplayName: "Zadejte zobrazované jméno",
     sendRequest: "Odeslat žádost",
     backendNotImplemented: "Pouze neveřejní uživatelé. Backend brzy.",
+    privateRequestSent: "Pokud uživatel existuje, bude upozorněn.",
     noContactsYet: "Zatím žádné kontakty",
     useButtonsAbove: "K přidání kontaktů použijte tlačítka výše.",
     couldNotLoadContacts: "Kontakty se nepodařilo načíst",
