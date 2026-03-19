@@ -727,6 +727,7 @@ a:hover {
   cursor: pointer;
   transition: all 0.2s ease;
   font-weight: 500;
+  line-height: 1.25rem;
 }
 
 .add-contact-btn:hover {
