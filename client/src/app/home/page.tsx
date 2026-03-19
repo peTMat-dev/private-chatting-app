@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Contact from "../components/Contact";
 import { buildApiUrl, postJson } from "../../lib/api";
-import { DEFAULT_LANG, LANGUAGES, getLang, setLang, t, type LangCode } from "../../lib/i18n";
+import { LANGUAGES, getLang, setLang, t, type LangCode } from "../../lib/i18n";
+import { useCubeNavigation, type CubeFace } from "../../lib/useCubeNavigation";
 
 type ContactSummary = {
   id: number | string;
@@ -66,12 +67,23 @@ type ApiTimezonesResponse = {
 };
 
 // Cube faces: front=Chats, left=Contacts, right=Chat view (placeholder), back=Settings, top=Logout
-type CubeFace = "front" | "left" | "right" | "back" | "top";
+// CubeFace type imported from useCubeNavigation
 
 export default function HomeCube() {
-  const [activeFace, setActiveFace] = useState<CubeFace>("front");
-  const [yTicks, setYTicks] = useState<number>(0);
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const {
+    activeFace,
+    yTicks,
+    setActiveFace,
+    setYTicks,
+    rotation,
+    goLeft,
+    goRight,
+    goDown,
+    goUp,
+    handleKeyDown,
+    handleTouchStart,
+    handleTouchEnd,
+  } = useCubeNavigation("front");
   const [contacts, setContacts] = useState<ContactSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [userContacts, setUserContacts] = useState<ContactItem[]>([]);
@@ -89,7 +101,7 @@ export default function HomeCube() {
   const [requestDisplayName, setRequestDisplayName] = useState("");
   const [showMaxParticipantsSelect, setShowMaxParticipantsSelect] = useState(false);
   const [showTimezoneSelect, setShowTimezoneSelect] = useState(false);
-  const [lang, setLangState] = useState<LangCode>(DEFAULT_LANG);
+  const [lang, setLangState] = useState<LangCode>("en");
   const [showLangSelect, setShowLangSelect] = useState(false);
 
   useEffect(() => {
@@ -209,70 +221,6 @@ export default function HomeCube() {
     };
   }, [activeFace, username]);
 
-  const facesByTicks: CubeFace[] = ["front", "left", "back", "right"];
-  const rotation = useMemo(() => {
-    const baseX = -5;
-    const baseY = -15;
-    const x = activeFace === "top" ? baseX - 90 : baseX;
-    const y = baseY + yTicks * 90;
-    return { x, y };
-  }, [activeFace, yTicks]);
-
-  const goLeft = () => {
-    if (activeFace === "top") return;
-    setYTicks((t) => {
-      const next = t + 1;
-      setActiveFace(facesByTicks[((next % 4) + 4) % 4]);
-      return next;
-    });
-  };
-  const goRight = () => {
-    if (activeFace === "top") return;
-    setYTicks((t) => {
-      const next = t - 1;
-      setActiveFace(facesByTicks[((next % 4) + 4) % 4]);
-      return next;
-    });
-  };
-
-  const goDown = () => {
-    setActiveFace((prev) => {
-      if (prev === "front" || prev === "left" || prev === "right" || prev === "back") return "top";
-      return prev;
-    });
-  };
-
-  const goUp = () => {
-    setActiveFace((prev) => {
-      if (prev === "top") return facesByTicks[((yTicks % 4) + 4) % 4];
-      return prev;
-    });
-  };
-
-  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
-    const touch = event.touches[0];
-    if (!touch) return;
-    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
-  };
-  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
-    const start = touchStartRef.current;
-    if (!start) return;
-    const touch = event.changedTouches[0];
-    if (!touch) return;
-    const dx = touch.clientX - start.x;
-    const dy = touch.clientY - start.y;
-    const absDx = Math.abs(dx);
-    const absDy = Math.abs(dy);
-    const threshold = 40;
-    if (absDx < threshold && absDy < threshold) return;
-    if (absDx > absDy) {
-      if (dx < 0) goRight(); else goLeft();
-    } else {
-      if (dy > 0) goUp(); else goDown();
-    }
-    touchStartRef.current = null;
-  };
-
   const fetchPublicUsers = async () => {
     if (!username) {
       setAlertDialog({ show: true, title: "Error", message: "Session expired. Please log in again." });
@@ -374,29 +322,6 @@ export default function HomeCube() {
     });
     return sorted;
   }, [publicUsers, sortOrder]);
-
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    switch (event.key) {
-      case "ArrowLeft":
-        event.preventDefault();
-        goLeft();
-        break;
-      case "ArrowRight":
-        event.preventDefault();
-        goRight();
-        break;
-      case "ArrowDown":
-        event.preventDefault();
-        goDown();
-        break;
-      case "ArrowUp":
-        event.preventDefault();
-        goUp();
-        break;
-      default:
-        break;
-    }
-  };
 
   const openChat = (_id: number | string) => {
     // Rotation-only for now: move to the right face

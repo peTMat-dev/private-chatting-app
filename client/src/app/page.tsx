@@ -1,10 +1,10 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import type { KeyboardEvent, TouchEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { buildApiUrl, postJson } from "../lib/api";
-import { DEFAULT_LANG, LANGUAGES, getLang, setLang, t, type LangCode } from "../lib/i18n";
+import { LANGUAGES, getLang, setLang, t, type LangCode } from "../lib/i18n";
+import { useCubeNavigation, type CubeFace } from "../lib/useCubeNavigation";
 
 type ApiResponse = {
 	success: boolean;
@@ -19,8 +19,6 @@ type ToastMessage = {
 	title: string;
 	body: string;
 };
-
-type CubeFace = "front" | "right" | "left" | "back" | "top";
 
 const buildEmptyRegisterForm = () => ({
 	firstName: "",
@@ -38,11 +36,22 @@ export default function AuthScreen() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const resetToken = searchParams.get("token") ?? "";
-	const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 	const [toast, setToast] = useState<ToastMessage | null>(null);
-	const [activeFace, setActiveFace] = useState<CubeFace>(resetToken ? "left" : "front");
-	// Track cumulative horizontal rotation in 90° steps to preserve direction
-	const [yTicks, setYTicks] = useState<number>(resetToken ? 1 : 0);
+	const {
+		activeFace,
+		yTicks,
+		setYTicks,
+		setActiveFace,
+		rotation,
+		goLeft,
+		goRight,
+		goDown,
+		goUp,
+		setFace,
+		handleKeyDown,
+		handleTouchStart,
+		handleTouchEnd,
+	} = useCubeNavigation(resetToken ? "left" : "front");
 	const [loading, setLoading] = useState({ login: false, register: false, forgot: false });
 	const [registrationSuccess, setRegistrationSuccess] = useState(false);
 	const [loginSuccess, setLoginSuccess] = useState(false);
@@ -54,7 +63,7 @@ export default function AuthScreen() {
 	const [forgotEmail, setForgotEmail] = useState("");
 	const [resetPassword, setResetPassword] = useState("");
 	const [resetConfirmPassword, setResetConfirmPassword] = useState("");
-	const [lang, setLangState] = useState<LangCode>(DEFAULT_LANG);
+	const [lang, setLangState] = useState<LangCode>("en");
 	const [showLangSelect, setShowLangSelect] = useState(false);
 
 	useEffect(() => {
@@ -108,46 +117,6 @@ export default function AuthScreen() {
 
 	const facesByTicks: CubeFace[] = ["front", "left", "back", "right"];
 
-	const rotation = useMemo(() => {
-		const baseX = -5;
-		const baseY = -15;
-		const x = activeFace === "top" ? baseX - 90 : baseX;
-		const y = baseY + yTicks * 90;
-		return { x, y };
-	}, [activeFace, yTicks]);
-
-	const goLeft = () => {
-		if (activeFace === "top") return;
-		setYTicks((t) => {
-			const next = t + 1;
-			setActiveFace(facesByTicks[((next % 4) + 4) % 4]);
-			return next;
-		});
-	};
-
-	const goRight = () => {
-		if (activeFace === "top") return;
-		setYTicks((t) => {
-			const next = t - 1;
-			setActiveFace(facesByTicks[((next % 4) + 4) % 4]);
-			return next;
-		});
-	};
-
-	const goDown = () => {
-		setActiveFace((prev) => {
-			if (prev === "front") return "top";
-			return prev;
-		});
-	};
-
-	const goUp = () => {
-		setActiveFace((prev) => {
-			if (prev === "top") return "front";
-			return prev;
-		});
-	};
-
 	// Continuous spin while logging in; ensure at least 3 full spins before redirect
 	const [pendingRedirect, setPendingRedirect] = useState(false);
 	const [fadeOut, setFadeOut] = useState(false);
@@ -191,79 +160,6 @@ export default function AuthScreen() {
 			}
 		};
 	}, [pendingRedirect, router]);
-
-	// Helper to set face and keep ticks in sync
-	const setFace = (face: CubeFace) => {
-		setActiveFace(face);
-		if (face !== "top") {
-			const map: Record<CubeFace, number> = {
-				front: 0,
-				left: 1,
-				back: 2,
-				right: 3,
-				top: yTicks, // unchanged
-			};
-			setYTicks(map[face]);
-		}
-	};
-
-	const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-		switch (event.key) {
-			case "ArrowLeft":
-				event.preventDefault();
-				goLeft();
-				break;
-			case "ArrowRight":
-				event.preventDefault();
-				goRight();
-				break;
-			case "ArrowDown":
-				event.preventDefault();
-				goDown();
-				break;
-			case "ArrowUp":
-				event.preventDefault();
-				goUp();
-				break;
-			default:
-				break;
-		}
-	};
-
-	const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
-		const touch = event.touches[0];
-		if (!touch) return;
-		touchStartRef.current = { x: touch.clientX, y: touch.clientY };
-	};
-
-	const handleTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
-		const start = touchStartRef.current;
-		if (!start) return;
-		const touch = event.changedTouches[0];
-		if (!touch) return;
-		const dx = touch.clientX - start.x;
-		const dy = touch.clientY - start.y;
-		const absDx = Math.abs(dx);
-		const absDy = Math.abs(dy);
-		const threshold = 40;
-		if (absDx < threshold && absDy < threshold) {
-			return;
-		}
-		if (absDx > absDy) {
-			if (dx < 0) {
-				goRight();
-			} else {
-				goLeft();
-			}
-		} else {
-			if (dy > 0) {
-				goUp();
-			} else {
-				goDown();
-			}
-		}
-		touchStartRef.current = null;
-	};
 
 	const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();

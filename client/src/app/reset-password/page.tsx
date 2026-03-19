@@ -1,8 +1,8 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { buildApiUrl, postJson } from "../../lib/api";
+export default function ResetPasswordPage() {
+  redirect("/");
+}
 
 type ApiResponse = {
   success: boolean;

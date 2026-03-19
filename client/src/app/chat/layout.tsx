@@ -1,7 +1,8 @@
-"use client";
-import React from "react";
-import Contact from "../components/Contact";
-import { useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
+
+export default function ChatLayout() {
+  redirect("/home");
+}
 
 export default function ChatLayout({ children }: { children: React.ReactNode }) {
   const contacts = [
