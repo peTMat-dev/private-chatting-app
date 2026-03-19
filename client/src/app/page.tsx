@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, TouchEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { buildApiUrl, postJson } from "../lib/api";
-import { LANGUAGES, getLang, setLang, t, type LangCode } from "../lib/i18n";
+import { DEFAULT_LANG, LANGUAGES, getLang, setLang, t, type LangCode } from "../lib/i18n";
 
 type ApiResponse = {
 	success: boolean;
@@ -54,8 +54,12 @@ export default function AuthScreen() {
 	const [forgotEmail, setForgotEmail] = useState("");
 	const [resetPassword, setResetPassword] = useState("");
 	const [resetConfirmPassword, setResetConfirmPassword] = useState("");
-	const [lang, setLangState] = useState<LangCode>(getLang);
+	const [lang, setLangState] = useState<LangCode>(DEFAULT_LANG);
 	const [showLangSelect, setShowLangSelect] = useState(false);
+
+	useEffect(() => {
+		setLangState(getLang());
+	}, []);
 
 	const handleLangChange = (code: LangCode) => {
 		setLang(code);

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Contact from "../components/Contact";
 import { buildApiUrl, postJson } from "../../lib/api";
-import { LANGUAGES, getLang, setLang, t, type LangCode } from "../../lib/i18n";
+import { DEFAULT_LANG, LANGUAGES, getLang, setLang, t, type LangCode } from "../../lib/i18n";
 
 type ContactSummary = {
   id: number | string;
@@ -89,8 +89,13 @@ export default function HomeCube() {
   const [requestDisplayName, setRequestDisplayName] = useState("");
   const [showMaxParticipantsSelect, setShowMaxParticipantsSelect] = useState(false);
   const [showTimezoneSelect, setShowTimezoneSelect] = useState(false);
-  const [lang, setLangState] = useState<LangCode>(getLang);
+  const [lang, setLangState] = useState<LangCode>(DEFAULT_LANG);
   const [showLangSelect, setShowLangSelect] = useState(false);
+
+  useEffect(() => {
+    setLangState(getLang());
+  }, []);
+
   const [confirmDialog, setConfirmDialog] = useState<{ show: boolean; message: string; onConfirm: () => void } | null>(null);
   const [alertDialog, setAlertDialog] = useState<{ show: boolean; message: string; title?: string } | null>(null);
   const username = useMemo(() => {
