@@ -96,6 +96,7 @@ export default function HomeCube() {
   const [publicUsers, setPublicUsers] = useState<PublicUser[]>([]);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [contactSortOrder, setContactSortOrder] = useState<"asc" | "desc">("asc");
+  const [publicUserSearch, setPublicUserSearch] = useState("");
   const [loadingPublicUsers, setLoadingPublicUsers] = useState(false);
   const [showPublicUserSelect, setShowPublicUserSelect] = useState(false);
   const [showRequestInput, setShowRequestInput] = useState(false);
@@ -369,8 +370,9 @@ export default function HomeCube() {
       }
       return b.displayName.localeCompare(a.displayName);
     });
-    return sorted;
-  }, [publicUsers, sortOrder]);
+    const term = publicUserSearch.trim().toLowerCase();
+    return term ? sorted.filter((u) => u.displayName.toLowerCase().includes(term)) : sorted;
+  }, [publicUsers, sortOrder, publicUserSearch]);
 
   const sortedContacts = useMemo(() => {
     const sorted = [...userContacts];
@@ -517,6 +519,8 @@ export default function HomeCube() {
                       onClick={() => {
                         setShowPublicUserSelect(!showPublicUserSelect);
                         setShowRequestInput(false);
+                        setShowContactList(false);
+                        setPublicUserSearch("");
                         if (!showPublicUserSelect && publicUsers.length === 0) {
                           fetchPublicUsers();
                         }
@@ -545,6 +549,34 @@ export default function HomeCube() {
                           >
                             Z-A
                           </button>
+                          <input
+                            type="text"
+                            value={publicUserSearch}
+                            onChange={(e) => setPublicUserSearch(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Escape") setPublicUserSearch(""); }}
+                            placeholder="🔍"
+                            style={{
+                              flex: 1,
+                              minWidth: 0,
+                              fontSize: "0.75rem",
+                              padding: "0.2rem 0.4rem",
+                              background: "rgba(3,160,98,0.08)",
+                              border: "1px solid rgba(3,160,98,0.3)",
+                              borderRadius: "0.25rem",
+                              color: "var(--color-green)",
+                              outline: "none",
+                            }}
+                          />
+                          {publicUserSearch && (
+                            <button
+                              type="button"
+                              className="sort-btn"
+                              onClick={() => setPublicUserSearch("")}
+                              style={{ fontSize: "0.75rem", padding: "0.25rem 0.5rem" }}
+                            >
+                              ✕
+                            </button>
+                          )}
                         </div>
                         <div
                           className="auth-input"
