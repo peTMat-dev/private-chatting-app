@@ -475,7 +475,6 @@ export default function HomeCube() {
                 <div className="cube-face-content">
                   <div className="cube-face-header">
                     <h2>{tr.chats}</h2>
-                    <button className="ghost-btn" type="button" onClick={goLeft}>{tr.contacts}</button>
                   </div>
                   {error ? (
                     <div className="empty-state">
@@ -509,7 +508,6 @@ export default function HomeCube() {
               <div className="cube-face-content">
                 <div className="cube-face-header">
                   <h2>{tr.contacts}</h2>
-                  <button className="ghost-btn" type="button" onClick={goRight}>{tr.backToChats}</button>
                 </div>
                 
                 <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid rgba(3, 160, 98, 0.15)" }}>
@@ -537,7 +535,7 @@ export default function HomeCube() {
                             type="button"
                             className={`sort-btn ${sortOrder === "asc" ? "active" : ""}`}
                             onClick={() => setSortOrder("asc")}
-                            style={{ fontSize: "0.75rem", padding: "0.25rem 0.5rem" }}
+                            style={{ fontSize: "0.75rem", padding: "0.35rem 0.5rem" }}
                           >
                             A-Z
                           </button>
@@ -545,7 +543,7 @@ export default function HomeCube() {
                             type="button"
                             className={`sort-btn ${sortOrder === "desc" ? "active" : ""}`}
                             onClick={() => setSortOrder("desc")}
-                            style={{ fontSize: "0.75rem", padding: "0.25rem 0.5rem" }}
+                            style={{ fontSize: "0.75rem", padding: "0.35rem 0.5rem" }}
                           >
                             Z-A
                           </button>
@@ -559,7 +557,7 @@ export default function HomeCube() {
                               flex: 1,
                               minWidth: 0,
                               fontSize: "0.75rem",
-                              padding: "0.2rem 0.4rem",
+                              padding: "0.35rem 0.4rem",
                               background: "rgba(3,160,98,0.08)",
                               border: "1px solid rgba(3,160,98,0.3)",
                               borderRadius: "0.25rem",
@@ -572,7 +570,7 @@ export default function HomeCube() {
                               type="button"
                               className="sort-btn"
                               onClick={() => setPublicUserSearch("")}
-                              style={{ fontSize: "0.75rem", padding: "0.25rem 0.5rem" }}
+                              style={{ fontSize: "0.75rem", padding: "0.35rem 0.5rem" }}
                             >
                               ✕
                             </button>
@@ -658,26 +656,36 @@ export default function HomeCube() {
                     
                     {showRequestInput && (
                       <div style={{ marginTop: "0.75rem" }}>
-                        <input
-                          type="text"
-                          className="auth-input"
-                          placeholder={tr.enterDisplayName}
-                          value={requestDisplayName}
-                          onChange={(e) => setRequestDisplayName(e.target.value)}
-                          style={{ marginBottom: "0.5rem" }}
-                        />
-                        <button
-                          className="auth-btn"
-                          onClick={() => {
-                            handleSendRequest();
-                            setShowRequestInput(false);
-                          }}
-                          disabled={!requestDisplayName.trim()}
-                          style={{ width: "100%" }}
-                        >
-                          {tr.sendRequest}
-                        </button>
-                        <p style={{ fontSize: "0.7rem", color: "rgba(3, 160, 98, 0.5)", margin: "0.5rem 0 0 0", textAlign: "center" }}>
+                        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                          <input
+                            type="text"
+                            value={requestDisplayName}
+                            onChange={(e) => setRequestDisplayName(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Enter" && requestDisplayName.trim()) { handleSendRequest(); setShowRequestInput(false); } }}
+                            placeholder={tr.enterDisplayName}
+                            style={{
+                              flex: 1,
+                              minWidth: 0,
+                              fontSize: "0.75rem",
+                              padding: "0.35rem 0.4rem",
+                              background: "rgba(3,160,98,0.08)",
+                              border: "1px solid rgba(3,160,98,0.3)",
+                              borderRadius: "0.25rem",
+                              color: "var(--color-green)",
+                              outline: "none",
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="sort-btn"
+                            onClick={() => { handleSendRequest(); setShowRequestInput(false); }}
+                            disabled={!requestDisplayName.trim()}
+                            style={{ fontSize: "0.75rem", padding: "0.35rem 0.5rem" }}
+                          >
+                            ✓
+                          </button>
+                        </div>
+                        <p style={{ fontSize: "0.7rem", color: "rgba(3, 160, 98, 0.5)", margin: "0.4rem 0 0 0", textAlign: "center" }}>
                           {tr.backendNotImplemented}
                         </p>
                       </div>
@@ -712,7 +720,7 @@ export default function HomeCube() {
                                 type="button"
                                 className={`sort-btn ${contactSortOrder === "asc" ? "active" : ""}`}
                                 onClick={() => setContactSortOrder("asc")}
-                                style={{ fontSize: "0.75rem", padding: "0.25rem 0.5rem" }}
+                                style={{ fontSize: "0.75rem", padding: "0.35rem 0.5rem" }}
                               >
                                 A-Z
                               </button>
@@ -720,7 +728,7 @@ export default function HomeCube() {
                                 type="button"
                                 className={`sort-btn ${contactSortOrder === "desc" ? "active" : ""}`}
                                 onClick={() => setContactSortOrder("desc")}
-                                style={{ fontSize: "0.75rem", padding: "0.25rem 0.5rem" }}
+                                style={{ fontSize: "0.75rem", padding: "0.35rem 0.5rem" }}
                               >
                                 Z-A
                               </button>
@@ -776,7 +784,6 @@ export default function HomeCube() {
               <div className="cube-face-content">
                 <div className="cube-face-header">
                   <h2>{tr.userSettings}</h2>
-                  <button className="ghost-btn" type="button" onClick={goRight}>{tr.backToChats}</button>
                 </div>
                 
                 {settingsError && !settings ? (
@@ -996,7 +1003,6 @@ export default function HomeCube() {
               <div className="cube-face-content">
                 <div className="cube-face-header">
                   <h2>{tr.chat}</h2>
-                  <button className="ghost-btn" type="button" onClick={goLeft}>{tr.contacts}</button>
                 </div>
                 <p className="hero-copy">{tr.openConversation}</p>
               </div>
