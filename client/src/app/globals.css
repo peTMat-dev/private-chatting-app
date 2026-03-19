@@ -745,7 +745,61 @@ a:hover {
   border: none !important;
   border-bottom: 1px solid rgba(3, 160, 98, 0.15) !important;
   padding: 0.75rem 1rem !important;
-  cursor: default;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.contact-item:hover {
+  background: rgba(3, 160, 98, 0.05) !important;
+}
+
+.contact-item--selected {
+  background: rgba(3, 160, 98, 0.08) !important;
+}
+
+.contact-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.contact-action-btn {
+  flex: 1;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.contact-action-btn--remove {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.25), rgba(220, 53, 69, 0.15));
+  border-color: rgba(220, 53, 69, 0.5);
+  color: #ff6b7a;
+}
+
+.contact-action-btn--remove:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.4), rgba(220, 53, 69, 0.3));
+  border-color: #dc3545;
+  box-shadow: 0 0 10px rgba(220, 53, 69, 0.3);
+}
+
+.contact-action-btn--remove:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.contact-action-btn--cancel {
+  background: linear-gradient(135deg, rgba(3, 160, 98, 0.1), rgba(3, 160, 98, 0.05));
+  border-color: rgba(3, 160, 98, 0.3);
+  color: rgba(3, 160, 98, 0.7);
+}
+
+.contact-action-btn--cancel:hover {
+  background: linear-gradient(135deg, rgba(3, 160, 98, 0.2), rgba(3, 160, 98, 0.1));
+  border-color: rgba(3, 160, 98, 0.5);
 }
 
 .contact-item:last-child {
@@ -833,6 +887,18 @@ a:hover {
 .user-add-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.user-add-btn--remove {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.25), rgba(220, 53, 69, 0.15));
+  border-color: rgba(220, 53, 69, 0.5);
+  color: #ff6b7a;
+}
+
+.user-add-btn--remove:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.4), rgba(220, 53, 69, 0.3));
+  border-color: #dc3545;
+  box-shadow: 0 0 10px rgba(220, 53, 69, 0.3);
 }
 
 .cube-contact-actions {

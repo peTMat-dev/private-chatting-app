@@ -103,6 +103,8 @@ export default function HomeCube() {
   const [showTimezoneSelect, setShowTimezoneSelect] = useState(false);
   const [lang, setLangState] = useState<LangCode>("en");
   const [showLangSelect, setShowLangSelect] = useState(false);
+  const [selectedContactId, setSelectedContactId] = useState<number | null>(null);
+  const [removingContactId, setRemovingContactId] = useState<number | null>(null);
 
   useEffect(() => {
     setLangState(getLang());
@@ -240,6 +242,50 @@ export default function HomeCube() {
       setAlertDialog({ show: true, title: "Error", message: (err as Error).message });
     } finally {
       setLoadingPublicUsers(false);
+    }
+  };
+
+  const handleRemoveContact = async (contactId: number) => {
+    setRemovingContactId(contactId);
+    try {
+      const { ok, data } = await postJson("/contacts/remove", {
+        username,
+        contactUserId: contactId,
+      });
+      if (!ok || !data.success) {
+        setAlertDialog({ show: true, title: "Error", message: data.error || "Failed to remove contact" });
+        return;
+      }
+      setUserContacts((prev) => prev.filter((c) => c.id !== contactId));
+      setSelectedContactId(null);
+    } catch (err) {
+      setAlertDialog({ show: true, title: "Error", message: (err as Error).message });
+    } finally {
+      setRemovingContactId(null);
+    }
+  };
+
+  const handleRemovePublicUser = async (userId: number) => {
+    setPublicUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, isAlreadyContact: false } : u))
+    );
+    try {
+      const { ok, data } = await postJson("/contacts/remove", {
+        username,
+        contactUserId: userId,
+      });
+      if (!ok || !data.success) {
+        setPublicUsers((prev) =>
+          prev.map((u) => (u.id === userId ? { ...u, isAlreadyContact: true } : u))
+        );
+        setAlertDialog({ show: true, title: "Error", message: data.error || "Failed to remove contact" });
+        return;
+      }
+      fetchUserContacts();
+    } catch {
+      setPublicUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, isAlreadyContact: true } : u))
+      );
     }
   };
 
@@ -510,29 +556,38 @@ export default function HomeCube() {
                               <div
                                 key={user.id}
                                 onClick={() => {
-                                  if (!loadingPublicUsers && !user.isAlreadyContact) {
-                                    handleAddPublicUser(user.id, user.displayName);
+                                  if (!loadingPublicUsers) {
+                                    if (user.isAlreadyContact) {
+                                      handleRemovePublicUser(user.id);
+                                    } else {
+                                      handleAddPublicUser(user.id, user.displayName);
+                                    }
                                   }
                                 }}
                                 style={{
                                   padding: "0.5rem 0.75rem",
-                                  cursor: loadingPublicUsers ? "default" : user.isAlreadyContact ? "not-allowed" : "pointer",
+                                  cursor: loadingPublicUsers ? "default" : "pointer",
                                   backgroundColor: "transparent",
                                   color: user.isAlreadyContact ? "#00FFFF" : "var(--color-green)",
                                   borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
                                   transition: "background-color 0.2s",
-                                  opacity: user.isAlreadyContact ? 0.6 : 1
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
                                 }}
                                 onMouseEnter={(e) => {
-                                  if (!loadingPublicUsers && !user.isAlreadyContact) {
-                                    e.currentTarget.style.backgroundColor = "rgba(3, 160, 98, 0.08)";
+                                  if (!loadingPublicUsers) {
+                                    e.currentTarget.style.backgroundColor = user.isAlreadyContact ? "rgba(220, 53, 69, 0.08)" : "rgba(3, 160, 98, 0.08)";
                                   }
                                 }}
                                 onMouseLeave={(e) => {
                                   e.currentTarget.style.backgroundColor = "transparent";
                                 }}
                               >
-                                {user.displayName}{user.isAlreadyContact ? " ✓" : ""}
+                                <span>{user.displayName}{user.isAlreadyContact ? " ✓" : ""}</span>
+                                {user.isAlreadyContact && (
+                                  <span style={{ fontSize: "0.75rem", color: "#ff6b7a", marginLeft: "0.5rem" }}>✕ Remove</span>
+                                )}
                               </div>
                             ))
                           )}
@@ -597,11 +652,32 @@ export default function HomeCube() {
                 ) : (
                   <ul className="list-group list-group-flush chats-list" style={{ maxHeight: "300px", overflowY: "auto" }}>
                     {userContacts.map((c) => (
-                      <li key={c.id} className="list-group-item contact-item">
+                      <li
+                        key={c.id}
+                        className={`list-group-item contact-item${selectedContactId === c.id ? " contact-item--selected" : ""}`}
+                        onClick={() => setSelectedContactId(selectedContactId === c.id ? null : c.id)}
+                      >
                         <div className="contact-header">{c.displayName}</div>
                         <div className="contact-meta">
                           {tr.addedDate} {new Date(c.addedAt).toLocaleDateString()}
                         </div>
+                        {selectedContactId === c.id && (
+                          <div className="contact-actions">
+                            <button
+                              className="contact-action-btn contact-action-btn--remove"
+                              onClick={(e) => { e.stopPropagation(); handleRemoveContact(c.id); }}
+                              disabled={removingContactId === c.id}
+                            >
+                              {removingContactId === c.id ? "Removing…" : "Remove Contact"}
+                            </button>
+                            <button
+                              className="contact-action-btn contact-action-btn--cancel"
+                              onClick={(e) => { e.stopPropagation(); setSelectedContactId(null); }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        )}
                       </li>
                     ))}
                   </ul>

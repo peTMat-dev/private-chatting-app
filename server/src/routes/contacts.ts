@@ -165,4 +165,36 @@ router.post("/request", async (req: Request, res: Response) => {
   });
 });
 
+// POST /contacts/remove - Remove a contact
+router.post("/remove", async (req: Request, res: Response) => {
+  const { username, contactUserId } = req.body;
+
+  if (!username || typeof username !== "string") {
+    return res.status(400).json({ success: false, error: "username is required" });
+  }
+  if (!contactUserId || typeof contactUserId !== "number") {
+    return res.status(400).json({ success: false, error: "contactUserId is required and must be a number" });
+  }
+
+  try {
+    const userRows = await query<{ user_id: number }>(
+      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
+      [username]
+    );
+    if (userRows.length === 0) {
+      return res.status(404).json({ success: false, error: "user not found" });
+    }
+    const userId = userRows[0].user_id;
+
+    await query(
+      "DELETE FROM contacts WHERE owner_user_id = ? AND contact_user_id = ?",
+      [userId, contactUserId]
+    );
+
+    res.json({ success: true, message: "Contact removed successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
 export default router;
