@@ -17,6 +17,7 @@ type ContactItem = {
   displayName: string;
   status: boolean;
   addedAt: string;
+  isPublic: boolean;
 };
 
 type ApiChatsResponse = {
@@ -748,7 +749,7 @@ export default function HomeCube() {
                                   gap: "0.4rem",
                                 }}
                               >
-                                <span style={{ color: "var(--color-green)", fontSize: "0.85rem", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                <span style={{ color: c.isPublic ? "var(--color-green)" : "rgba(3, 160, 98, 0.45)", fontSize: "0.85rem", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                   {c.displayName}
                                 </span>
                                 <button

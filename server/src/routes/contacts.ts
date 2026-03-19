@@ -14,6 +14,7 @@ type Contact = {
   display_name: string;
   status: boolean;
   added_at: string;
+  is_public: number | null;
 };
 
 // GET /contacts - Get user's contact list
@@ -36,9 +37,11 @@ router.get("/", async (req: Request, res: Response) => {
 
     // Get user's contacts
     const contacts = await query<Contact>(
-      `SELECT c.contact_user_id, umd.display_name, c.status, c.added_at
+      `SELECT c.contact_user_id, umd.display_name, c.status, c.added_at,
+              usd.public AS is_public
        FROM contacts c
        JOIN user_main_details umd ON umd.user_id = c.contact_user_id
+       LEFT JOIN user_system_details usd ON usd.user_id = c.contact_user_id
        WHERE c.owner_user_id = ?
        ORDER BY umd.display_name ASC`,
       [userId]
@@ -49,6 +52,7 @@ router.get("/", async (req: Request, res: Response) => {
       displayName: c.display_name,
       status: Boolean(c.status),
       addedAt: c.added_at,
+      isPublic: c.is_public === null ? true : Boolean(c.is_public),
     }));
 
     res.json({ success: true, count: data.length, data });
