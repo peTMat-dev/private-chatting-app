@@ -170,7 +170,7 @@ router.post("/request", async (req: Request, res: Response) => {
 
     // Call SP — result intentionally ignored to preserve privacy
     // Notification mechanism to be implemented separately
-    await query("CALL contacts_2lookup_added_private_user(?, ?)", [userId, displayName.trim()]);
+    await query("CALL contact_2lookup_added_private_user(?, ?)", [userId, displayName.trim()]);
   } catch (err) {
     // Log server-side only — never expose to caller
     console.error("Private user lookup error:", (err as Error).message);
