@@ -78,6 +78,8 @@ export type Translations = {
   couldNotLoadContacts: string;
   added: string;
   addedDate: string;
+  contactList: string;
+  chatSoon: string;
 
   // Post-login: Settings face
   userSettings: string;
@@ -172,6 +174,8 @@ const translations: Record<LangCode, Translations> = {
     couldNotLoadContacts: "Could not load contacts",
     added: "Added",
     addedDate: "Added:",
+    contactList: "Contact List",
+    chatSoon: "Chat (coming soon)",
     userSettings: "User Settings",
     settingsSaved: "Success!",
     settingsSavedMsg: "Settings saved successfully.",
@@ -256,6 +260,8 @@ const translations: Record<LangCode, Translations> = {
     couldNotLoadContacts: "No se pudieron cargar los contactos",
     added: "Añadido",
     addedDate: "Añadido:",
+    contactList: "Lista de contactos",
+    chatSoon: "Chat (próximamente)",
     userSettings: "Configuración",
     settingsSaved: "¡Éxito!",
     settingsSavedMsg: "Configuración guardada correctamente.",
@@ -340,6 +346,8 @@ const translations: Record<LangCode, Translations> = {
     couldNotLoadContacts: "Impossible de charger les contacts",
     added: "Ajouté",
     addedDate: "Ajouté :",
+    contactList: "Liste de contacts",
+    chatSoon: "Chat (bientôt disponible)",
     userSettings: "Paramètres utilisateur",
     settingsSaved: "Succès !",
     settingsSavedMsg: "Paramètres enregistrés avec succès.",
@@ -424,6 +432,8 @@ const translations: Record<LangCode, Translations> = {
     couldNotLoadContacts: "Kontakte konnten nicht geladen werden",
     added: "Hinzugefügt",
     addedDate: "Hinzugefügt:",
+    contactList: "Kontaktliste",
+    chatSoon: "Chat (demnächst)",
     userSettings: "Benutzereinstellungen",
     settingsSaved: "Erfolg!",
     settingsSavedMsg: "Einstellungen erfolgreich gespeichert.",
@@ -508,6 +518,8 @@ const translations: Record<LangCode, Translations> = {
     couldNotLoadContacts: "Kontakty sa nepodarilo načítať",
     added: "Pridané",
     addedDate: "Pridané:",
+    contactList: "Zoznam kontaktov",
+    chatSoon: "Chat (čoskoro)",
     userSettings: "Nastavenia používateľa",
     settingsSaved: "Úspech!",
     settingsSavedMsg: "Nastavenia boli úspešne uložené.",
@@ -592,6 +604,8 @@ const translations: Record<LangCode, Translations> = {
     couldNotLoadContacts: "Kontakty se nepodařilo načíst",
     added: "Přidáno",
     addedDate: "Přidáno:",
+    contactList: "Seznam kontaktů",
+    chatSoon: "Chat (brzy)",
     userSettings: "Nastavení uživatele",
     settingsSaved: "Úspěch!",
     settingsSavedMsg: "Nastavení bylo úspěšně uloženo.",

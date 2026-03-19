@@ -95,6 +95,7 @@ export default function HomeCube() {
   const [settingsSaved, setSettingsSaved] = useState(false);
   const [publicUsers, setPublicUsers] = useState<PublicUser[]>([]);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [contactSortOrder, setContactSortOrder] = useState<"asc" | "desc">("asc");
   const [loadingPublicUsers, setLoadingPublicUsers] = useState(false);
   const [showPublicUserSelect, setShowPublicUserSelect] = useState(false);
   const [showRequestInput, setShowRequestInput] = useState(false);
@@ -103,7 +104,7 @@ export default function HomeCube() {
   const [showTimezoneSelect, setShowTimezoneSelect] = useState(false);
   const [lang, setLangState] = useState<LangCode>("en");
   const [showLangSelect, setShowLangSelect] = useState(false);
-  const [selectedContactId, setSelectedContactId] = useState<number | null>(null);
+  const [showContactList, setShowContactList] = useState(false);
   const [removingContactId, setRemovingContactId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -257,7 +258,9 @@ export default function HomeCube() {
         return;
       }
       setUserContacts((prev) => prev.filter((c) => c.id !== contactId));
-      setSelectedContactId(null);
+      setPublicUsers((prev) =>
+        prev.map((u) => (u.id === contactId ? { ...u, isAlreadyContact: false } : u))
+      );
     } catch (err) {
       setAlertDialog({ show: true, title: "Error", message: (err as Error).message });
     } finally {
@@ -368,6 +371,17 @@ export default function HomeCube() {
     });
     return sorted;
   }, [publicUsers, sortOrder]);
+
+  const sortedContacts = useMemo(() => {
+    const sorted = [...userContacts];
+    sorted.sort((a, b) => {
+      if (contactSortOrder === "asc") {
+        return a.displayName.localeCompare(b.displayName);
+      }
+      return b.displayName.localeCompare(a.displayName);
+    });
+    return sorted;
+  }, [userContacts, contactSortOrder]);
 
   const openChat = (_id: number | string) => {
     // Rotation-only for now: move to the right face
@@ -556,17 +570,13 @@ export default function HomeCube() {
                               <div
                                 key={user.id}
                                 onClick={() => {
-                                  if (!loadingPublicUsers) {
-                                    if (user.isAlreadyContact) {
-                                      handleRemovePublicUser(user.id);
-                                    } else {
-                                      handleAddPublicUser(user.id, user.displayName);
-                                    }
+                                  if (!loadingPublicUsers && !user.isAlreadyContact) {
+                                    handleAddPublicUser(user.id, user.displayName);
                                   }
                                 }}
                                 style={{
                                   padding: "0.5rem 0.75rem",
-                                  cursor: loadingPublicUsers ? "default" : "pointer",
+                                  cursor: loadingPublicUsers ? "default" : user.isAlreadyContact ? "default" : "pointer",
                                   backgroundColor: "transparent",
                                   color: user.isAlreadyContact ? "#00FFFF" : "var(--color-green)",
                                   borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
@@ -576,8 +586,8 @@ export default function HomeCube() {
                                   alignItems: "center",
                                 }}
                                 onMouseEnter={(e) => {
-                                  if (!loadingPublicUsers) {
-                                    e.currentTarget.style.backgroundColor = user.isAlreadyContact ? "rgba(220, 53, 69, 0.08)" : "rgba(3, 160, 98, 0.08)";
+                                  if (!loadingPublicUsers && !user.isAlreadyContact) {
+                                    e.currentTarget.style.backgroundColor = "rgba(3, 160, 98, 0.08)";
                                   }
                                 }}
                                 onMouseLeave={(e) => {
@@ -586,7 +596,13 @@ export default function HomeCube() {
                               >
                                 <span>{user.displayName}{user.isAlreadyContact ? " ✓" : ""}</span>
                                 {user.isAlreadyContact && (
-                                  <span style={{ fontSize: "0.75rem", color: "#ff6b7a", marginLeft: "0.5rem" }}>✕ Remove</span>
+                                  <button
+                                    className="contact-action-btn contact-action-btn--remove"
+                                    onClick={(e) => { e.stopPropagation(); handleRemovePublicUser(user.id); }}
+                                    disabled={loadingPublicUsers}
+                                  >
+                                    ✕
+                                  </button>
                                 )}
                               </div>
                             ))
@@ -596,7 +612,7 @@ export default function HomeCube() {
                     )}
                   </div>
 
-                  <div>
+                  <div style={{ marginBottom: "1rem" }}>
                     <button
                       className="add-contact-btn"
                       onClick={() => {
@@ -635,53 +651,89 @@ export default function HomeCube() {
                       </div>
                     )}
                   </div>
-                </div>
-
-                {contactsError ? (
-                  <div className="empty-state">
-                    <div className="empty-icon" aria-hidden="true" />
-                    <h2>{tr.couldNotLoadContacts}</h2>
-                    <p>{contactsError}</p>
-                  </div>
-                ) : userContacts.length === 0 ? (
-                  <div className="empty-state">
-                    <div className="empty-icon" aria-hidden="true" />
-                    <h2>{tr.noContactsYet}</h2>
-                    <p>{tr.useButtonsAbove}</p>
-                  </div>
-                ) : (
-                  <ul className="list-group list-group-flush chats-list" style={{ maxHeight: "300px", overflowY: "auto" }}>
-                    {userContacts.map((c) => (
-                      <li
-                        key={c.id}
-                        className={`list-group-item contact-item${selectedContactId === c.id ? " contact-item--selected" : ""}`}
-                        onClick={() => setSelectedContactId(selectedContactId === c.id ? null : c.id)}
-                      >
-                        <div className="contact-header">{c.displayName}</div>
-                        <div className="contact-meta">
-                          {tr.addedDate} {new Date(c.addedAt).toLocaleDateString()}
-                        </div>
-                        {selectedContactId === c.id && (
-                          <div className="contact-actions">
-                            <button
-                              className="contact-action-btn contact-action-btn--remove"
-                              onClick={(e) => { e.stopPropagation(); handleRemoveContact(c.id); }}
-                              disabled={removingContactId === c.id}
-                            >
-                              {removingContactId === c.id ? "Removing…" : "Remove Contact"}
-                            </button>
-                            <button
-                              className="contact-action-btn contact-action-btn--cancel"
-                              onClick={(e) => { e.stopPropagation(); setSelectedContactId(null); }}
-                            >
-                              Cancel
-                            </button>
+                  <div>
+                    <button
+                      className="add-contact-btn"
+                      onClick={() => {
+                        setShowContactList(!showContactList);
+                        setShowPublicUserSelect(false);
+                        setShowRequestInput(false);
+                      }}
+                      style={{ width: "100%" }}
+                    >
+                      ☰ {tr.contactList}
+                    </button>
+                    {showContactList && (
+                      <div style={{ marginTop: "0.75rem" }}>
+                        {contactsError ? (
+                          <div style={{ padding: "0.5rem 0.75rem", color: "rgba(255,80,80,0.8)", fontSize: "0.8rem" }}>
+                            {tr.couldNotLoadContacts}
                           </div>
+                        ) : userContacts.length === 0 ? (
+                          <div style={{ padding: "0.5rem 0.75rem", color: "rgba(3,160,98,0.5)", fontSize: "0.8rem", textAlign: "center" }}>
+                            {tr.noContactsYet}
+                          </div>
+                        ) : (
+                          <>
+                            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginBottom: "0.5rem" }}>
+                              <button
+                                type="button"
+                                className={`sort-btn ${contactSortOrder === "asc" ? "active" : ""}`}
+                                onClick={() => setContactSortOrder("asc")}
+                                style={{ fontSize: "0.75rem", padding: "0.25rem 0.5rem" }}
+                              >
+                                A-Z
+                              </button>
+                              <button
+                                type="button"
+                                className={`sort-btn ${contactSortOrder === "desc" ? "active" : ""}`}
+                                onClick={() => setContactSortOrder("desc")}
+                                style={{ fontSize: "0.75rem", padding: "0.25rem 0.5rem" }}
+                              >
+                                Z-A
+                              </button>
+                            </div>
+                            <div
+                              className="auth-input"
+                              style={{ padding: 0, maxHeight: "180px", overflowY: "auto" }}
+                            >
+                              {sortedContacts.map((c) => (
+                              <div
+                                key={c.id}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  padding: "0.45rem 0.75rem",
+                                  borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                                  gap: "0.4rem",
+                                }}
+                              >
+                                <span style={{ color: "var(--color-green)", fontSize: "0.85rem", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {c.displayName}
+                                </span>
+                                <button
+                                  className="contact-action-btn contact-action-btn--chat"
+                                  disabled
+                                  title={tr.chatSoon}
+                                >
+                                  💬
+                                </button>
+                                <button
+                                  className="contact-action-btn contact-action-btn--remove"
+                                  onClick={() => handleRemoveContact(c.id)}
+                                  disabled={removingContactId === c.id}
+                                >
+                                  {removingContactId === c.id ? "…" : "✕"}
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          </>
                         )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </article>
           </section>
