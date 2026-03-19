@@ -232,6 +232,14 @@ export const isUserActive = async (user: DbUserRecord): Promise<boolean> => {
   return raw === true || raw === 1 || raw === "1";
 };
 
+export const getUserLanguage = async (userId: number): Promise<string> => {
+  const rows = await query<{ user_language: string }>(
+    `SELECT user_language FROM user_system_details WHERE user_id = ? LIMIT 1`,
+    [userId]
+  );
+  return rows.length > 0 ? rows[0].user_language : "en";
+};
+
 export const registerUserInDefaultGroup = async (payload: RegistrationInput): Promise<void> => {
   const userId = await withTransaction(async (connection) => {
     const userInsert = await queryWithConnection<OkPacket>(

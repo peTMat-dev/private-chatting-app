@@ -7,6 +7,7 @@ import {
   RegistrationInput,
   findUserByEmail,
   findUserByIdentifier,
+  getUserLanguage,
   isUsernameTaken,
   registerUserInDefaultGroup,
   resetPasswordWithToken,
@@ -38,7 +39,8 @@ router.post("/login", async (req: Request, res: Response) => {
     await bindUser(user.ldapUid, password);
     await updateLastLogin(user);
 
-    res.json({ success: true, message: "Login successful", user: { username: user.username } });
+    const userLang = await getUserLanguage(user.userId);
+    res.json({ success: true, message: "Login successful", user: { username: user.username, user_language: userLang } });
   } catch (error) {
     // If we reached bindUser, username is valid, so error must be password
     res.status(401).json({ success: false, error: "Invalid password" });
@@ -86,7 +88,14 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
       const token = crypto.randomBytes(32).toString("hex");
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
       await storePasswordResetToken(upperEmail, token, toMySqlDateTime(expiresAt));
-      const resetUrl = buildResetUrl(token);
+      let userLang = "en";
+      const rawUid = user.uid;
+      const ldapUid: string | undefined = Array.isArray(rawUid) ? (rawUid[0] as string) : (rawUid as string | undefined);
+      if (ldapUid) {
+        const dbRecord = await findUserByIdentifier(ldapUid);
+        if (dbRecord) userLang = await getUserLanguage(dbRecord.userId);
+      }
+      const resetUrl = buildResetUrl(token, userLang);
       await sendPasswordResetEmail(upperEmail, resetUrl);
       if (env.app.exposeResetUrl) {
         res.json({
@@ -163,12 +172,12 @@ const toMySqlDateTime = (date: Date): string => {
 
 const normalizeBaseUrl = (value: string): string => value.replace(/\/+$/, "");
 
-const buildResetUrl = (token: string): string => {
+const buildResetUrl = (token: string, lang = "en"): string => {
   const baseFromEnv = env.app.resetPasswordBaseUrl;
   const fallback = env.app.clientOrigins[0] ?? "";
   const base = normalizeBaseUrl(baseFromEnv || fallback);
   const path = "/";
-  const query = `token=${encodeURIComponent(token)}`;
+  const query = `token=${encodeURIComponent(token)}&lang=${encodeURIComponent(lang)}`;
   return base ? `${base}${path}?${query}` : `${path}?${query}`;
 };
 

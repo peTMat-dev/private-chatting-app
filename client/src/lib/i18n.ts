@@ -99,6 +99,18 @@ export type Translations = {
   // Dialogs
   ok: string;
   confirmAction: string;
+
+  // Toast / handler error strings
+  passwordsMustMatch: string;
+  registrationFailed: string;
+  resetFailed: string;
+  tryAgain: string;
+  resetSent: string;
+  checkInbox: string;
+  tokenMissing: string;
+  unableToReset: string;
+  passwordUpdated: string;
+  signInNewPassword: string;
 };
 
 const translations: Record<LangCode, Translations> = {
@@ -175,6 +187,16 @@ const translations: Record<LangCode, Translations> = {
     openConversation: "Open a conversation from the Chats face.",
     ok: "OK",
     confirmAction: "Confirm",
+    passwordsMustMatch: "Passwords must match",
+    registrationFailed: "Registration failed",
+    resetFailed: "Reset failed",
+    tryAgain: "Try again",
+    resetSent: "Reset sent",
+    checkInbox: "Check your inbox",
+    tokenMissing: "Token is missing",
+    unableToReset: "Unable to reset password",
+    passwordUpdated: "Password updated",
+    signInNewPassword: "Sign in with your new password",
   },
   es: {
     backToLogin: "Volver al inicio",
@@ -249,6 +271,16 @@ const translations: Record<LangCode, Translations> = {
     openConversation: "Abre una conversación desde la cara de Chats.",
     ok: "Aceptar",
     confirmAction: "Confirmar",
+    passwordsMustMatch: "Las contraseñas no coinciden",
+    registrationFailed: "Error en el registro",
+    resetFailed: "Error al restablecer",
+    tryAgain: "Inténtalo de nuevo",
+    resetSent: "Enlace enviado",
+    checkInbox: "Revisa tu bandeja de entrada",
+    tokenMissing: "El token no está disponible",
+    unableToReset: "No se pudo restablecer la contraseña",
+    passwordUpdated: "Contraseña actualizada",
+    signInNewPassword: "Inicia sesión con tu nueva contraseña",
   },
   fr: {
     backToLogin: "Retour à la connexion",
@@ -323,6 +355,16 @@ const translations: Record<LangCode, Translations> = {
     openConversation: "Ouvrez une conversation depuis la face Discussions.",
     ok: "OK",
     confirmAction: "Confirmer",
+    passwordsMustMatch: "Les mots de passe ne correspondent pas",
+    registrationFailed: "Échec de l'inscription",
+    resetFailed: "Échec de la réinitialisation",
+    tryAgain: "Réessayer",
+    resetSent: "Lien envoyé",
+    checkInbox: "Vérifiez votre boîte de réception",
+    tokenMissing: "Le jeton est manquant",
+    unableToReset: "Impossible de réinitialiser le mot de passe",
+    passwordUpdated: "Mot de passe mis à jour",
+    signInNewPassword: "Connectez-vous avec votre nouveau mot de passe",
   },
   de: {
     backToLogin: "Zurück zur Anmeldung",
@@ -397,6 +439,16 @@ const translations: Record<LangCode, Translations> = {
     openConversation: "Öffnen Sie ein Gespräch von der Chats-Seite.",
     ok: "OK",
     confirmAction: "Bestätigen",
+    passwordsMustMatch: "Passwörter stimmen nicht überein",
+    registrationFailed: "Registrierung fehlgeschlagen",
+    resetFailed: "Zurücksetzen fehlgeschlagen",
+    tryAgain: "Erneut versuchen",
+    resetSent: "Link gesendet",
+    checkInbox: "Überprüfen Sie Ihren Posteingang",
+    tokenMissing: "Token fehlt",
+    unableToReset: "Passwort konnte nicht zurückgesetzt werden",
+    passwordUpdated: "Passwort aktualisiert",
+    signInNewPassword: "Melden Sie sich mit Ihrem neuen Passwort an",
   },
   sk: {
     backToLogin: "Späť na prihlásenie",
@@ -471,6 +523,16 @@ const translations: Record<LangCode, Translations> = {
     openConversation: "Otvorte konverzáciu zo strany Chaty.",
     ok: "OK",
     confirmAction: "Potvrdiť",
+    passwordsMustMatch: "Heslá sa nezhodujú",
+    registrationFailed: "Registrácia zlyhala",
+    resetFailed: "Obnovenie zlyhalo",
+    tryAgain: "Skúste znova",
+    resetSent: "Odkaz odoslaný",
+    checkInbox: "Skontrolujte svoju doručenú poštu",
+    tokenMissing: "Token chýba",
+    unableToReset: "Heslo sa nepodarilo obnoviť",
+    passwordUpdated: "Heslo aktualizované",
+    signInNewPassword: "Prihláste sa svojím novým heslom",
   },
   cs: {
     backToLogin: "Zpět na přihlášení",
@@ -545,6 +607,16 @@ const translations: Record<LangCode, Translations> = {
     openConversation: "Otevřete konverzaci ze strany Chaty.",
     ok: "OK",
     confirmAction: "Potvrdit",
+    passwordsMustMatch: "Hesla se neshodují",
+    registrationFailed: "Registrace selhala",
+    resetFailed: "Obnovení selhalo",
+    tryAgain: "Zkuste znovu",
+    resetSent: "Odkaz odeslán",
+    checkInbox: "Zkontrolujte svou doručenou poštu",
+    tokenMissing: "Token chybí",
+    unableToReset: "Heslo se nepodařilo obnovit",
+    passwordUpdated: "Heslo aktualizováno",
+    signInNewPassword: "Přihlaste se novým heslem",
   },
 };
 
@@ -552,13 +624,21 @@ export const DEFAULT_LANG: LangCode = "en";
 
 export const getLang = (): LangCode => {
   if (typeof window === "undefined") return DEFAULT_LANG;
-  const stored = localStorage.getItem("cubcha_lang") as LangCode | null;
-  return stored && translations[stored] ? stored : DEFAULT_LANG;
+  const cookieMatch = document.cookie.match(/(?:^|;\s*)cubcha_lang=([^;]+)/);
+  const cookieVal = cookieMatch?.[1] as LangCode | undefined;
+  if (cookieVal && translations[cookieVal]) return cookieVal;
+  try {
+    const stored = localStorage.getItem("cubcha_lang") as LangCode | null;
+    if (stored && translations[stored]) return stored;
+  } catch {}
+  return DEFAULT_LANG;
 };
 
 export const setLang = (code: LangCode): void => {
   if (typeof window !== "undefined") {
-    localStorage.setItem("cubcha_lang", code);
+    const maxAge = 60 * 60 * 24 * 365;
+    document.cookie = `cubcha_lang=${code};path=/;max-age=${maxAge};SameSite=Lax`;
+    try { localStorage.setItem("cubcha_lang", code); } catch {}
   }
 };
 

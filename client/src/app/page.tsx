@@ -67,7 +67,13 @@ export default function AuthScreen() {
 	const [showLangSelect, setShowLangSelect] = useState(false);
 
 	useEffect(() => {
-		setLangState(getLang());
+		const urlLang = searchParams.get("lang") as LangCode | null;
+		if (urlLang && LANGUAGES.some(l => l.code === urlLang)) {
+			setLang(urlLang);
+			setLangState(urlLang);
+		} else {
+			setLangState(getLang());
+		}
 	}, []);
 
 	const handleLangChange = (code: LangCode) => {
@@ -179,6 +185,14 @@ export default function AuthScreen() {
 				if (data.user?.username) {
 					localStorage.setItem("cubcha_username", data.user.username);
 				}
+				// sync language preference from server (covers cross-browser/device logins)
+				if (data.user?.user_language) {
+					const serverLang = data.user.user_language as LangCode;
+					if (LANGUAGES.some(l => l.code === serverLang)) {
+						setLang(serverLang);
+						setLangState(serverLang);
+					}
+				}
 			} catch {}
 			// Stop loading first to stabilize the UI
 			setLoading((prev) => ({ ...prev, login: false }));
@@ -201,7 +215,7 @@ export default function AuthScreen() {
 	const handleRegister = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		if (registerForm.password !== registerForm.confirmPassword) {
-			setRegisterErrors(["Passwords must match"]);
+			setRegisterErrors([tr.passwordsMustMatch]);
 			return;
 		}
 		setLoading((prev) => ({ ...prev, register: true }));
@@ -216,7 +230,7 @@ export default function AuthScreen() {
 		try {
 			const { ok, data } = await postJson("/auth/register", payload);
 			if (!ok || !data.success) {
-				const errs = data.errors ?? (data.error ? [data.error] : ["Registration failed"]);
+				const errs = data.errors ?? (data.error ? [data.error] : [tr.registrationFailed]);
 				setRegisterErrors(errs);
 				return;
 			}
@@ -241,13 +255,13 @@ export default function AuthScreen() {
 		try {
 			const { ok, data } = await postJson("/auth/forgot-password", { email: forgotEmail });
 			if (!ok || !data.success) {
-				showToast({ title: "Reset failed", body: data.error ?? "Try again" });
+				showToast({ title: tr.resetFailed, body: data.error ?? tr.tryAgain });
 				return;
 			}
-			showToast({ title: "Reset sent", body: data.message ?? "Check your inbox" });
+			showToast({ title: tr.resetSent, body: data.message ?? tr.checkInbox });
 			setForgotEmail("");
 		} catch (error) {
-			showToast({ title: "Reset failed", body: (error as Error).message });
+			showToast({ title: tr.resetFailed, body: (error as Error).message });
 		} finally {
 			setLoading((prev) => ({ ...prev, forgot: false }));
 		}
@@ -256,11 +270,11 @@ export default function AuthScreen() {
 	const handleTokenReset = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		if (!resetToken) {
-			showToast({ title: "Reset failed", body: "Token is missing" });
+			showToast({ title: tr.resetFailed, body: tr.tokenMissing });
 			return;
 		}
 		if (resetPassword !== resetConfirmPassword) {
-			showToast({ title: "Reset failed", body: "Passwords must match" });
+			showToast({ title: tr.resetFailed, body: tr.passwordsMustMatch });
 			return;
 		}
 
@@ -271,13 +285,13 @@ export default function AuthScreen() {
 				password: resetPassword,
 			});
 			if (!ok || !data.success) {
-				const detail = data.errors?.[0] ?? data.error ?? "Unable to reset password";
-				showToast({ title: "Reset failed", body: detail });
+				const detail = data.errors?.[0] ?? data.error ?? tr.unableToReset;
+				showToast({ title: tr.resetFailed, body: detail });
 				return;
 			}
 			showToast({
-				title: "Password updated",
-				body: data.message ?? "Sign in with your new password",
+				title: tr.passwordUpdated,
+				body: data.message ?? tr.signInNewPassword,
 			});
 			setResetPassword("");
 			setResetConfirmPassword("");
@@ -286,7 +300,7 @@ export default function AuthScreen() {
 				router.push("/");
 			}, 1200);
 		} catch (error) {
-			showToast({ title: "Reset failed", body: (error as Error).message });
+			showToast({ title: tr.resetFailed, body: (error as Error).message });
 		} finally {
 			setLoading((prev) => ({ ...prev, forgot: false }));
 		}
