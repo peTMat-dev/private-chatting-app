@@ -12,7 +12,7 @@ type PublicUser = {
 type Contact = {
   contact_user_id: number;
   display_name: string;
-  status: boolean;
+  status_st: boolean;
   added_at: string;
   is_public: number | null;
 };
@@ -37,7 +37,7 @@ router.get("/", async (req: Request, res: Response) => {
 
     // Get user's contacts
     const contacts = await query<Contact>(
-      `SELECT c.contact_user_id, umd.display_name, c.status, c.added_at,
+      `SELECT c.contact_user_id, umd.display_name, c.status_st, c.added_at,
               usd.\`public_st\` AS is_public
        FROM contacts c
        JOIN user_main_details umd ON umd.user_id = c.contact_user_id
@@ -50,7 +50,7 @@ router.get("/", async (req: Request, res: Response) => {
     const data = contacts.map((c) => ({
       id: c.contact_user_id,
       displayName: c.display_name,
-      status: Boolean(c.status),
+      status_st: Boolean(c.status_st),
       addedAt: c.added_at,
       isPublic: c.is_public === null ? true : Boolean(c.is_public),
     }));

@@ -51,13 +51,13 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`contacts_requests` (
     `target_user_id` SMALLINT NOT NULL,     -- Who receives request (FK to user_id)
     `requester_username` VARCHAR(64) NOT NULL,
     `target_username` VARCHAR(64) NOT NULL,
-    `status` ENUM('pending','approved','rejected','cancelled') DEFAULT 'pending',
+    `status_st` ENUM('pending','approved','rejected','cancelled') DEFAULT 'pending',
     `requested_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `responded_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
     `removed_at` DATETIME NULL,
     FOREIGN KEY (`requester_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
     FOREIGN KEY (`target_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
-    UNIQUE KEY `unique_pending_request` (`requester_user_id`, `target_user_id`, `status`)
+    UNIQUE KEY `unique_pending_request` (`requester_user_id`, `target_user_id`, `status_st`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`blocked_users` (

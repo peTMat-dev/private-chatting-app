@@ -15,7 +15,7 @@ type ContactSummary = {
 type ContactItem = {
   id: number;
   displayName: string;
-  status: boolean;
+  status_st: boolean;
   addedAt: string;
   isPublic: boolean;
 };
