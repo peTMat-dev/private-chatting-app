@@ -202,13 +202,17 @@ router.post("/remove", async (req: Request, res: Response) => {
     const userId = userRows[0].user_id;
 
     await query(
-      "DELETE FROM contacts WHERE owner_user_id = ? AND contact_user_id = ?",
+      "CALL contact_list_2remove_user(?, ?)",
       [userId, contactUserId]
     );
 
     res.json({ success: true, message: "Contact removed successfully" });
   } catch (error) {
-    res.status(500).json({ success: false, error: (error as Error).message });
+    const msg = (error as Error).message;
+    if (msg.includes("does not exist") || msg.includes("DOES NOT")) {
+      return res.status(404).json({ success: false, error: "Contact does not exist" });
+    }
+    res.status(500).json({ success: false, error: msg });
   }
 });
 
