@@ -1009,8 +1009,8 @@ export default function HomeCube() {
                       <input
                         id="profile-public"
                         type="checkbox"
-                        checked={settings.public}
-                        onChange={(e) => setSettings({ ...settings, public: e.target.checked })}
+                        checked={settings.public_st}
+                        onChange={(e) => setSettings({ ...settings, public_st: e.target.checked })}
                         style={{ width: "18px", height: "18px", cursor: "pointer", margin: 0 }}
                       />
                       <label htmlFor="profile-public" className="auth-label" style={{ marginBottom: 0, cursor: "pointer" }}>

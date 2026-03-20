@@ -6,7 +6,7 @@ const router = Router();
 type UserSystemDetails = {
   user_language: string;
   default_max_chat_participants: number;
-  public: boolean;
+  public_st: boolean;
   user_timezone: string;
 };
 
@@ -38,7 +38,7 @@ router.get("/", async (req: Request, res: Response) => {
 
     // Get user system details
     const settingsRows = await query<UserSystemDetails>(
-      `SELECT user_language, default_max_chat_participants, public, user_timezone 
+      `SELECT user_language, default_max_chat_participants, public_st, user_timezone 
        FROM user_system_details 
        WHERE user_id = ? LIMIT 1`,
       [userId]
@@ -51,7 +51,7 @@ router.get("/", async (req: Request, res: Response) => {
     const settings: UserSystemDetails = {
       user_language: settingsRows[0].user_language,
       default_max_chat_participants: settingsRows[0].default_max_chat_participants,
-      public: Boolean(settingsRows[0].public),
+      public_st: Boolean(settingsRows[0].public_st),
       user_timezone: settingsRows[0].user_timezone,
     };
 
@@ -83,7 +83,7 @@ router.get("/timezones", async (_req: Request, res: Response) => {
 
 // PUT /settings
 router.put("/", async (req: Request, res: Response) => {
-  const { username, user_language, default_max_chat_participants, public: isPublic, user_timezone } = req.body;
+  const { username, user_language, default_max_chat_participants, public_st: isPublic, user_timezone } = req.body;
 
   if (!username || typeof username !== "string") {
     return res.status(400).json({ success: false, error: "Username is required" });
@@ -123,7 +123,7 @@ router.put("/", async (req: Request, res: Response) => {
     }
 
     if (isPublic !== undefined && typeof isPublic === "boolean") {
-      updates.push("public = ?");
+      updates.push("public_st = ?");
       values.push(isPublic);
     }
 

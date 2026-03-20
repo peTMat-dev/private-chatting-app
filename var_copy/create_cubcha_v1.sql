@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_system_details` (
     `user_id` SMALLINT PRIMARY KEY NOT NULL COMMENT 'FK to user_main_details.user_id',
     `user_language` VARCHAR(32) NOT NULL COMMENT 'Preferred language for UI',
     `default_max_chat_participants` SMALLINT DEFAULT 10 COMMENT 'Default max chat participants for new conversations',
-    `public` BOOLEAN DEFAULT TRUE COMMENT 'Indicates if the user profile is public',
+    `public_st` BOOLEAN DEFAULT TRUE COMMENT 'Indicates if the user profile is public',
     `user_timezone` VARCHAR(32) DEFAULT 'UTC' COMMENT 'User timezone string',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Profile creation timestamp',
     `updated_at` DATETIME DEFAULT NULL on UPDATE CURRENT_TIMESTAMP COMMENT 'Last profile update timestamp',

@@ -254,7 +254,7 @@ export const registerUserInDefaultGroup = async (payload: RegistrationInput): Pr
     // Insert default settings into user_system_details
     await queryWithConnection<OkPacket>(
       connection,
-      `INSERT INTO user_system_details (user_id, user_language, default_max_chat_participants, public, user_timezone)
+      `INSERT INTO user_system_details (user_id, user_language, default_max_chat_participants, public_st, user_timezone)
        VALUES (?, 'en', 10, TRUE, 'UTC')`,
       [newUserId]
     );

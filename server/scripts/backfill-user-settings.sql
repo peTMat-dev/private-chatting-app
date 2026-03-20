@@ -1,12 +1,12 @@
 -- Backfill user_system_details for existing users who don't have settings yet
 -- This handles users created before the registration workflow was updated
 
-INSERT INTO cubcha_v1.user_system_details (user_id, user_language, default_max_chat_participants, public, user_timezone, last_login_at)
+INSERT INTO cubcha_v1.user_system_details (user_id, user_language, default_max_chat_participants, public_st, user_timezone, last_login_at)
 SELECT 
     u.user_id,
     'en' as user_language,
     10 as default_max_chat_participants,
-    TRUE as public,
+    TRUE as public_st,
     'UTC' as user_timezone,
     u.last_login_at
 FROM cubcha_v1.user_main_details u

@@ -38,7 +38,7 @@ router.get("/", async (req: Request, res: Response) => {
     // Get user's contacts
     const contacts = await query<Contact>(
       `SELECT c.contact_user_id, umd.display_name, c.status, c.added_at,
-              usd.\`public\` AS is_public
+              usd.\`public_st\` AS is_public
        FROM contacts c
        JOIN user_main_details umd ON umd.user_id = c.contact_user_id
        LEFT JOIN user_system_details usd ON usd.user_id = c.contact_user_id
