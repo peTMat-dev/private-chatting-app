@@ -108,6 +108,7 @@ export default function HomeCube() {
   const [lang, setLangState] = useState<LangCode>("en");
   const [showLangSelect, setShowLangSelect] = useState(false);
   const [showContactList, setShowContactList] = useState(false);
+  const [contactSearch, setContactSearch] = useState("");
   const [removingContactId, setRemovingContactId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -375,8 +376,9 @@ export default function HomeCube() {
       }
       return b.displayName.localeCompare(a.displayName);
     });
-    return sorted;
-  }, [userContacts, contactSortOrder]);
+    const term = contactSearch.trim().toLowerCase();
+    return term ? sorted.filter((c) => c.displayName.toLowerCase().includes(term)) : sorted;
+  }, [userContacts, contactSortOrder, contactSearch]);
 
   const openChat = (_id: number | string) => {
     // Rotation-only for now: move to the right face
@@ -697,6 +699,7 @@ export default function HomeCube() {
                         setShowPublicUserSelect(false);
                         setShowRequestInput(false);
                         setPrivateRequestSent(false);
+                        setContactSearch("");
                       }}
                       style={{ width: "100%" }}
                     >
@@ -731,6 +734,34 @@ export default function HomeCube() {
                               >
                                 Z-A
                               </button>
+                              <input
+                                type="text"
+                                value={contactSearch}
+                                onChange={(e) => setContactSearch(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === "Escape") setContactSearch(""); }}
+                                placeholder="🔍"
+                                style={{
+                                  flex: 1,
+                                  minWidth: 0,
+                                  fontSize: "0.75rem",
+                                  padding: "0.35rem 0.4rem",
+                                  background: "rgba(3,160,98,0.08)",
+                                  border: "1px solid rgba(3,160,98,0.3)",
+                                  borderRadius: "0.25rem",
+                                  color: "var(--color-green)",
+                                  outline: "none",
+                                }}
+                              />
+                              {contactSearch && (
+                                <button
+                                  type="button"
+                                  className="sort-btn"
+                                  onClick={() => setContactSearch("")}
+                                  style={{ fontSize: "0.75rem", padding: "0.35rem 0.5rem" }}
+                                >
+                                  ✕
+                                </button>
+                              )}
                             </div>
                             <div
                               className="auth-input"
