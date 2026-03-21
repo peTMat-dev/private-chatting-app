@@ -7,7 +7,7 @@ USE `cubcha_v1`;
 
 -- Create a user details 
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_main_details` (
-    `user_id` SMALLINT PRIMARY KEY NOT NULL AUTO_INCREMENT COMMENT 'Primary key for users',
+    `user_id` SMALLINT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT COMMENT 'Primary key for users',
     `ldap_uid_id` VARCHAR(32) NOT NULL UNIQUE COMMENT 'Unique LDAP user ID (immutable)',
     -- username_id` VARCHAR(32) NOT NULL UNIQUE COMMENT 'Display username (may be shown in UI)',
     --   BOOLEAN DEFAULT FALSE COMMENT 'Indicates if the user account is disabled',
@@ -19,9 +19,9 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_main_details` (
 
 -- Create user system details for profile setting
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_system_details` (
-    `user_id` SMALLINT PRIMARY KEY NOT NULL COMMENT 'FK to user_main_details.user_id',
+    `user_id` SMALLINT UNSIGNED PRIMARY KEY NOT NULL COMMENT 'FK to user_main_details.user_id',
     `user_language` VARCHAR(32) NOT NULL COMMENT 'Preferred language for UI',
-    `default_max_chat_participants` SMALLINT DEFAULT 10 COMMENT 'Default max chat participants for new conversations',
+    `default_max_chat_participants` TINYINT UNSIGNED DEFAULT 10 COMMENT 'Default max chat participants for new conversations',
     `public_st` BOOLEAN DEFAULT TRUE COMMENT 'Indicates if the user profile is public',
     `user_timezone` VARCHAR(32) DEFAULT 'UTC' COMMENT 'User timezone string',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Profile creation timestamp',
@@ -33,9 +33,9 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_system_details` (
 
 
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`contacts` (
-    `owner_user_id` SMALLINT NOT NULL COMMENT 'User who owns this contact',
-    `contact_user_id` SMALLINT NOT NULL COMMENT 'User who is the contact',
-    `status` BOOLEAN DEFAULT TRUE COMMENT 'Contact status (active/blocked)',
+    `owner_user_id` SMALLINT UNSIGNED NOT NULL COMMENT 'User who owns this contact',
+    `contact_user_id` SMALLINT UNSIGNED NOT NULL COMMENT 'User who is the contact',
+    `status_st` BOOLEAN DEFAULT TRUE COMMENT 'Contact status added/removed or closed account)',
     `added_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'When contact was added',
     PRIMARY KEY (`owner_user_id`, `contact_user_id`),
     FOREIGN KEY (`owner_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
@@ -44,11 +44,11 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`contacts` (
 
 -- dorobit
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`contacts_requests` (
-    `request_id` INT PRIMARY KEY AUTO_INCREMENT,
+    `request_id` INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     -- Only one active (pending) request allowed per user pair. Unique key on (requester_user_id, target_user_id, status)
     -- allows new requests after approval/rejection, but prevents duplicate pending requests.
-    `requester_user_id` SMALLINT NOT NULL,  -- Who sent request (FK to user_id)
-    `target_user_id` SMALLINT NOT NULL,     -- Who receives request (FK to user_id)
+    `requester_user_id` SMALLINT UNSIGNED NOT NULL,  -- Who sent request (FK to user_id)
+    `target_user_id` SMALLINT UNSIGNED NOT NULL,     -- Who receives request (FK to user_id)
     `requester_username` VARCHAR(64) NOT NULL,
     `target_username` VARCHAR(64) NOT NULL,
     `status_st` ENUM('pending','approved','rejected','cancelled') DEFAULT 'pending',
@@ -57,12 +57,12 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`contacts_requests` (
     `removed_at` DATETIME NULL,
     FOREIGN KEY (`requester_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
     FOREIGN KEY (`target_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
-    UNIQUE KEY `unique_pending_request` (`requester_user_id`, `target_user_id`, `status_st`)
+    UNIQUE KEY `unique_pending_request` (`requester_user_id`, `target_user_id`, `status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`blocked_users` (
-    `blocker_user_id` SMALLINT NOT NULL,      -- the user who is blocking
-    `blocked_user_id` SMALLINT NOT NULL,      -- the user being blocked
+    `blocker_user_id` SMALLINT UNSIGNED NOT NULL,      -- the user who is blocking
+    `blocked_user_id` SMALLINT UNSIGNED NOT NULL,      -- the user being blocked
     `blocked_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`blocker_user_id`, `blocked_user_id`),
     FOREIGN KEY (`blocker_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
@@ -70,16 +70,16 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`blocked_users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_groups` (
-    `group_id` INT PRIMARY KEY AUTO_INCREMENT,
+    `group_id` INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     `group_name` VARCHAR(64) NOT NULL,
-    `owner_user_id` SMALLINT NOT NULL,   -- user_id of the group owner
+    `owner_user_id` SMALLINT UNSIGNED NOT NULL,   -- user_id of the group owner
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`owner_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`group_members` (
-    `group_id` INT NOT NULL,
-    `member_user_id` SMALLINT NOT NULL,
+    `group_id` INT UNSIGNED NOT NULL,
+    `member_user_id` SMALLINT UNSIGNED NOT NULL,
     `is_admin` BOOLEAN DEFAULT FALSE,
     `joined_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`group_id`, `member_user_id`),
@@ -89,13 +89,13 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`group_members` (
 
 -- Conversations table (with optional link to user_groups)
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`conversations` (
-    `conversation_id` INT PRIMARY KEY AUTO_INCREMENT,
-    `max_participants` SMALLINT DEFAULT NULL, -- value set in user_system table
-    `creator_user_id` SMALLINT NOT NULL,
+    `conversation_id` INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    `max_participants` SMALLINT UNSIGNED DEFAULT NULL, -- value set in user_system table
+    `creator_user_id` SMALLINT UNSIGNED NOT NULL,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `is_group` BOOLEAN DEFAULT FALSE,
     `title` VARCHAR(64) DEFAULT NULL,
-    `group_id` INT DEFAULT NULL,
+    `group_id` INT UNSIGNED DEFAULT NULL,
     FOREIGN KEY (`creator_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
     FOREIGN KEY (`group_id`) REFERENCES `cubcha_v1`.`user_groups`(`group_id`)
     ,KEY `idx_conversations_creator` (`creator_user_id`)
@@ -103,8 +103,8 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`conversations` (
 
 -- Conversation participants table
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`conversations_participants` (
-    `conversation_id` INT NOT NULL,
-    `user_id` SMALLINT NOT NULL,
+    `conversation_id` INT UNSIGNED NOT NULL,
+    `user_id` SMALLINT UNSIGNED NOT NULL,
     `joined_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`conversation_id`, `user_id`),
     FOREIGN KEY (`conversation_id`) REFERENCES `cubcha_v1`.`conversations`(`conversation_id`),
@@ -114,9 +114,9 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`conversations_participants` (
 
 -- Messages table
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`messages` (
-    `message_id` INT PRIMARY KEY AUTO_INCREMENT,
-    `conversation_id` INT NOT NULL,
-    `sender_user_id` SMALLINT NOT NULL,
+    `message_id` INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    `conversation_id` INT UNSIGNED NOT NULL,
+    `sender_user_id` SMALLINT UNSIGNED NOT NULL,
     `sender_username` VARCHAR(32) NOT NULL, -- denormalized for fast display
     `sender_avatar_url` VARCHAR(255) DEFAULT NULL, -- denormalized for fast display
     `message_text` TEXT NOT NULL,
@@ -128,10 +128,10 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`messages` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_messages` (
-    `archive_id` INT PRIMARY KEY AUTO_INCREMENT,
-    `message_id` INT NOT NULL,
-    `conversation_id` INT NOT NULL,
-    `sender_user_id` SMALLINT NOT NULL,
+    `archive_id` INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    `message_id` INT UNSIGNED NOT NULL,
+    `conversation_id` INT UNSIGNED NOT NULL,
+    `sender_user_id` SMALLINT UNSIGNED NOT NULL,
     `sender_username` VARCHAR(32) NOT NULL, -- denormalized for fast display
     `sender_avatar_url` VARCHAR(255) DEFAULT NULL, -- denormalized for fast display
     `message_text` TEXT NOT NULL,
@@ -143,20 +143,20 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_messages` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_conversations` (
-    `conversation_id` INT PRIMARY KEY,
-    `max_participants` SMALLINT DEFAULT NULL,
-    `creator_user_id` SMALLINT NOT NULL,
+    `conversation_id` INT UNSIGNED PRIMARY KEY,
+    `max_participants` SMALLINT UNSIGNED DEFAULT NULL,
+    `creator_user_id` SMALLINT UNSIGNED NOT NULL,
     `created_at` DATETIME DEFAULT NULL,
     `is_group` BOOLEAN DEFAULT FALSE,
     `title` VARCHAR(64) DEFAULT NULL,
-    `group_id` INT DEFAULT NULL,
+    `group_id` INT UNSIGNED DEFAULT NULL,
     `archived_at` DATETIME DEFAULT CURRENT_TIMESTAMP
     ,KEY `idx_archived_conversations_creator` (`creator_user_id`)
  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_conversations_participants` (
-    `conversation_id` INT NOT NULL,
-    `user_id` SMALLINT NOT NULL,
+    `conversation_id` INT UNSIGNED NOT NULL,
+    `user_id` SMALLINT UNSIGNED NOT NULL,
     `joined_at` DATETIME DEFAULT NULL,
     PRIMARY KEY (`conversation_id`, `user_id`),
     FOREIGN KEY (`conversation_id`) REFERENCES `cubcha_v1`.`archived_conversations`(`conversation_id`),
@@ -165,19 +165,19 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_conversations_participants` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_user_groups` (
-    archived_group_id INT PRIMARY KEY AUTO_INCREMENT,
-    `group_id` INT NOT NULL UNIQUE, -- Only one archived record per group_id allowed
+    archived_group_id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    `group_id` INT UNSIGNED NOT NULL UNIQUE, -- Only one archived record per group_id allowed
     `group_name` VARCHAR(64) NOT NULL,
-    `owner_user_id` SMALLINT NOT NULL,   -- user_id of the group owner
+    `owner_user_id` SMALLINT UNSIGNED NOT NULL,   -- user_id of the group owner
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `archived_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`owner_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`) -- PK for archived group
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_group_members` (
-    `archived_group_id` INT NOT NULL,
-    `group_id` INT NOT NULL,
-    `member_user_id` SMALLINT NOT NULL,
+    `archived_group_id` INT UNSIGNED NOT NULL,
+    `group_id` INT UNSIGNED NOT NULL,
+    `member_user_id` SMALLINT UNSIGNED NOT NULL,
     `is_admin` BOOLEAN DEFAULT FALSE,
     `joined_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`archived_group_id`, `member_user_id`),
@@ -186,7 +186,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_group_members` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`timezones` (
-    `timezone_id` SMALLINT PRIMARY KEY AUTO_INCREMENT,
+    `timezone_id` SMALLINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     `timezone_name` VARCHAR(64) NOT NULL UNIQUE,  -- e.g., 'Europe/Amsterdam'
     `utc_offset` VARCHAR(8) NOT NULL,             -- e.g., '+01:00'
     `display_name` VARCHAR(64) NOT NULL           -- e.g., 'Amsterdam (UTC+1)'
@@ -194,8 +194,8 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`timezones` (
 
 -- Create  password reset token table
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`password_resets` (
-    `resetoken_id` INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-    `user_id` SMALLINT NOT NULL COMMENT 'FK to user_main_details.user_id',
+    `resetoken_id` INT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    `user_id` SMALLINT UNSIGNED NOT NULL COMMENT 'FK to user_main_details.user_id',
     `resettoken` BOOLEAN NOT NULL COMMENT 'Password reset token created YES or NO',
     `resettokenexpiry` DATETIME NOT NULL COMMENT 'Expiry time of the reset token',
     `resetused` BOOLEAN DEFAULT CURRENT_TIMESTAMP COMMENT 'confirmation if the token was used',
@@ -207,12 +207,25 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`password_resets` (
 
 -- Table to track alarm triggers for excessive password resets
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`password_reset_alarms` (
-    `user_id` SMALLINT PRIMARY KEY COMMENT 'FK to user_main_details.user_id',
+    `user_id` SMALLINT UNSIGNED PRIMARY KEY COMMENT 'FK to user_main_details.user_id',
     `alarm_triggered` BOOLEAN DEFAULT FALSE COMMENT 'Whether alarm was triggered',
     `last_triggered` DATETIME DEFAULT NULL COMMENT 'When alarm was last triggered',
     FOREIGN KEY (`user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)
         ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Tracks alarm state for excessive password resets';
+
+
+-- Table to store manual information for users
+CREATE TABLE IF NOT EXISTS `cubcha_v1`.`infos` (
+    `info_id` SMALLINT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT COMMENT 'Primary key for manual info entries',
+    `heading_cube` VARCHAR(48) NOT NULL COMMENT 'heading to the section of the manual',
+    `language_code` VARCHAR(8) NOT NULL COMMENT 'language code for the manual section (e.g., en, de)',
+    `display_order` SMALLINT UNSIGNED NOT NULL COMMENT 'order of display for manual sections',
+    `text_description` VARCHAR(128) COMMENT 'text of the section of the manual',
+    UNIQUE KEY uq_infos_heading_language (heading_cube, language_code),
+    KEY idx_infos_language_order (language_code, display_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Manual information for users';
+
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
