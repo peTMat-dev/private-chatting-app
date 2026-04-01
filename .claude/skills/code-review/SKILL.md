@@ -24,7 +24,7 @@ argument-hint: 'Optional: specify a file or area to review (e.g. auth routes, LD
 
 ### Security (OWASP Top 10)
 - [ ] No SQL injection — use parameterized queries with `?` placeholders (`query('SELECT ... WHERE id = ?', [id])`)
-- [ ] No LDAP injection — sanitize all LDAP filter inputs (current code interpolates `email`/`uid` directly into filter strings — high risk)
+- [ ] No LDAP injection — filter values escaped via `escapeLdapFilter()`, DN values via `escapeLdapDn()` (RFC 4515/4514). Verify any new filter/DN interpolations use these helpers
 - [ ] Auth checks on every protected route (session/token validation)
 - [ ] Passwords never logged or returned in responses
 - [ ] CORS origin restricted to known clients (`env.app.clientOrigins`)
