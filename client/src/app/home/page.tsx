@@ -614,7 +614,7 @@ export default function HomeCube() {
                               <div
                                 key={user.id}
                                 style={{
-                                  padding: "0.5rem 0.75rem",
+                                  padding: "0.45rem 0.75rem",
                                   cursor: "default",
                                   backgroundColor: "transparent",
                                   color: user.isAlreadyContact ? "#00FFFF" : "var(--color-green)",
@@ -628,7 +628,7 @@ export default function HomeCube() {
                                   {user.displayName}
                                 </span>
                                 <button
-                                  className={`contact-action-btn ${user.isAlreadyContact ? "contact-action-btn--remove" : "contact-action-btn--add"}`}
+                                  className={`contact-action-btn ${user.isAlreadyContact ? "contact-action-btn--tick" : "contact-action-btn--add"}`}
                                   onClick={() => {
                                     if (isBusy || loadingPublicUsers) return;
                                     if (user.isAlreadyContact) {
@@ -640,7 +640,7 @@ export default function HomeCube() {
                                   disabled={isBusy || loadingPublicUsers}
                                   title={user.isAlreadyContact ? "Remove contact" : "Add contact"}
                                 >
-                                  {isBusy ? "…" : user.isAlreadyContact ? "✕" : "✓"}
+                                  {isBusy ? "…" : user.isAlreadyContact ? "☑" : "☐"}
                                 </button>
                               </div>
                               );

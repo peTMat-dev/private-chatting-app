@@ -792,6 +792,42 @@ a:hover {
   cursor: not-allowed;
 }
 
+.contact-action-btn--tick {
+  background: transparent;
+  border-color: transparent;
+  color: #00FFFF;
+  font-size: 0.95rem;
+  padding: 0 0.3rem;
+  line-height: 1;
+}
+
+.contact-action-btn--tick:hover:not(:disabled) {
+  background: rgba(0, 255, 255, 0.08);
+}
+
+.contact-action-btn--tick:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.contact-action-btn--add {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-green);
+  font-size: 0.95rem;
+  padding: 0 0.3rem;
+  line-height: 1;
+}
+
+.contact-action-btn--add:hover:not(:disabled) {
+  background: rgba(3, 160, 98, 0.08);
+}
+
+.contact-action-btn--add:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .contact-action-btn--chat {
   background: linear-gradient(135deg, rgba(3, 160, 98, 0.1), rgba(3, 160, 98, 0.05));
   border-color: rgba(3, 160, 98, 0.2);
