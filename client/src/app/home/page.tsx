@@ -110,6 +110,8 @@ export default function HomeCube() {
   const [showContactList, setShowContactList] = useState(false);
   const [contactSearch, setContactSearch] = useState("");
   const [removingContactId, setRemovingContactId] = useState<number | null>(null);
+  const [removingPublicUserId, setRemovingPublicUserId] = useState<number | null>(null);
+  const [addingPublicUserId, setAddingPublicUserId] = useState<number | null>(null);
   const [whoseContactAmI, setWhoseContactAmI] = useState<{ id: number; displayName: string }[]>([]);
   const [showWhoseContactAmI, setShowWhoseContactAmI] = useState(false);
   const [loadingWhoseContactAmI, setLoadingWhoseContactAmI] = useState(false);
@@ -276,55 +278,47 @@ export default function HomeCube() {
   };
 
   const handleRemovePublicUser = async (userId: number) => {
-    setPublicUsers((prev) =>
-      prev.map((u) => (u.id === userId ? { ...u, isAlreadyContact: false } : u))
-    );
+    setRemovingPublicUserId(userId);
     try {
       const { ok, data } = await postJson("/contacts/remove", {
         username,
         contactUserId: userId,
       });
       if (!ok || !data.success) {
-        setPublicUsers((prev) =>
-          prev.map((u) => (u.id === userId ? { ...u, isAlreadyContact: true } : u))
-        );
         setAlertDialog({ show: true, title: "Error", message: data.error || "Failed to remove contact" });
         return;
       }
-      fetchUserContacts();
-    } catch {
       setPublicUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, isAlreadyContact: true } : u))
+        prev.map((u) => (u.id === userId ? { ...u, isAlreadyContact: false } : u))
       );
+      fetchUserContacts();
+    } catch (err) {
+      setAlertDialog({ show: true, title: "Error", message: (err as Error).message });
+    } finally {
+      setRemovingPublicUserId(null);
     }
   };
 
   const handleAddPublicUser = async (userId: number, displayName: string) => {
     if (!userId || !displayName) return;
-
-    // Optimistic update — mark as added immediately
-    setPublicUsers((prev) =>
-      prev.map((u) => (u.id === userId ? { ...u, isAlreadyContact: true } : u))
-    );
-
+    setAddingPublicUserId(userId);
     try {
       const { ok, data } = await postJson("/contacts/add-public", {
         username,
         contactUserId: userId,
       });
       if (!ok || !data.success) {
-        // Roll back on failure
-        setPublicUsers((prev) =>
-          prev.map((u) => (u.id === userId ? { ...u, isAlreadyContact: false } : u))
-        );
+        setAlertDialog({ show: true, title: "Error", message: data.error || "Failed to add contact" });
         return;
       }
-      fetchUserContacts();
-    } catch {
-      // Roll back on error
       setPublicUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, isAlreadyContact: false } : u))
+        prev.map((u) => (u.id === userId ? { ...u, isAlreadyContact: true } : u))
       );
+      fetchUserContacts();
+    } catch (err) {
+      setAlertDialog({ show: true, title: "Error", message: (err as Error).message });
+    } finally {
+      setAddingPublicUserId(null);
     }
   };
 
@@ -614,46 +608,43 @@ export default function HomeCube() {
                               {tr.noPublicUsers}
                             </div>
                           ) : (
-                            sortedPublicUsers.map((user) => (
+                            sortedPublicUsers.map((user) => {
+                              const isBusy = removingPublicUserId === user.id || addingPublicUserId === user.id;
+                              return (
                               <div
                                 key={user.id}
-                                onClick={() => {
-                                  if (!loadingPublicUsers && !user.isAlreadyContact) {
-                                    handleAddPublicUser(user.id, user.displayName);
-                                  }
-                                }}
                                 style={{
                                   padding: "0.5rem 0.75rem",
-                                  cursor: loadingPublicUsers ? "default" : user.isAlreadyContact ? "default" : "pointer",
+                                  cursor: "default",
                                   backgroundColor: "transparent",
                                   color: user.isAlreadyContact ? "#00FFFF" : "var(--color-green)",
                                   borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
-                                  transition: "background-color 0.2s",
                                   display: "flex",
                                   justifyContent: "space-between",
                                   alignItems: "center",
                                 }}
-                                onMouseEnter={(e) => {
-                                  if (!loadingPublicUsers && !user.isAlreadyContact) {
-                                    e.currentTarget.style.backgroundColor = "rgba(3, 160, 98, 0.08)";
-                                  }
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = "transparent";
-                                }}
                               >
-                                <span>{user.displayName}{user.isAlreadyContact ? " ✓" : ""}</span>
-                                {user.isAlreadyContact && (
-                                  <button
-                                    className="contact-action-btn contact-action-btn--remove"
-                                    onClick={(e) => { e.stopPropagation(); handleRemovePublicUser(user.id); }}
-                                    disabled={loadingPublicUsers}
-                                  >
-                                    ✕
-                                  </button>
-                                )}
+                                <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {user.displayName}
+                                </span>
+                                <button
+                                  className={`contact-action-btn ${user.isAlreadyContact ? "contact-action-btn--remove" : "contact-action-btn--add"}`}
+                                  onClick={() => {
+                                    if (isBusy || loadingPublicUsers) return;
+                                    if (user.isAlreadyContact) {
+                                      handleRemovePublicUser(user.id);
+                                    } else {
+                                      handleAddPublicUser(user.id, user.displayName);
+                                    }
+                                  }}
+                                  disabled={isBusy || loadingPublicUsers}
+                                  title={user.isAlreadyContact ? "Remove contact" : "Add contact"}
+                                >
+                                  {isBusy ? "…" : user.isAlreadyContact ? "✕" : "✓"}
+                                </button>
                               </div>
-                            ))
+                              );
+                            })
                           )}
                         </div>
                       </div>

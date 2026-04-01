@@ -13,7 +13,9 @@
   "license": "ISC",
   "packageManager": "pnpm@10.24.0",
   "pnpm": {
-    "onlyBuiltDependencies": ["argon2"]
+    "onlyBuiltDependencies": [
+      "argon2"
+    ]
   },
   "dependencies": {
     "argon2": "^0.44.0",
@@ -23,7 +25,7 @@
     "ldapjs": "^3.0.7",
     "ldapts": "^8.1.7",
     "mysql": "^2.18.1",
-    "nodemailer": "^6.10.1"
+    "nodemailer": "^8.0.4"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
@@ -31,7 +33,7 @@
     "@types/ldapjs": "^3.0.6",
     "@types/mysql": "^2.15.27",
     "@types/node": "^25.5.0",
-    "@types/nodemailer": "^6.4.17",
+    "@types/nodemailer": "^7.0.11",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
