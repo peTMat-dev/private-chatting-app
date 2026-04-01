@@ -110,6 +110,9 @@ export default function HomeCube() {
   const [showContactList, setShowContactList] = useState(false);
   const [contactSearch, setContactSearch] = useState("");
   const [removingContactId, setRemovingContactId] = useState<number | null>(null);
+  const [whoseContactAmI, setWhoseContactAmI] = useState<{ id: number; displayName: string }[]>([]);
+  const [showWhoseContactAmI, setShowWhoseContactAmI] = useState(false);
+  const [loadingWhoseContactAmI, setLoadingWhoseContactAmI] = useState(false);
 
   useEffect(() => {
     setLangState(getLang());
@@ -322,6 +325,25 @@ export default function HomeCube() {
       setPublicUsers((prev) =>
         prev.map((u) => (u.id === userId ? { ...u, isAlreadyContact: false } : u))
       );
+    }
+  };
+
+  const fetchWhoseContactAmI = async () => {
+    if (!username) return;
+    setLoadingWhoseContactAmI(true);
+    try {
+      const url = buildApiUrl(`/contacts/whose-contact-am-i?username=${encodeURIComponent(username)}`);
+      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      const data = (await res.json()) as { success: boolean; data?: { id: number; displayName: string }[]; error?: string };
+      if (!res.ok || !data.success) {
+        setAlertDialog({ show: true, title: "Error", message: data.error || "Unable to load" });
+        return;
+      }
+      setWhoseContactAmI(data.data || []);
+    } catch (err) {
+      setAlertDialog({ show: true, title: "Error", message: (err as Error).message });
+    } finally {
+      setLoadingWhoseContactAmI(false);
     }
   };
 
@@ -691,7 +713,7 @@ export default function HomeCube() {
                       </div>
                     )}
                   </div>
-                  <div>
+                  <div style={{ marginBottom: "1rem" }}>
                     <button
                       className="add-contact-btn"
                       onClick={() => {
@@ -800,6 +822,56 @@ export default function HomeCube() {
                           </div>
                           </>
                         )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <button
+                      className="add-contact-btn"
+                      onClick={() => {
+                        const next = !showWhoseContactAmI;
+                        setShowWhoseContactAmI(next);
+                        setShowContactList(false);
+                        setShowPublicUserSelect(false);
+                        setShowRequestInput(false);
+                        setPrivateRequestSent(false);
+                        if (next) fetchWhoseContactAmI();
+                      }}
+                      style={{ width: "100%" }}
+                    >
+                      {tr.whoseContactAmI}
+                    </button>
+                    {showWhoseContactAmI && (
+                      <div style={{ marginTop: "0.75rem" }}>
+                        <div
+                          className="auth-input"
+                          style={{ padding: 0, maxHeight: "180px", overflowY: "auto", opacity: loadingWhoseContactAmI ? 0.6 : 1 }}
+                        >
+                          {loadingWhoseContactAmI ? (
+                            <div style={{ padding: "0.75rem", color: "var(--color-green)", textAlign: "center" }}>
+                              {tr.loadingUsers}
+                            </div>
+                          ) : whoseContactAmI.length === 0 ? (
+                            <div style={{ padding: "0.75rem", color: "rgba(3,160,98,0.5)", textAlign: "center", fontSize: "0.8rem" }}>
+                              —
+                            </div>
+                          ) : (
+                            whoseContactAmI.map((user) => (
+                              <div
+                                key={user.id}
+                                style={{
+                                  padding: "0.5rem 0.75rem",
+                                  color: "var(--color-green)",
+                                  borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                                  fontSize: "0.85rem",
+                                }}
+                              >
+                                {user.displayName}
+                              </div>
+                            ))
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>

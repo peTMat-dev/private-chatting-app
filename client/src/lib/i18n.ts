@@ -80,6 +80,7 @@ export type Translations = {
   added: string;
   addedDate: string;
   contactList: string;
+  whoseContactAmI: string;
   chatSoon: string;
 
   // Post-login: Settings face
@@ -177,6 +178,7 @@ const translations: Record<LangCode, Translations> = {
     added: "Added",
     addedDate: "Added:",
     contactList: "Contact List",
+    whoseContactAmI: "Whose contact am I?",
     chatSoon: "Chat (coming soon)",
     userSettings: "User Settings",
     settingsSaved: "Success!",
@@ -264,6 +266,7 @@ const translations: Record<LangCode, Translations> = {
     added: "Añadido",
     addedDate: "Añadido:",
     contactList: "Lista de contactos",
+    whoseContactAmI: "¿De quién soy contacto?",
     chatSoon: "Chat (próximamente)",
     userSettings: "Configuración",
     settingsSaved: "¡Éxito!",
@@ -351,6 +354,7 @@ const translations: Record<LangCode, Translations> = {
     added: "Ajouté",
     addedDate: "Ajouté :",
     contactList: "Liste de contacts",
+    whoseContactAmI: "Dont je suis le contact ?",
     chatSoon: "Chat (bientôt disponible)",
     userSettings: "Paramètres utilisateur",
     settingsSaved: "Succès !",
@@ -438,6 +442,7 @@ const translations: Record<LangCode, Translations> = {
     added: "Hinzugefügt",
     addedDate: "Hinzugefügt:",
     contactList: "Kontaktliste",
+    whoseContactAmI: "Wessen Kontakt bin ich?",
     chatSoon: "Chat (demnächst)",
     userSettings: "Benutzereinstellungen",
     settingsSaved: "Erfolg!",
@@ -525,6 +530,7 @@ const translations: Record<LangCode, Translations> = {
     added: "Pridané",
     addedDate: "Pridané:",
     contactList: "Zoznam kontaktov",
+    whoseContactAmI: "Čí kontakt som?",
     chatSoon: "Chat (čoskoro)",
     userSettings: "Nastavenia používateľa",
     settingsSaved: "Úspech!",
@@ -612,6 +618,7 @@ const translations: Record<LangCode, Translations> = {
     added: "Přidáno",
     addedDate: "Přidáno:",
     contactList: "Seznam kontaktů",
+    whoseContactAmI: "Čí kontakt jsem?",
     chatSoon: "Chat (brzy)",
     userSettings: "Nastavení uživatele",
     settingsSaved: "Úspěch!",

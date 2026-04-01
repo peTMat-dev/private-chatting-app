@@ -1,9 +1,0 @@
-{
-	"dependencies": {
-		"bootstrap": "^5.3.8",
-		"ldapjs": "^3.0.7"
-	},
-	"devDependencies": {
-		"@types/ldapjs": "^3.0.6"
-	}
-}

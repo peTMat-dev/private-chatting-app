@@ -180,6 +180,42 @@ router.post("/request", async (req: Request, res: Response) => {
   res.json({ success: true });
 });
 
+// GET /contacts/whose-contact-am-i - Find users who have added the current user as a contact
+router.get("/whose-contact-am-i", async (req: Request, res: Response) => {
+  const username = String(req.query.username || "").trim();
+  if (!username) {
+    return res.status(400).json({ success: false, error: "username is required" });
+  }
+
+  try {
+    const userRows = await query<{ user_id: number }>(
+      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
+      [username]
+    );
+    if (userRows.length === 0) {
+      return res.status(404).json({ success: false, error: "user not found" });
+    }
+    const userId = userRows[0].user_id;
+
+    const rows = await query<{ user_id: number; display_name: string }>(
+      "CALL contact_whose_contact_am_I(?)",
+      [userId]
+    );
+
+    // MySQL stored procedures return results in nested array
+    const resultRows = Array.isArray(rows[0]) ? rows[0] : rows;
+
+    const data = resultRows.map((r: { user_id: number; display_name: string }) => ({
+      id: r.user_id,
+      displayName: r.display_name,
+    }));
+
+    res.json({ success: true, count: data.length, data });
+  } catch (error) {
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
 // POST /contacts/remove - Remove a contact
 router.post("/remove", async (req: Request, res: Response) => {
   const { username, contactUserId } = req.body;

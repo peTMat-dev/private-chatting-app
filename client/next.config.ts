@@ -5,8 +5,9 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
   turbopack: {
-    // Use an absolute path to avoid warnings about inferred root
-    root: process.cwd(),
+    // Set root to monorepo root so Turbopack can follow pnpm symlinks
+    // from client/node_modules into the shared parent .pnpm store
+    root: path.resolve(process.cwd(), '..'),
   },
   // Explicitly allow dev asset requests from your app domain
   // to future-proof against stricter defaults.

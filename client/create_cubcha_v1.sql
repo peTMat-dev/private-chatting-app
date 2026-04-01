@@ -11,11 +11,20 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_main_details` (
     `ldap_uid_id` VARCHAR(32) NOT NULL UNIQUE COMMENT 'Unique LDAP user ID (immutable)',
     -- username_id` VARCHAR(32) NOT NULL UNIQUE COMMENT 'Display username (may be shown in UI)',
     --   BOOLEAN DEFAULT FALSE COMMENT 'Indicates if the user account is disabled',
-    `active` BOOLEAN DEFAULT FALSE COMMENT 'Indicates if the user account is active/disabled',
+    `active` BOOLEAN DEFAULT FALSE COMMENT 'Indicates if the user account is active/disabled',*
     `display_name` VARCHAR(48) NOT NULL COMMENT 'User-chosen public display name',
-    `last_seen_at` TIMESTAMP DEFAULT NULL COMMENT 'Last time user was seen online',
-    `last_login_at` DATETIME DEFAULT NULL COMMENT 'Last login timestamp'
+    `last_seen_at` TIMESTAMP DEFAULT NULL COMMENT 'Last time user was seen online'*,
+    `last_login_at` DATETIME DEFAULT NULL COMMENT 'Last login timestamp, admin purpose'*
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores main user details';
+
+-- Create a user details, not created in live db yet. 
+CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_main_details_disabled` (
+    `user_id` SMALLINT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT COMMENT 'Primary key for users',
+    `disabled` BOOLEAN DEFAULT FALSE COMMENT 'Indicates if the user account is active/disabled',*?
+    `disabled_at` TIMESTAMP DEFAULT NULL COMMENT 'Last time user was seen online'*,
+    `last_login_at` DATETIME DEFAULT NULL COMMENT 'Last login timestamp, admin purpose'*might not be needed?
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores details of disabled users to purge the database + activates archiving -NAY';
+
 
 -- Create user system details for profile setting
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_system_details` (
@@ -23,6 +32,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_system_details` (
     `user_language` VARCHAR(32) NOT NULL COMMENT 'Preferred language for UI',
     `default_max_chat_participants` TINYINT UNSIGNED DEFAULT 10 COMMENT 'Default max chat participants for new conversations',
     `public_st` BOOLEAN DEFAULT TRUE COMMENT 'Indicates if the user profile is public',
+    `can_be_added_to_contacts` BOOLEAN DEFAULT FALSE COMMENT 'Indicates if the user can be added to contacts',
     `user_timezone` VARCHAR(32) DEFAULT 'UTC' COMMENT 'User timezone string',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Profile creation timestamp',
     `updated_at` DATETIME DEFAULT NULL on UPDATE CURRENT_TIMESTAMP COMMENT 'Last profile update timestamp',
@@ -36,13 +46,13 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`contacts` (
     `owner_user_id` SMALLINT UNSIGNED NOT NULL COMMENT 'User who owns this contact',
     `contact_user_id` SMALLINT UNSIGNED NOT NULL COMMENT 'User who is the contact',
     `status_st` BOOLEAN DEFAULT TRUE COMMENT 'Contact status added/removed or closed account)',
-    `added_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'When contact was added',
+    `added_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'When contact was added',*
     PRIMARY KEY (`owner_user_id`, `contact_user_id`),
     FOREIGN KEY (`owner_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
     FOREIGN KEY (`contact_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores user-to-user contacts';
 
--- dorobit
+-- to finish this table
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`contacts_requests` (
     `request_id` INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     -- Only one active (pending) request allowed per user pair. Unique key on (requester_user_id, target_user_id, status)
@@ -57,10 +67,10 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`contacts_requests` (
     `removed_at` DATETIME NULL,
     FOREIGN KEY (`requester_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
     FOREIGN KEY (`target_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
-    UNIQUE KEY `unique_pending_request` (`requester_user_id`, `target_user_id`, `status`)
+    UNIQUE KEY `unique_pending_request` (`requester_user_id`, `target_user_id`, `status_st`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE IF NOT EXISTS `cubcha_v1`.`blocked_users` (
+CREATE TABLE IF NOT EXISTS `cubcha_v1`.`contacts_blocked_users` (
     `blocker_user_id` SMALLINT UNSIGNED NOT NULL,      -- the user who is blocking
     `blocked_user_id` SMALLINT UNSIGNED NOT NULL,      -- the user being blocked
     `blocked_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -97,7 +107,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`conversations` (
     `title` VARCHAR(64) DEFAULT NULL,
     `group_id` INT UNSIGNED DEFAULT NULL,
     FOREIGN KEY (`creator_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
-    FOREIGN KEY (`group_id`) REFERENCES `cubcha_v1`.`user_groups`(`group_id`)
+    FOREIGN KEY (`group_id`) REFERENCES `cubcha_v1`.`user_groups`(`group_id`) not in live db yet
     ,KEY `idx_conversations_creator` (`creator_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -198,10 +208,9 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`password_resets` (
     `user_id` SMALLINT UNSIGNED NOT NULL COMMENT 'FK to user_main_details.user_id',
     `resettoken` BOOLEAN NOT NULL COMMENT 'Password reset token created YES or NO',
     `resettokenexpiry` DATETIME NOT NULL COMMENT 'Expiry time of the reset token',
-    `resetused` BOOLEAN DEFAULT CURRENT_TIMESTAMP COMMENT 'confirmation if the token was used',
-    
+    `resetused` BOOLEAN DEFAULT CURRENT_TIMESTAMP COMMENT 'confirmation if the token was used',   
     FOREIGN KEY (`user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)
-        ON DELETE CASCADE ON UPDATE CASCADE
+    ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='handles password reset tokens for users';
 
 
@@ -219,9 +228,9 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`password_reset_alarms` (
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`infos` (
     `info_id` SMALLINT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT COMMENT 'Primary key for manual info entries',
     `heading_cube` VARCHAR(48) NOT NULL COMMENT 'heading to the section of the manual',
-    `language_code` VARCHAR(8) NOT NULL COMMENT 'language code for the manual section (e.g., en, de)',
-    `display_order` SMALLINT UNSIGNED NOT NULL COMMENT 'order of display for manual sections',
-    `text_description` VARCHAR(128) COMMENT 'text of the section of the manual',
+    `language_code` VARCHAR(8) NOT NULL DEFAULT 'en' COMMENT 'language code for the manual section (e.g., en, de)',
+    `display_order`  SMALLINT(5) UNSIGNED NOT NULL DEFAULT 1 COMMENT 'order of display for manual sections',
+    `text_description` VARCHAR(256) COMMENT 'text of the section of the manual',
     UNIQUE KEY uq_infos_heading_language (heading_cube, language_code),
     KEY idx_infos_language_order (language_code, display_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Manual information for users';
