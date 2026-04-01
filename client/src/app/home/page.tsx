@@ -802,11 +802,11 @@ export default function HomeCube() {
                                   💬
                                 </button>
                                 <button
-                                  className="contact-action-btn contact-action-btn--remove"
+                                  className="contact-action-btn contact-action-btn--tick"
                                   onClick={() => handleRemoveContact(c.id)}
                                   disabled={removingContactId === c.id}
                                 >
-                                  {removingContactId === c.id ? "…" : "✕"}
+                                  {removingContactId === c.id ? "…" : "☑"}
                                 </button>
                               </div>
                             ))}
