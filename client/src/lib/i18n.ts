@@ -91,6 +91,7 @@ export type Translations = {
   maxChatParticipants: string;
   timezone: string;
   makeProfilePublic: string;
+  allowContactRequests: string;
   saving: string;
   saveSettings: string;
   loadingSettings: string;
@@ -187,6 +188,7 @@ const translations: Record<LangCode, Translations> = {
     maxChatParticipants: "Max Chat Participants",
     timezone: "Timezone",
     makeProfilePublic: "Make profile public",
+    allowContactRequests: "Allow contact requests",
     saving: "Saving...",
     saveSettings: "Save Settings",
     loadingSettings: "Loading settings...",
@@ -275,6 +277,7 @@ const translations: Record<LangCode, Translations> = {
     maxChatParticipants: "Máx. participantes en chat",
     timezone: "Zona horaria",
     makeProfilePublic: "Hacer perfil público",
+    allowContactRequests: "Permitir solicitudes de contacto",
     saving: "Guardando...",
     saveSettings: "Guardar configuración",
     loadingSettings: "Cargando configuración...",
@@ -363,6 +366,7 @@ const translations: Record<LangCode, Translations> = {
     maxChatParticipants: "Participants max. par chat",
     timezone: "Fuseau horaire",
     makeProfilePublic: "Rendre le profil public",
+    allowContactRequests: "Autoriser les demandes de contact",
     saving: "Enregistrement...",
     saveSettings: "Enregistrer les paramètres",
     loadingSettings: "Chargement des paramètres...",
@@ -451,6 +455,7 @@ const translations: Record<LangCode, Translations> = {
     maxChatParticipants: "Max. Chat-Teilnehmer",
     timezone: "Zeitzone",
     makeProfilePublic: "Profil öffentlich machen",
+    allowContactRequests: "Kontaktanfragen erlauben",
     saving: "Speichern...",
     saveSettings: "Einstellungen speichern",
     loadingSettings: "Einstellungen werden geladen...",
@@ -539,6 +544,7 @@ const translations: Record<LangCode, Translations> = {
     maxChatParticipants: "Max. účastníkov chatu",
     timezone: "Časové pásmo",
     makeProfilePublic: "Zverejniť profil",
+    allowContactRequests: "Povoliť žiadosti o kontakt",
     saving: "Ukladanie...",
     saveSettings: "Uložiť nastavenia",
     loadingSettings: "Načítanie nastavení...",
@@ -627,6 +633,7 @@ const translations: Record<LangCode, Translations> = {
     maxChatParticipants: "Max. účastníků chatu",
     timezone: "Časové pásmo",
     makeProfilePublic: "Zveřejnit profil",
+    allowContactRequests: "Povolit žádosti o kontakt",
     saving: "Ukládání...",
     saveSettings: "Uložit nastavení",
     loadingSettings: "Načítání nastavení...",

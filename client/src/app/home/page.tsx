@@ -53,6 +53,7 @@ type UserSettings = {
   default_max_chat_participants: number;
   public: boolean;
   user_timezone: string;
+  can_be_added_to_contacts: boolean;
 };
 
 type ApiSettingsResponse = {
@@ -76,6 +77,7 @@ export default function HomeCube() {
     yTicks,
     setActiveFace,
     setYTicks,
+    transitionEnabled,
     rotation,
     goLeft,
     goRight,
@@ -84,6 +86,7 @@ export default function HomeCube() {
     handleKeyDown,
     handleTouchStart,
     handleTouchEnd,
+    handleHeaderTripleTap,
   } = useCubeNavigation("front");
   const [contacts, setContacts] = useState<ContactSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -477,14 +480,17 @@ export default function HomeCube() {
       <div className="auth-cube-stage">
         <div
           className="auth-cube"
-          style={{ transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)` }}
+          style={{
+            transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
+            transition: transitionEnabled ? undefined : "none",
+          }}
         >
           {/* Front: Chats list */}
           <section className="cube-face cube-face-front">
             <section className="auth-stack">
               <article className="auth-card cube-face-panel">
                 <div className="cube-face-content">
-                  <div className="cube-face-header">
+                  <div className="cube-face-header" onClick={handleHeaderTripleTap}>
                     <h2>{tr.chats}</h2>
                   </div>
                   {error ? (
@@ -517,7 +523,7 @@ export default function HomeCube() {
           <section className="cube-face cube-face-left">
             <article className="auth-card cube-face-panel">
               <div className="cube-face-content">
-                <div className="cube-face-header">
+                <div className="cube-face-header" onClick={handleHeaderTripleTap}>
                   <h2>{tr.contacts}</h2>
                 </div>
                 
@@ -875,7 +881,7 @@ export default function HomeCube() {
           <section className="cube-face cube-face-back">
             <article className="auth-card cube-face-panel">
               <div className="cube-face-content">
-                <div className="cube-face-header">
+                <div className="cube-face-header" onClick={handleHeaderTripleTap}>
                   <h2>{tr.userSettings}</h2>
                 </div>
                 
@@ -1081,6 +1087,19 @@ export default function HomeCube() {
                       </label>
                     </div>
 
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                      <input
+                        id="allow-contact-requests"
+                        type="checkbox"
+                        checked={settings.can_be_added_to_contacts}
+                        onChange={(e) => setSettings({ ...settings, can_be_added_to_contacts: e.target.checked })}
+                        style={{ width: "18px", height: "18px", cursor: "pointer", margin: 0 }}
+                      />
+                      <label htmlFor="allow-contact-requests" className="auth-label" style={{ marginBottom: 0, cursor: "pointer" }}>
+                        {tr.allowContactRequests}
+                      </label>
+                    </div>
+
                     <button type="submit" className="auth-btn" disabled={savingSettings} style={{ marginTop: "0.25rem" }}>
                     {savingSettings ? tr.saving : tr.saveSettings}
                     </button>
@@ -1094,7 +1113,7 @@ export default function HomeCube() {
           <section className="cube-face cube-face-right">
             <article className="auth-card cube-face-panel">
               <div className="cube-face-content">
-                <div className="cube-face-header">
+                <div className="cube-face-header" onClick={handleHeaderTripleTap}>
                   <h2>{tr.chat}</h2>
                 </div>
                 <p className="hero-copy">{tr.openConversation}</p>

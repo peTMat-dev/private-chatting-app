@@ -9,29 +9,35 @@ USE `cubcha_v1`;
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_main_details` (
     `user_id` SMALLINT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT COMMENT 'Primary key for users',
     `ldap_uid_id` VARCHAR(32) NOT NULL UNIQUE COMMENT 'Unique LDAP user ID (immutable)',
-    -- username_id` VARCHAR(32) NOT NULL UNIQUE COMMENT 'Display username (may be shown in UI)',
-    --   BOOLEAN DEFAULT FALSE COMMENT 'Indicates if the user account is disabled',
-    `active` BOOLEAN DEFAULT FALSE COMMENT 'Indicates if the user account is active/disabled',*
     `display_name` VARCHAR(48) NOT NULL COMMENT 'User-chosen public display name',
     `last_seen_at` TIMESTAMP DEFAULT NULL COMMENT 'Last time user was seen online'*,
     `last_login_at` DATETIME DEFAULT NULL COMMENT 'Last login timestamp, admin purpose'*
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores main user details';
 
--- Create a user details, not created in live db yet. 
+-- Create a table for disabled user details, not created in live db yet. 
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_main_details_disabled` (
-    `user_id` SMALLINT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT COMMENT 'Primary key for users',
-    `disabled` BOOLEAN DEFAULT FALSE COMMENT 'Indicates if the user account is active/disabled',*?
-    `disabled_at` TIMESTAMP DEFAULT NULL COMMENT 'Last time user was seen online'*,
-    `last_login_at` DATETIME DEFAULT NULL COMMENT 'Last login timestamp, admin purpose'*might not be needed?
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores details of disabled users to purge the database + activates archiving -NAY';
+    `user_id` SMALLINT UNSIGNED PRIMARY KEY NOT NULL COMMENT 'Primary key for disabled users, matches user_id from user_main_details',
+    `disabled_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Timestamp when user was disabled',
+    `last_login_at` DATETIME DEFAULT NULL COMMENT 'Last login timestamp, admin purpose'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores details of disabled users to purge the database + activates archiving -NYI';
 
+-- Create a table for banned users, not created in live db yet.
+CREATE TABLE IF NOT EXISTS `cubcha_v1`.`banned_users` (
+    `ban_id` SMALLINT UNSIGNED PRIMARY KEY,
+    `email_hash` VARCHAR(64) NOT NULL COMMENT 'HMAC-SHA256 of email, if available',
+    `ban_expires_at` DATETIME DEFAULT NULL COMMENT 'NULL = permanent',
+    `banned_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `ban_reason` VARCHAR(255) DEFAULT NULL COMMENT 'Admin notes, no PII',
+    UNIQUE KEY `unique_email_hash` (`email_hash`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+  COMMENT='Banned user identifiers — hashed only, no recoverable PII';
 
 -- Create user system details for profile setting
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_system_details` (
     `user_id` SMALLINT UNSIGNED PRIMARY KEY NOT NULL COMMENT 'FK to user_main_details.user_id',
     `user_language` VARCHAR(32) NOT NULL COMMENT 'Preferred language for UI',
     `default_max_chat_participants` TINYINT UNSIGNED DEFAULT 10 COMMENT 'Default max chat participants for new conversations',
-    `public_st` BOOLEAN DEFAULT TRUE COMMENT 'Indicates if the user profile is public',
+    `public_st` BOOLEAN DEFAULT TRUE COMMENT 'Indicates if the user profile is public(on) or private (off)',
     `can_be_added_to_contacts` BOOLEAN DEFAULT FALSE COMMENT 'Indicates if the user can be added to contacts',
     `user_timezone` VARCHAR(32) DEFAULT 'UTC' COMMENT 'User timezone string',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Profile creation timestamp',

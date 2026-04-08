@@ -19,7 +19,11 @@ export function useCubeNavigation(initialFace: CubeFace = "front") {
   const initialTicks = initialFace !== "top" ? FACE_TICKS[initialFace] : 0;
   const [activeFace, setActiveFace] = useState<CubeFace>(initialFace);
   const [yTicks, setYTicks] = useState<number>(initialTicks);
+  const [transitionEnabled, setTransitionEnabled] = useState(true);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const tapCountRef = useRef(0);
+  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedYTicksRef = useRef(0);
 
   const rotation = useMemo(() => {
     const baseX = -5;
@@ -48,16 +52,29 @@ export function useCubeNavigation(initialFace: CubeFace = "front") {
   };
 
   const goDown = () => {
-    setActiveFace((prev) => {
-      if (prev !== "top") return "top";
-      return prev;
+    if (activeFace === "top") return;
+    savedYTicksRef.current = yTicks;
+    // Instantly snap Y to front (no animation), then animate X tilt to top
+    setTransitionEnabled(false);
+    setYTicks(0);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setTransitionEnabled(true);
+        setActiveFace("top");
+      });
     });
   };
 
   const goUp = () => {
-    setActiveFace((prev) => {
-      if (prev === "top") return FACES_BY_TICKS[((yTicks % 4) + 4) % 4];
-      return prev;
+    if (activeFace !== "top") return;
+    // Instantly restore Y (no animation), then animate X tilt back down
+    setTransitionEnabled(false);
+    setYTicks(savedYTicksRef.current);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setTransitionEnabled(true);
+        setActiveFace(FACES_BY_TICKS[((savedYTicksRef.current % 4) + 4) % 4]);
+      });
     });
   };
 
@@ -111,9 +128,22 @@ export function useCubeNavigation(initialFace: CubeFace = "front") {
     if (absDx > absDy) {
       if (dx < 0) goRight(); else goLeft();
     } else {
-      if (dy > 0) goUp(); else goDown();
+      if (dy > 0) goUp();
     }
     touchStartRef.current = null;
+  };
+
+  const handleHeaderTripleTap = () => {
+    tapCountRef.current += 1;
+    if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
+    if (tapCountRef.current >= 3) {
+      tapCountRef.current = 0;
+      goDown();
+      return;
+    }
+    tapTimerRef.current = setTimeout(() => {
+      tapCountRef.current = 0;
+    }, 600);
   };
 
   return {
@@ -121,6 +151,7 @@ export function useCubeNavigation(initialFace: CubeFace = "front") {
     yTicks,
     setYTicks,
     setActiveFace,
+    transitionEnabled,
     rotation,
     goLeft,
     goRight,
@@ -130,5 +161,6 @@ export function useCubeNavigation(initialFace: CubeFace = "front") {
     handleKeyDown,
     handleTouchStart,
     handleTouchEnd,
+    handleHeaderTripleTap,
   };
 }

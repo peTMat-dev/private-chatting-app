@@ -8,6 +8,7 @@ type UserSystemDetails = {
   default_max_chat_participants: number;
   public_st: boolean;
   user_timezone: string;
+  can_be_added_to_contacts: boolean;
 };
 
 type TimezoneRow = {
@@ -38,7 +39,7 @@ router.get("/", async (req: Request, res: Response) => {
 
     // Get user system details
     const settingsRows = await query<UserSystemDetails>(
-      `SELECT user_language, default_max_chat_participants, public_st, user_timezone 
+      `SELECT user_language, default_max_chat_participants, public_st, user_timezone, can_be_added_to_contacts 
        FROM user_system_details 
        WHERE user_id = ? LIMIT 1`,
       [userId]
@@ -53,6 +54,7 @@ router.get("/", async (req: Request, res: Response) => {
       default_max_chat_participants: settingsRows[0].default_max_chat_participants,
       public_st: Boolean(settingsRows[0].public_st),
       user_timezone: settingsRows[0].user_timezone,
+      can_be_added_to_contacts: Boolean(settingsRows[0].can_be_added_to_contacts),
     };
 
     res.json({ success: true, data: settings });
@@ -83,7 +85,7 @@ router.get("/timezones", async (_req: Request, res: Response) => {
 
 // PUT /settings
 router.put("/", async (req: Request, res: Response) => {
-  const { username, user_language, default_max_chat_participants, public_st: isPublic, user_timezone } = req.body;
+  const { username, user_language, default_max_chat_participants, public_st: isPublic, user_timezone, can_be_added_to_contacts } = req.body;
 
   if (!username || typeof username !== "string") {
     return res.status(400).json({ success: false, error: "Username is required" });
@@ -125,6 +127,11 @@ router.put("/", async (req: Request, res: Response) => {
     if (isPublic !== undefined && typeof isPublic === "boolean") {
       updates.push("public_st = ?");
       values.push(isPublic);
+    }
+
+    if (can_be_added_to_contacts !== undefined && typeof can_be_added_to_contacts === "boolean") {
+      updates.push("can_be_added_to_contacts = ?");
+      values.push(can_be_added_to_contacts);
     }
 
     if (user_timezone !== undefined && typeof user_timezone === "string") {
