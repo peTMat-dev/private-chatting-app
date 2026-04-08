@@ -65,14 +65,12 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`contacts_requests` (
     -- allows new requests after approval/rejection, but prevents duplicate pending requests.
     `requester_user_id` SMALLINT UNSIGNED NOT NULL,  -- Who sent request (FK to user_id)
     `target_user_id` SMALLINT UNSIGNED NOT NULL,     -- Who receives request (FK to user_id)
-    `requester_username` VARCHAR(64) NOT NULL,
-    `target_username` VARCHAR(64) NOT NULL,
     `status_st` ENUM('pending','approved','rejected','cancelled') DEFAULT 'pending',
     `requested_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    `responded_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+    `responded_at` DATETIME NULL DEFAULT NULL,
     `removed_at` DATETIME NULL,
-    FOREIGN KEY (`requester_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
-    FOREIGN KEY (`target_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
+    CONSTRAINT `cr_fk_requester` FOREIGN KEY (`requester_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT `cr_fk_target` FOREIGN KEY (`target_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
     UNIQUE KEY `unique_pending_request` (`requester_user_id`, `target_user_id`, `status_st`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
