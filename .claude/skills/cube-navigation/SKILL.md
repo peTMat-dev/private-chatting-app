@@ -6,18 +6,6 @@ argument-hint: 'Optional: specify area (e.g. swipe gestures, triple tap, top fac
 
 # Cube Navigation Skill
 
-## What This Skill Covers
-
-The entire navigation system for the **3D CSS rotating cube** UI in `client/src/app/home/page.tsx`. This includes:
-- Swipe gesture detection (touch events)
-- Keyboard arrow navigation
-- Triple-tap gesture to access the top (logout) face
-- Rotation math (`yTicks`, `rotation.x/y`)
-- CSS 3D transforms for each face
-- The `useCubeNavigation` hook
-
----
-
 ## File Map
 
 | File | Purpose |
@@ -25,6 +13,8 @@ The entire navigation system for the **3D CSS rotating cube** UI in `client/src/
 | `client/src/lib/useCubeNavigation.ts` | All navigation state, gestures, rotation logic |
 | `client/src/app/home/page.tsx` | Mounts the hook, wires events to the wrapper div and face headers |
 | `client/src/app/globals.css` | CSS 3D transforms for each face, cube stage perspective, transition |
+
+**State & Refs, Returned API, full wiring JSX, CSS code blocks:** See [navigation-reference.md](navigation-reference.md)
 
 ---
 
@@ -89,20 +79,6 @@ The **only correct approach** is the `transitionEnabled` + double-rAF pattern in
 
 ## The `useCubeNavigation` Hook
 
-**File:** `client/src/lib/useCubeNavigation.ts`
-
-### State & Refs
-
-```ts
-const [activeFace, setActiveFace] = useState<CubeFace>(initialFace);
-const [yTicks, setYTicks] = useState<number>(initialTicks);
-const [transitionEnabled, setTransitionEnabled] = useState(true); // controls CSS transition on/off
-const touchStartRef = useRef<{ x: number; y: number } | null>(null);  // swipe start position
-const tapCountRef = useRef(0);              // tracks consecutive header taps
-const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null); // resets tap count
-const savedYTicksRef = useRef(0);          // saves yTicks before going to top face
-```
-
 ### Navigation Functions
 
 | Function | Behaviour |
@@ -143,106 +119,28 @@ Two `requestAnimationFrame` calls are required — one rAF is not enough to guar
 
 ### Event Handlers
 
-**`handleTouchStart`** — records `{ x, y }` of first touch point into `touchStartRef`.
+| Handler | Wired to | Behaviour |
+|---|---|---|
+| `handleTouchStart` | wrapper `onTouchStart` | Records `{x, y}` touch start |
+| `handleTouchEnd` | wrapper `onTouchEnd` | `\|dx\| > \|dy\|` → left/right; upward only → `goUp()`; swipe-down disabled |
+| `handleKeyDown` | wrapper `onKeyDown` | Arrow keys → navigation |
+| `handleHeaderTripleTap` | each `.cube-face-header onClick` | 3 taps ≤ 600ms → `goDown()` |
 
-**`handleTouchEnd`** — calculates `dx`/`dy` from stored start. Ignores movements < 40px (tap threshold). Routes:
-- `|dx| > |dy|` → horizontal swipe → `goRight()` or `goLeft()`
-- `|dy| > |dx|` → vertical swipe → only **upward** swipe calls `goUp()` (swipe down is disabled — it used to call `goDown()`)
-- Clears `touchStartRef` after handling
-
-**`handleKeyDown`** — Arrow keys: Left/Right call goLeft/goRight; Up/Down call goUp/goDown.
-
-**`handleHeaderTripleTap`** — Called by the `onClick` on each `.cube-face-header`. Counts taps; 3 taps within 600ms calls `goDown()` (go to logout). Timer resets count if 600ms passes between taps.
-
-### Returned API
-
-```ts
-{
-  activeFace,          // CubeFace string — which face is currently active
-  yTicks,              // raw tick count (can be any int, negative OK)
-  setYTicks,           // raw setter
-  setActiveFace,       // raw setter
-  transitionEnabled,   // boolean — false during instant Y snap, true otherwise
-  rotation,            // { x, y } in degrees — apply to cube element
-  goLeft, goRight,     // horizontal navigation
-  goDown, goUp,        // vertical navigation (to/from top)
-  setFace,             // jump to named face
-  handleKeyDown,       // wire to wrapper div onKeyDown
-  handleTouchStart,    // wire to wrapper div onTouchStart
-  handleTouchEnd,      // wire to wrapper div onTouchEnd
-  handleHeaderTripleTap, // wire to each cube-face-header onClick
-}
-```
+Threshold: 40px. Wire to outer wrapper, NOT the cube element (`preserve-3d` can interfere on iOS).
 
 ---
 
 ## Wiring in `home/page.tsx`
 
-### Wrapper div (outermost)
-```tsx
-<div
-  className="mobile-auth-screen fade-in"
-  tabIndex={0}
-  onKeyDown={handleKeyDown}
-  onTouchStart={handleTouchStart}
-  onTouchEnd={handleTouchEnd}
->
-```
-Swipe and keyboard events are captured here — on the full-screen wrapper. This means swipes anywhere on the page rotate the cube.
-
-### Cube element
-```tsx
-<div
-  className="auth-cube"
-  style={{
-    transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
-    transition: transitionEnabled ? undefined : "none",
-  }}
->
-```
-`transition: "none"` is applied during the instant Y snap in `goDown`/`goUp` so the user never sees the Y movement.
-
-### Face headers (triple-tap)
-Every `.cube-face-header` has `onClick={handleHeaderTripleTap}`:
-```tsx
-<div className="cube-face-header" onClick={handleHeaderTripleTap}>
-  <h2>{tr.chats}</h2>
-</div>
-```
-This is wired to all 4 side faces: Chats (front), Contacts (left), Settings (back), Chat (right). The top face itself has no header.
+See [navigation-reference.md](navigation-reference.md) for full JSX examples.
 
 ---
 
 ## CSS — Key Rules
 
-**`client/src/app/globals.css`**
+`perspective: 1200px` on stage. `transition: transform 0.7s cubic-bezier(...)` on cube. **`backface-visibility: hidden`** on `.cube-face` — NEVER add extra rotations to face CSS transforms (black screen result).
 
-```css
-.auth-cube-stage {
-  perspective: 1200px; /* 3D depth — reduce = more dramatic perspective */
-}
-
-.auth-cube {
-  --cube-width: min(340px, 85vw);
-  transform-style: preserve-3d;
-  transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1); /* rotation animation */
-}
-
-.cube-face {
-  backface-visibility: hidden; /* CRITICAL — never flip a face 180° within its own transform */
-}
-```
-
-**Face transforms** — each face is pre-rotated into its 3D position:
-```css
-.cube-face-front  { transform: translateZ(calc(var(--cube-width) / 2)); }
-.cube-face-right  { transform: rotateY(90deg)  translateZ(calc(var(--cube-width) / 2)); }
-.cube-face-left   { transform: rotateY(-90deg) translateZ(calc(var(--cube-width) / 2)); }
-.cube-face-back   { transform: rotateY(180deg) translateZ(calc(var(--cube-width) / 2)); }
-.cube-face-top    { transform: rotateX(90deg)  translateZ(calc(var(--cube-width) / 2)); }
-```
-
-**Do NOT add extra rotations** to face transforms (e.g. `rotateX(180deg)`) — this flips the backface toward the viewer, which combined with `backface-visibility: hidden` makes the face completely invisible (black screen).
+See [navigation-reference.md](navigation-reference.md) for full CSS code and face transforms.
 
 ---
 
@@ -283,19 +181,16 @@ FACES_BY_TICKS = ["front", "left", "back", "right"];
 
 ---
 
-## Common Mistakes to Avoid
+## Common Mistakes
 
-| Mistake | Correct Approach |
+| Mistake | Correct |
 |---|---|
-| Adding `rotateX(180deg)` or `rotateY(180deg)` to a face CSS transform | `backface-visibility: hidden` makes flipped faces invisible — black screen result |
-| Adding a counter-rotation wrapper inside the top face | Cascading 3D transforms produce mirrored/sideways content — use the `transitionEnabled` Y-snap pattern instead |
-| Setting Y and activeFace to "top" in the same render | Browser animates both X and Y simultaneously — diagonal unnatural movement. Use the double-rAF pattern so Y snaps instantly, then X animates |
-| Using one `requestAnimationFrame` instead of two | One rAF may not be enough for the browser to flush the `transition: none` style change before re-enabling transition — always double-rAF |
-| Wiring `handleTouchStart`/`handleTouchEnd` to the cube element instead of wrapper | Cube element has `transform-style: preserve-3d` which can interfere with touch hit areas on some iOS versions — keep on outer wrapper |
-| Enabling swipe-down for logout | Too easy to trigger accidentally while scrolling content — use triple-tap header instead |
-| Resetting `tapCountRef` inside the triple-tap timeout before checking count | Always check `>= 3` before the timeout reset, not after |
-| Using `goLeft`/`goRight` when already on top face | Both are guarded — they no-op when `activeFace === "top"` |
-| Forgetting `+4) % 4` when computing face from yTicks | Negative yTicks (going right from front) produce negative modulo in JS — must use `((n % 4) + 4) % 4` |
+| Adding `rotateX/Y(180deg)` to face CSS | `backface-visibility: hidden` → black screen |
+| Counter-rotation wrapper inside top face | Cascading 3D = mirrored/sideways — use double-rAF Y-snap |
+| Setting Y + `activeFace="top"` same render | Diagonal animation — ALWAYS use double-rAF |
+| One `requestAnimationFrame` instead of two | May not flush `transition: none` — ALWAYS double-rAF |
+| Wiring touch handlers to cube element | `preserve-3d` interferes with iOS touch — use outer wrapper |
+| Forgetting `+4) % 4` for face from yTicks | `((n % 4) + 4) % 4` handles negative values |
 
 ---
 

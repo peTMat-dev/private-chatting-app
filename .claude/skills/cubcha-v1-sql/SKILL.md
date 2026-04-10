@@ -16,52 +16,21 @@ argument-hint: 'Optional: specify a table or concern (e.g. banned_users, trigger
 
 ---
 
-## Table Inventory
+## Table Overview
 
-### `user_main_details`
-Core user identity table. Source of truth for `user_id`.
-- `user_id` SMALLINT UNSIGNED PK AUTO_INCREMENT
-- `ldap_uid_id` VARCHAR(32) UNIQUE — LDAP login identifier, never shown to other users
-- `display_name` VARCHAR(48) — only identity visible to other users in chat
-- `last_seen_at` TIMESTAMP, `last_login_at` DATETIME
+| Table | Purpose |
+|---|---|
+| `user_main_details` | Core identity: `user_id` PK, `ldap_uid_id`, `display_name` |
+| `user_main_details_disabled` | Purge queue — INSERT triggers cascade deletion, removes from `user_main_details` last |
+| `banned_users` | Abuse prevention: HMAC-SHA256 email hashes, `ban_expires_at` (NULL = permanent) |
+| `user_system_details` | Profile flags: `public_st`, `can_be_added_to_contacts`, timezone, language |
+| `contacts` / `contacts_requests` / `contacts_blocked_users` | User relationships |
+| `user_groups` / `group_members` | Group management |
+| `conversations` / `conversations_participants` / `messages` | Core chat (messages denormalizes sender fields) |
+| `archived_*` | Historical copies after deletion — no live FKs back |
+| `timezones` | Reference table; FK target from `user_system_details` |
 
-### `user_main_details_disabled`
-**Purge queue table.** Inserted into when a user account is closed (by user or admin). A trigger (NYI) fires on INSERT to cascade-delete the user across all tables, then removes from `user_main_details` last.
-- `user_id` SMALLINT UNSIGNED **PRIMARY KEY** — no surrogate key, 1:1 with `user_main_details`
-- `disabled_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-- `last_login_at` DATETIME — admin audit only
-- **No FOREIGN KEY** to `user_main_details` — intentionally omitted. After the trigger completes, `user_id` becomes an orphaned reference, which is correct behavior for a purge queue.
-
-### `banned_users`
-Stores hashed identifiers of banned users to prevent re-registration abuse. Contains **no recoverable PII**.
-- `ban_id` SMALLINT UNSIGNED PK AUTO_INCREMENT
-- `email_hash` VARCHAR(64) NOT NULL — HMAC-SHA256 of email (requires server-side secret, not plain SHA-256)
-- `ban_expires_at` DATETIME DEFAULT NULL — NULL = permanent ban, a date = temporary ban. Single source of truth; no redundant boolean needed.
-- `banned_at` DATETIME DEFAULT CURRENT_TIMESTAMP
-- `ban_reason` VARCHAR(255) — admin notes only, no PII
-- UNIQUE KEY on `email_hash`
-
-### `user_system_details`
-Profile and settings. FK to `user_main_details` with CASCADE.
-- `user_id` PK (no surrogate)
-- Language, timezone (FK to `timezones`), max participants, public/private flags
-- `created_at`, `updated_at` with ON UPDATE CURRENT_TIMESTAMP
-
-### `contacts`, `contacts_requests`, `contacts_blocked_users`
-User relationship tables. All FK to `user_main_details`.
-- `contacts_requests` uses ENUM `('pending','approved','rejected','cancelled')` with a unique key on `(requester_user_id, target_user_id, status_st)` to allow new requests after resolution while blocking duplicate pending ones.
-
-### `user_groups`, `group_members`
-Group management. `user_groups.owner_user_id` FK to `user_main_details`.
-
-### `conversations`, `conversations_participants`, `messages`
-Core chat tables. `messages` denormalizes `sender_username` and `sender_avatar_url` for fast display without joins.
-
-### Archived tables
-`archived_conversations`, `archived_conversations_participants`, `archived_messages`, `archived_user_groups`, `archived_group_members` — mirror structure of live tables for historical retention after conversation/group deletion. No live FKs back to active tables in some cases.
-
-### `timezones`
-Reference table. `timezone_name` VARCHAR(64) UNIQUE. FK target from `user_system_details`.
+Full field-level detail: See [schema-reference.md](schema-reference.md)
 
 ---
 
@@ -84,15 +53,6 @@ Reference table. `timezone_name` VARCHAR(64) UNIQUE. FK target from `user_system
 
 ### `ban_expires_at` as single source of truth for temporary bans
 - A `temporary_ban BOOLEAN` column alongside `ban_expires_at` is redundant and creates desync risk (e.g. `temporary_ban=TRUE`, `ban_expires_at=NULL`). Use only `ban_expires_at`: NULL = permanent, a date value = temporary.
-
----
-
-## Common Syntax Issues to Watch
-- `DEFAULT NOT NULL` is invalid — `DEFAULT` requires a value. Use just `NOT NULL`.
-- Informal notes with `*` outside string literals (e.g. `COMMENT '...'*might not be needed?`) cause syntax errors — use `-- comment` instead.
-- A table can only have one `PRIMARY KEY`. Two columns both declared `PRIMARY KEY` is a fatal error.
-- `UNIQUE KEY` referencing a column that is not defined in the table will fail silently or error on execution — always verify the column exists.
-- `FOREIGN KEY ... ON DELETE CASCADE` on `user_main_details_disabled.user_id` would delete the purge record when the user is removed — wrong. FK intentionally omitted.
 
 ---
 

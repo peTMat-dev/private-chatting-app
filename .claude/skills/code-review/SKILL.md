@@ -6,12 +6,6 @@ argument-hint: 'Optional: specify a file or area to review (e.g. auth routes, LD
 
 # Code Review Skill
 
-## When to Use
-- User asks to review, audit, or check a file or feature
-- Spotting bugs, security vulnerabilities, or bad patterns
-- Reviewing a PR or a set of changes
-- Checking API routes, services, or frontend components
-
 ## Stack Context
 - **Frontend**: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Bootstrap 5
 - **Backend**: Express.js 5, TypeScript, Node.js
@@ -51,14 +45,6 @@ argument-hint: 'Optional: specify a file or area to review (e.g. auth routes, LD
 - [ ] Parameterized queries only — never string-concatenated SQL (MySQL uses `?` placeholders)
 - [ ] Connection pool used correctly — connections from `getConnection()` must be released after use
 - [ ] `queryWithConnection` used inside transactions, not bare `query()`
-
-## Procedure
-
-1. **Identify scope** — which file(s) or feature to review
-2. **Read the code** — use Read/Grep tools to load relevant files
-3. **Check against checklist above** — note issues by category
-4. **Report findings** — group by severity: Critical, Warning, Suggestion
-5. **Propose fixes** — show corrected code snippets for each issue
 
 ## Output Format
 

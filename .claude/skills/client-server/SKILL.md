@@ -46,7 +46,7 @@ argument-hint: 'Optional: specify area (e.g. client packages, server routes, con
   - Client packages → `cd client/ && pnpm add <pkg> -D`
   - Server packages → `cd server/ && pnpm add <pkg>`
   - Never run `pnpm add` from the monorepo root unless the package belongs to the root `package.json`.
-- To update a single package without upgrading everything: `pnpm add <pkg>@<version> -D` (NOT `pnpm update --latest` — this upgrades ALL packages including Next.js, TypeScript, ESLint major versions, which causes breakage).
+- To update a single package: `pnpm add <pkg>@<version> -D`. NEVER run `pnpm update --latest` — upgrades ALL packages including Next.js, TypeScript, ESLint major versions.
 - After restoring a `pnpm-lock.yaml` from git, run `pnpm install` then `pnpm add <only-the-target-package>@<version>`.
 - `pnpm approve-builds` with no selection adds packages to `ignoredBuiltDependencies` — this blocks `argon2` native compilation. If accidentally triggered, remove the entry from `pnpm-workspace.yaml`.
 
@@ -59,12 +59,7 @@ argument-hint: 'Optional: specify area (e.g. client packages, server routes, con
 ## Client Architecture (Next.js)
 
 - App Router, all pages under `src/app/`.
-- Main UI is a **3D CSS cube** in `src/app/home/page.tsx`:
-  - **Front face**: Chats list
-  - **Left face**: Contacts (public user add/remove, request by name, contact list, whose-contact-am-I)
-  - **Back face**: User Settings
-  - **Right face**: Chat view (placeholder)
-  - **Top face**: Logout
+- Main UI is a **3D CSS cube** in `src/app/home/page.tsx` — see `cube-navigation` and `contact-face` skills for face details.
 - Navigation is handled by `useCubeNavigation.ts` (touch swipes + keyboard arrows).
 - All API calls use `buildApiUrl()` and `postJson()` from `lib/api.ts` — never raw hardcoded URLs.
 - All UI strings come from `lib/i18n.ts` — check for existing keys before adding new ones.
@@ -73,8 +68,7 @@ argument-hint: 'Optional: specify area (e.g. client packages, server routes, con
 
 - Routes in `server/src/routes/` — each file handles one domain (contacts, chats, auth, settings).
 - DB access via `query()` from `services/db.ts` — always parameterized (`?` placeholders).
-- Stored procedures used for contact operations: `CALL contact_2lookup_public_user(?)`, `CALL contact_2add_public_user(?, ?)`, `CALL contact_list_2remove_user(?, ?)`, `CALL contact_whose_contact_am_I(?)`.
-- MySQL stored procedures return results in a nested array — always unwrap: `const rows = Array.isArray(result[0]) ? result[0] : result`.
+- MySQL stored procedures return results in a nested array — ALWAYS unwrap: `const rows = Array.isArray(result[0]) ? result[0] : result`.
 
 ## Common Mistakes to Avoid
 
