@@ -38,6 +38,15 @@ type PublicUser = {
   id: number;
   displayName: string;
   isAlreadyContact: boolean;
+  canBeAddedToContacts: boolean;
+  hasPendingRequest: boolean;
+};
+
+type ContactRequest = {
+  requestId: number;
+  userId: number;
+  displayName: string;
+  requestedAt: string;
 };
 
 type ApiPublicUsersResponse = {
@@ -118,6 +127,13 @@ export default function HomeCube() {
   const [whoseContactAmI, setWhoseContactAmI] = useState<{ id: number; displayName: string }[]>([]);
   const [showWhoseContactAmI, setShowWhoseContactAmI] = useState(false);
   const [loadingWhoseContactAmI, setLoadingWhoseContactAmI] = useState(false);
+  const [incomingRequests, setIncomingRequests] = useState<ContactRequest[]>([]);
+  const [outgoingRequests, setOutgoingRequests] = useState<ContactRequest[]>([]);
+  const [showRequests, setShowRequests] = useState(false);
+  const [loadingRequests, setLoadingRequests] = useState(false);
+  const [approvingRequestId, setApprovingRequestId] = useState<number | null>(null);
+  const [rejectingRequestId, setRejectingRequestId] = useState<number | null>(null);
+  const [cancellingRequestId, setCancellingRequestId] = useState<number | null>(null);
 
   useEffect(() => {
     setLangState(getLang());
@@ -311,13 +327,13 @@ export default function HomeCube() {
         contactUserId: userId,
       });
       if (!ok || !data.success) {
-        setAlertDialog({ show: true, title: "Error", message: data.error || "Failed to add contact" });
+        setAlertDialog({ show: true, title: "Error", message: data.error || "Failed to send contact request" });
         return;
       }
       setPublicUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, isAlreadyContact: true } : u))
+        prev.map((u) => (u.id === userId ? { ...u, hasPendingRequest: true } : u))
       );
-      fetchUserContacts();
+      if (showRequests) fetchRequests();
     } catch (err) {
       setAlertDialog({ show: true, title: "Error", message: (err as Error).message });
     } finally {
@@ -344,6 +360,77 @@ export default function HomeCube() {
     }
   };
 
+  const fetchRequests = async () => {
+    if (!username) return;
+    setLoadingRequests(true);
+    try {
+      const [incomingRes, outgoingRes] = await Promise.all([
+        fetch(buildApiUrl(`/contacts/requests/incoming?username=${encodeURIComponent(username)}`), { headers: { Accept: "application/json" } }),
+        fetch(buildApiUrl(`/contacts/requests/outgoing?username=${encodeURIComponent(username)}`), { headers: { Accept: "application/json" } }),
+      ]);
+      const [incomingData, outgoingData] = await Promise.all([
+        incomingRes.json() as Promise<{ success: boolean; data?: ContactRequest[]; error?: string }>,
+        outgoingRes.json() as Promise<{ success: boolean; data?: ContactRequest[]; error?: string }>,
+      ]);
+      if (incomingData.success) setIncomingRequests(incomingData.data || []);
+      if (outgoingData.success) setOutgoingRequests(outgoingData.data || []);
+    } catch (err) {
+      setAlertDialog({ show: true, title: "Error", message: (err as Error).message });
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
+  const handleApproveRequest = async (requestId: number) => {
+    setApprovingRequestId(requestId);
+    try {
+      const { ok, data } = await postJson("/contacts/requests/approve", { username, requestId });
+      if (!ok || !data.success) {
+        setAlertDialog({ show: true, title: "Error", message: data.error || "Failed to approve request" });
+        return;
+      }
+      setIncomingRequests((prev) => prev.filter((r) => r.requestId !== requestId));
+      fetchUserContacts();
+    } catch (err) {
+      setAlertDialog({ show: true, title: "Error", message: (err as Error).message });
+    } finally {
+      setApprovingRequestId(null);
+    }
+  };
+
+  const handleRejectRequest = async (requestId: number) => {
+    setRejectingRequestId(requestId);
+    try {
+      const { ok, data } = await postJson("/contacts/requests/reject", { username, requestId });
+      if (!ok || !data.success) {
+        setAlertDialog({ show: true, title: "Error", message: data.error || "Failed to reject request" });
+        return;
+      }
+      setIncomingRequests((prev) => prev.filter((r) => r.requestId !== requestId));
+    } catch (err) {
+      setAlertDialog({ show: true, title: "Error", message: (err as Error).message });
+    } finally {
+      setRejectingRequestId(null);
+    }
+  };
+
+  const handleCancelRequest = async (requestId: number, targetId: number) => {
+    setCancellingRequestId(requestId);
+    try {
+      const { ok, data } = await postJson("/contacts/requests/cancel", { username, requestId });
+      if (!ok || !data.success) {
+        setAlertDialog({ show: true, title: "Error", message: data.error || "Failed to cancel request" });
+        return;
+      }
+      setOutgoingRequests((prev) => prev.filter((r) => r.requestId !== requestId));
+      setPublicUsers((prev) => prev.map((u) => u.id === targetId ? { ...u, hasPendingRequest: false } : u));
+    } catch (err) {
+      setAlertDialog({ show: true, title: "Error", message: (err as Error).message });
+    } finally {
+      setCancellingRequestId(null);
+    }
+  };
+
   const handleSendRequest = async () => {
     if (!requestDisplayName.trim()) return;
     try {
@@ -351,6 +438,7 @@ export default function HomeCube() {
         username,
         displayName: requestDisplayName.trim(),
       });
+      if (showRequests) fetchRequests();
     } catch {
       // Intentionally ignored — always show same neutral message to protect privacy
     }
@@ -536,6 +624,7 @@ export default function HomeCube() {
                         setShowRequestInput(false);
                         setPrivateRequestSent(false);
                         setShowContactList(false);
+                        setShowRequests(false);
                         setPublicUserSearch("");
                         if (!showPublicUserSelect && publicUsers.length === 0) {
                           fetchPublicUsers();
@@ -623,7 +712,7 @@ export default function HomeCube() {
                                   padding: "0.45rem 0.75rem",
                                   cursor: "default",
                                   backgroundColor: "transparent",
-                                  color: user.isAlreadyContact ? "#00FFFF" : "var(--color-green)",
+                                  color: user.isAlreadyContact ? "#00FFFF" : !user.canBeAddedToContacts ? "rgba(3,160,98,0.35)" : "var(--color-green)",
                                   borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
                                   display: "flex",
                                   justifyContent: "space-between",
@@ -634,19 +723,19 @@ export default function HomeCube() {
                                   {user.displayName}
                                 </span>
                                 <button
-                                  className={`contact-action-btn ${user.isAlreadyContact ? "contact-action-btn--tick" : "contact-action-btn--add"}`}
+                                  className={`contact-action-btn ${user.isAlreadyContact ? "contact-action-btn--tick" : user.hasPendingRequest ? "contact-action-btn--pending" : !user.canBeAddedToContacts ? "contact-action-btn--blocked" : "contact-action-btn--add"}`}
                                   onClick={() => {
-                                    if (isBusy || loadingPublicUsers) return;
+                                    if (isBusy || loadingPublicUsers || user.hasPendingRequest || !user.canBeAddedToContacts) return;
                                     if (user.isAlreadyContact) {
                                       handleRemovePublicUser(user.id);
                                     } else {
                                       handleAddPublicUser(user.id, user.displayName);
                                     }
                                   }}
-                                  disabled={isBusy || loadingPublicUsers}
-                                  title={user.isAlreadyContact ? "Remove contact" : "Add contact"}
+                                  disabled={isBusy || loadingPublicUsers || (!user.isAlreadyContact && (user.hasPendingRequest || !user.canBeAddedToContacts))}
+                                  title={user.isAlreadyContact ? "Remove contact" : user.hasPendingRequest ? tr.requestPending : !user.canBeAddedToContacts ? tr.cannotBeRequested : "Send contact request"}
                                 >
-                                  {isBusy ? "…" : user.isAlreadyContact ? "☑" : "☐"}
+                                  {isBusy ? "…" : user.isAlreadyContact ? "☑" : user.hasPendingRequest ? "⌛" : !user.canBeAddedToContacts ? "🚫" : "☐"}
                                 </button>
                               </div>
                               );
@@ -664,6 +753,7 @@ export default function HomeCube() {
                         setShowRequestInput(!showRequestInput);
                         setPrivateRequestSent(false);
                         setShowPublicUserSelect(false);
+                        setShowRequests(false);
                       }}
                       style={{ width: "100%" }}
                     >
@@ -718,6 +808,7 @@ export default function HomeCube() {
                         setShowPublicUserSelect(false);
                         setShowRequestInput(false);
                         setPrivateRequestSent(false);
+                        setShowRequests(false);
                         setContactSearch("");
                       }}
                       style={{ width: "100%" }}
@@ -823,6 +914,125 @@ export default function HomeCube() {
                     )}
                   </div>
 
+                  <div style={{ marginBottom: "1rem" }}>
+                    <button
+                      className="add-contact-btn"
+                      onClick={() => {
+                        const next = !showRequests;
+                        setShowRequests(next);
+                        setShowContactList(false);
+                        setShowPublicUserSelect(false);
+                        setShowRequestInput(false);
+                        setPrivateRequestSent(false);
+                        setShowWhoseContactAmI(false);
+                        if (next) fetchRequests();
+                      }}
+                      style={{ width: "100%" }}
+                    >
+                      📬 {tr.requests}
+                    </button>
+                    {showRequests && (
+                      <div style={{ marginTop: "0.75rem" }}>
+                        {loadingRequests ? (
+                          <div style={{ padding: "0.75rem", color: "var(--color-green)", textAlign: "center" }}>
+                            {tr.loadingUsers}
+                          </div>
+                        ) : (
+                          <>
+                            <div style={{ marginBottom: "0.75rem" }}>
+                              <div style={{ fontSize: "0.7rem", color: "rgba(3,160,98,0.55)", padding: "0 0.5rem 0.35rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                                {tr.incomingRequests}
+                              </div>
+                              <div
+                                className="auth-input"
+                                style={{ padding: 0, maxHeight: "130px", overflowY: "auto" }}
+                              >
+                                {incomingRequests.length === 0 ? (
+                                  <div style={{ padding: "0.5rem 0.75rem", color: "rgba(3,160,98,0.5)", fontSize: "0.8rem", textAlign: "center" }}>
+                                    {tr.noIncomingRequests}
+                                  </div>
+                                ) : (
+                                  incomingRequests.map((req) => (
+                                    <div
+                                      key={req.requestId}
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        padding: "0.45rem 0.75rem",
+                                        borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                                        gap: "0.4rem",
+                                      }}
+                                    >
+                                      <span style={{ flex: 1, color: "var(--color-green)", fontSize: "0.85rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                        {req.displayName}
+                                      </span>
+                                      <button
+                                        className="contact-action-btn contact-action-btn--tick"
+                                        onClick={() => handleApproveRequest(req.requestId)}
+                                        disabled={approvingRequestId === req.requestId || rejectingRequestId === req.requestId}
+                                        title={tr.approveRequest}
+                                      >
+                                        {approvingRequestId === req.requestId ? "\u2026" : "\u2713"}
+                                      </button>
+                                      <button
+                                        className="contact-action-btn contact-action-btn--remove"
+                                        onClick={() => handleRejectRequest(req.requestId)}
+                                        disabled={approvingRequestId === req.requestId || rejectingRequestId === req.requestId}
+                                        title={tr.rejectRequest}
+                                      >
+                                        {rejectingRequestId === req.requestId ? "\u2026" : "\u2717"}
+                                      </button>
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: "0.7rem", color: "rgba(3,160,98,0.55)", padding: "0 0.5rem 0.35rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                                {tr.outgoingRequests}
+                              </div>
+                              <div
+                                className="auth-input"
+                                style={{ padding: 0, maxHeight: "130px", overflowY: "auto" }}
+                              >
+                                {outgoingRequests.length === 0 ? (
+                                  <div style={{ padding: "0.5rem 0.75rem", color: "rgba(3,160,98,0.5)", fontSize: "0.8rem", textAlign: "center" }}>
+                                    {tr.noOutgoingRequests}
+                                  </div>
+                                ) : (
+                                  outgoingRequests.map((req) => (
+                                    <div
+                                      key={req.requestId}
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        padding: "0.45rem 0.75rem",
+                                        borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                                        gap: "0.4rem",
+                                      }}
+                                    >
+                                      <span style={{ flex: 1, color: "var(--color-green)", fontSize: "0.85rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                        {req.displayName}
+                                      </span>
+                                      <button
+                                        className="contact-action-btn contact-action-btn--cancel"
+                                        onClick={() => handleCancelRequest(req.requestId, req.userId)}
+                                        disabled={cancellingRequestId === req.requestId}
+                                        title={tr.cancelRequest}
+                                      >
+                                        {cancellingRequestId === req.requestId ? "\u2026" : "\u2715"}
+                                      </button>
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
                   <div>
                     <button
                       className="add-contact-btn"
@@ -833,6 +1043,7 @@ export default function HomeCube() {
                         setShowPublicUserSelect(false);
                         setShowRequestInput(false);
                         setPrivateRequestSent(false);
+                        setShowRequests(false);
                         if (next) fetchWhoseContactAmI();
                       }}
                       style={{ width: "100%" }}

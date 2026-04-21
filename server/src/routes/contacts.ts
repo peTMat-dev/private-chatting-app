@@ -7,6 +7,15 @@ type PublicUser = {
   user_id: number;
   display_name: string;
   is_already_contact: number;
+  can_be_added_to_contacts: number;
+  has_pending_request: number;
+};
+
+type ContactRequest = {
+  request_id: number;
+  user_id: number;
+  display_name: string;
+  requested_at: string;
 };
 
 type Contact = {
@@ -89,6 +98,8 @@ router.get("/public-users", async (req: Request, res: Response) => {
       id: u.user_id,
       displayName: u.display_name,
       isAlreadyContact: Boolean(u.is_already_contact),
+      canBeAddedToContacts: Boolean(u.can_be_added_to_contacts),
+      hasPendingRequest: Boolean(u.has_pending_request),
     }));
 
     res.json({ success: true, count: data.length, data });
@@ -124,19 +135,19 @@ router.post("/add-public", async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: "Cannot add yourself as a contact" });
     }
 
-    // Call stored procedure to add contact
+    // Call stored procedure to send contact request
     await query(
-      "CALL contact_2add_public_user(?, ?)",
+      "CALL contact_2send_public_request(?, ?)",
       [userId, contactUserId]
     );
 
-    res.json({ success: true, message: "Contact added successfully" });
+    res.json({ success: true, message: "Contact request sent successfully" });
   } catch (error) {
     const errorMsg = (error as Error).message;
     
     // Handle specific error cases
-    if (errorMsg.includes("Contact already exists")) {
-      return res.status(409).json({ success: false, error: "Contact already exists" });
+    if (errorMsg.includes("Request already pending")) {
+      return res.status(409).json({ success: false, error: "Request already pending" });
     }
     if (errorMsg.includes("not publicly available")) {
       return res.status(403).json({ success: false, error: "User is not publicly available" });
@@ -169,8 +180,7 @@ router.post("/request", async (req: Request, res: Response) => {
     const userId = userRows[0].user_id;
 
     // Call SP — result intentionally ignored to preserve privacy
-    // Notification mechanism to be implemented separately
-    await query("CALL contact_2lookup_added_private_user(?, ?)", [userId, displayName.trim()]);
+    await query("CALL contact_2send_private_request(?, ?)", [userId, displayName.trim()]);
   } catch (err) {
     // Log server-side only — never expose to caller
     console.error("Private user lookup error:", (err as Error).message);
@@ -247,6 +257,171 @@ router.post("/remove", async (req: Request, res: Response) => {
     const msg = (error as Error).message;
     if (msg.includes("does not exist") || msg.includes("DOES NOT")) {
       return res.status(404).json({ success: false, error: "Contact does not exist" });
+    }
+    res.status(500).json({ success: false, error: msg });
+  }
+});
+
+// GET /contacts/requests/incoming - Get incoming contact requests
+router.get("/requests/incoming", async (req: Request, res: Response) => {
+  const username = String(req.query.username || "").trim();
+  if (!username) {
+    return res.status(400).json({ success: false, error: "username is required" });
+  }
+
+  try {
+    const userRows = await query<{ user_id: number }>(
+      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
+      [username]
+    );
+    if (userRows.length === 0) {
+      return res.status(404).json({ success: false, error: "user not found" });
+    }
+    const userId = userRows[0].user_id;
+
+    const rows = await query<ContactRequest>("CALL contact_2get_incoming_requests(?)", [userId]);
+    const resultRows = Array.isArray(rows[0]) ? rows[0] : rows;
+
+    const data = (resultRows as ContactRequest[]).map((r) => ({
+      requestId: r.request_id,
+      userId: r.user_id,
+      displayName: r.display_name,
+      requestedAt: r.requested_at,
+    }));
+
+    res.json({ success: true, count: data.length, data });
+  } catch (error) {
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
+// GET /contacts/requests/outgoing - Get outgoing contact requests
+router.get("/requests/outgoing", async (req: Request, res: Response) => {
+  const username = String(req.query.username || "").trim();
+  if (!username) {
+    return res.status(400).json({ success: false, error: "username is required" });
+  }
+
+  try {
+    const userRows = await query<{ user_id: number }>(
+      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
+      [username]
+    );
+    if (userRows.length === 0) {
+      return res.status(404).json({ success: false, error: "user not found" });
+    }
+    const userId = userRows[0].user_id;
+
+    const rows = await query<ContactRequest>("CALL contact_2get_outgoing_requests(?)", [userId]);
+    const resultRows = Array.isArray(rows[0]) ? rows[0] : rows;
+
+    const data = (resultRows as ContactRequest[]).map((r) => ({
+      requestId: r.request_id,
+      userId: r.user_id,
+      displayName: r.display_name,
+      requestedAt: r.requested_at,
+    }));
+
+    res.json({ success: true, count: data.length, data });
+  } catch (error) {
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
+// POST /contacts/requests/approve - Approve an incoming contact request
+router.post("/requests/approve", async (req: Request, res: Response) => {
+  const { username, requestId } = req.body;
+
+  if (!username || typeof username !== "string") {
+    return res.status(400).json({ success: false, error: "username is required" });
+  }
+  if (!requestId || typeof requestId !== "number") {
+    return res.status(400).json({ success: false, error: "requestId is required and must be a number" });
+  }
+
+  try {
+    const userRows = await query<{ user_id: number }>(
+      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
+      [username]
+    );
+    if (userRows.length === 0) {
+      return res.status(404).json({ success: false, error: "user not found" });
+    }
+    const userId = userRows[0].user_id;
+
+    await query("CALL contact_2approve_contact_request(?, ?)", [userId, requestId]);
+
+    res.json({ success: true, message: "Contact request approved" });
+  } catch (error) {
+    const msg = (error as Error).message;
+    if (msg.includes("not found or already actioned")) {
+      return res.status(404).json({ success: false, error: "Request not found or already actioned" });
+    }
+    res.status(500).json({ success: false, error: msg });
+  }
+});
+
+// POST /contacts/requests/reject - Reject an incoming contact request
+router.post("/requests/reject", async (req: Request, res: Response) => {
+  const { username, requestId } = req.body;
+
+  if (!username || typeof username !== "string") {
+    return res.status(400).json({ success: false, error: "username is required" });
+  }
+  if (!requestId || typeof requestId !== "number") {
+    return res.status(400).json({ success: false, error: "requestId is required and must be a number" });
+  }
+
+  try {
+    const userRows = await query<{ user_id: number }>(
+      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
+      [username]
+    );
+    if (userRows.length === 0) {
+      return res.status(404).json({ success: false, error: "user not found" });
+    }
+    const userId = userRows[0].user_id;
+
+    await query("CALL contact_2reject_contact_request(?, ?)", [userId, requestId]);
+
+    res.json({ success: true, message: "Contact request rejected" });
+  } catch (error) {
+    const msg = (error as Error).message;
+    if (msg.includes("not found or already actioned")) {
+      return res.status(404).json({ success: false, error: "Request not found or already actioned" });
+    }
+    res.status(500).json({ success: false, error: msg });
+  }
+});
+
+// POST /contacts/requests/cancel - Cancel an outgoing contact request
+router.post("/requests/cancel", async (req: Request, res: Response) => {
+  const { username, requestId } = req.body;
+
+  if (!username || typeof username !== "string") {
+    return res.status(400).json({ success: false, error: "username is required" });
+  }
+  if (!requestId || typeof requestId !== "number") {
+    return res.status(400).json({ success: false, error: "requestId is required and must be a number" });
+  }
+
+  try {
+    const userRows = await query<{ user_id: number }>(
+      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
+      [username]
+    );
+    if (userRows.length === 0) {
+      return res.status(404).json({ success: false, error: "user not found" });
+    }
+    const userId = userRows[0].user_id;
+
+    await query("CALL contact_2cancel_contact_request(?, ?)", [userId, requestId]);
+
+    res.json({ success: true, message: "Contact request cancelled" });
+  } catch (error) {
+    const msg = (error as Error).message;
+    if (msg.includes("not found or already actioned")) {
+      return res.status(404).json({ success: false, error: "Request not found or already actioned" });
     }
     res.status(500).json({ success: false, error: msg });
   }

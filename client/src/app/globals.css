@@ -847,6 +847,27 @@ a:hover {
   border-color: rgba(3, 160, 98, 0.5);
 }
 
+.contact-action-btn--pending {
+  background: transparent;
+  border-color: transparent;
+  color: #f0a830;
+  font-size: 0.95rem;
+  padding: 0 0.3rem;
+  line-height: 1;
+  cursor: not-allowed;
+}
+
+.contact-action-btn--blocked {
+  background: transparent;
+  border-color: transparent;
+  color: rgba(3, 160, 98, 0.3);
+  font-size: 0.95rem;
+  padding: 0 0.3rem;
+  line-height: 1;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .contact-item:last-child {
   border-bottom: none !important;
 }
