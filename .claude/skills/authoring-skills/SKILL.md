@@ -20,12 +20,18 @@ description: 'Guides creating, improving, and restructuring SKILL.md files for t
 name: skill-name          # lowercase, hyphens only, max 64 chars; no "anthropic"/"claude"
 description: >            # what + when to use it; third person; max 1024 chars
   Does X and Y. Use when asked to Z.
-argument-hint: >          # optional: hint what extra context helps
-  Describe optional context user can provide
 ---
 ```
 
 **Body limit:** Target ~200 lines. The official hard limit is 500 lines (beyond that you must split), but if you're approaching 200 you should already be asking what can move to a reference file. Concise is the goal, not the limit.
+
+---
+
+## When NOT to Create a Skill
+
+- One-off or trivial tasks — use inline instructions instead
+- Tasks fully covered by Claude's built-in knowledge (REST calls, standard library usage)
+- Context that changes per-project — document in repo memory instead
 
 ---
 
@@ -46,47 +52,19 @@ Reference files explicitly in SKILL.md:
 **State vars, types, schema:** See [state-reference.md](state-reference.md)
 ```
 
-**One level deep only.** Never chain: `SKILL.md → fileA.md → fileB.md`. Claude may partially read nested files.
-
 ---
 
 ## Degrees of Freedom
 
 Match specificity to fragility:
 
-| Level | When to use | Example |
-|---|---|---|
-| **High** (text instructions) | Multiple approaches valid; context drives the decision | Code review, writing tasks |
-| **Medium** (pseudocode / template with params) | Preferred pattern exists; some variation acceptable | Generating reports |
-| **Low** (exact command/code, no modification) | Fragile, error-prone, must run in exact sequence | DB migrations, SP result unwrapping |
+| Level | When to use |
+|---|---|
+| **High** (text instructions) | Multiple approaches valid; context drives the decision |
+| **Medium** (pseudocode / template with params) | Preferred pattern exists; some variation acceptable |
+| **Low** (exact command/code, no modification) | Fragile, error-prone, must run in exact sequence |
 
-For low-freedom instructions use strong language: `ALWAYS`, `NEVER`, `exactly this`, `do not modify`.
-
----
-
-## Workflows and Feedback Loops
-
-For complex multi-step tasks, provide a copy-paste checklist:
-
-```
-Task Progress:
-- [ ] Step 1: ...
-- [ ] Step 2: ...
-- [ ] Step 3: validate
-- [ ] Step 4: only proceed when validation passes
-```
-
-For quality-critical tasks, include a feedback loop: **run validator → fix errors → repeat**. Never let Claude skip validation steps.
-
----
-
-## Output Templates and Examples
-
-**Template pattern** — use when output format matters:
-- Strict (`ALWAYS use this exact structure`) for API responses, data formats
-- Flexible (`sensible default, adjust as needed`) for analysis or prose
-
-**Examples pattern** — provide input/output pairs when style matters more than structure. Two or three concrete examples outperform any description.
+For low-freedom instructions use strong language: `ALWAYS`, `NEVER`, `exactly this`, `do not modify`. For complex workflows, provide a copy-paste checklist. For quality-critical tasks, include a feedback loop: **run validator → fix errors → repeat**.
 
 ---
 
