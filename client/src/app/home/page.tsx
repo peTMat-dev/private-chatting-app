@@ -712,7 +712,7 @@ export default function HomeCube() {
                                   padding: "0.45rem 0.75rem",
                                   cursor: "default",
                                   backgroundColor: "transparent",
-                                  color: user.isAlreadyContact ? "#00FFFF" : !user.canBeAddedToContacts ? "rgba(3,160,98,0.35)" : "var(--color-green)",
+                                  color: user.isAlreadyContact ? "rgba(180,180,180,0.5)" : "var(--color-green)",
                                   borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
                                   display: "flex",
                                   justifyContent: "space-between",
@@ -724,6 +724,7 @@ export default function HomeCube() {
                                 </span>
                                 <button
                                   className={`contact-action-btn ${user.isAlreadyContact ? "contact-action-btn--tick" : user.hasPendingRequest ? "contact-action-btn--pending" : !user.canBeAddedToContacts ? "contact-action-btn--blocked" : "contact-action-btn--add"}`}
+                                  style={!user.canBeAddedToContacts ? { color: "#ff5555" } : {}}
                                   onClick={() => {
                                     if (isBusy || loadingPublicUsers || user.hasPendingRequest || !user.canBeAddedToContacts) return;
                                     if (user.isAlreadyContact) {

@@ -203,7 +203,8 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`timezones` (
     `timezone_id` SMALLINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     `timezone_name` VARCHAR(64) NOT NULL UNIQUE,  -- e.g., 'Europe/Amsterdam'
     `utc_offset` VARCHAR(8) NOT NULL,             -- e.g., '+01:00'
-    `display_name` VARCHAR(64) NOT NULL           -- e.g., 'Amsterdam (UTC+1)'
+    `display_name` VARCHAR(64) NOT NULL,          -- e.g., 'Amsterdam (UTC+1)'
+    KEY `idx_display_name` (`display_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Create  password reset token table
