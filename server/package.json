@@ -25,7 +25,8 @@
     "ldapjs": "^3.0.7",
     "ldapts": "^8.1.7",
     "mysql": "^2.18.1",
-    "nodemailer": "^8.0.4"
+    "nodemailer": "^8.0.4",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

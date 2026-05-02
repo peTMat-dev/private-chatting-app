@@ -1,3 +1,4 @@
+import http from "http";
 import express, { Request, Response } from "express";
 import cors from "cors";
 
@@ -8,6 +9,7 @@ import settingsRouter from "./routes/settings";
 import contactsRouter from "./routes/contacts";
 import { query, pool } from "./services/db";
 import { LDAP_getUser, testLDAPConnection } from "./services/ldap.service";
+import { initSocketService } from "./services/socket.service";
 
 const app = express();
 
@@ -93,6 +95,9 @@ app.get("/", async (_req: Request, res: Response) => {
   });
 });
 
-app.listen(8080, () => {
+const httpServer = http.createServer(app);
+initSocketService(httpServer);
+
+httpServer.listen(8080, () => {
   console.log("Server has started on port 8080");
 });

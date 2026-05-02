@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { query } from "../services/db";
+import { emitToUser } from "../services/socket.service";
 
 const router = Router();
 
@@ -340,16 +341,27 @@ router.post("/requests/approve", async (req: Request, res: Response) => {
   }
 
   try {
-    const userRows = await query<{ user_id: number }>(
-      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
+    const userRows = await query<{ user_id: number; display_name: string }>(
+      "SELECT user_id, display_name FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
       [username]
     );
     if (userRows.length === 0) {
       return res.status(404).json({ success: false, error: "user not found" });
     }
     const userId = userRows[0].user_id;
+    const approverDisplayName = userRows[0].display_name;
+
+    // Use existing SP to find the requester before approving
+    type IncomingRequest = { request_id: number; requester_user_id: number; display_name: string; requested_at: string };
+    const incomingRaw = await query<IncomingRequest>("CALL contact_2get_incoming_requests(?)", [userId]);
+    const incomingRows: IncomingRequest[] = Array.isArray(incomingRaw[0]) ? (incomingRaw[0] as IncomingRequest[]) : (incomingRaw as IncomingRequest[]);
+    const matched = incomingRows.find((r) => r.request_id === requestId);
 
     await query("CALL contact_2approve_contact_request(?, ?)", [userId, requestId]);
+
+    if (matched) {
+      emitToUser(matched.requester_user_id, "contact_approved", { userId, displayName: approverDisplayName });
+    }
 
     res.json({ success: true, message: "Contact request approved" });
   } catch (error) {
