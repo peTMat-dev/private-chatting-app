@@ -110,6 +110,15 @@ export type Translations = {
   // Post-login: Chat face
   chat: string;
   openConversation: string;
+  newChat: string;
+  openChat: string;
+  createGroup: string;
+  groupTitle: string;
+  groupTitleRequired: string;
+  sendMessage: string;
+  typeMessage: string;
+  noMessagesYet: string;
+  selectContacts: string;
 
   // Dialogs
   ok: string;
@@ -215,6 +224,15 @@ const translations: Record<LangCode, Translations> = {
     couldNotLoadSettings: "Could not load settings",
     chat: "Chat",
     openConversation: "Open a conversation from the Chats face.",
+    newChat: "New Chat",
+    openChat: "Open Chat",
+    createGroup: "Create Group",
+    groupTitle: "Group Title",
+    groupTitleRequired: "A title is required for group chats",
+    sendMessage: "Send",
+    typeMessage: "Type a message…",
+    noMessagesYet: "No messages yet",
+    selectContacts: "Select contacts",
     ok: "OK",
     confirmAction: "Confirm",
     passwordsMustMatch: "Passwords must match",
@@ -314,6 +332,15 @@ const translations: Record<LangCode, Translations> = {
     couldNotLoadSettings: "No se pudo cargar la configuración",
     chat: "Chat",
     openConversation: "Abre una conversación desde la cara de Chats.",
+    newChat: "Nuevo chat",
+    openChat: "Abrir chat",
+    createGroup: "Crear grupo",
+    groupTitle: "Título del grupo",
+    groupTitleRequired: "Se requiere un título para los chats de grupo",
+    sendMessage: "Enviar",
+    typeMessage: "Escribe un mensaje…",
+    noMessagesYet: "Aún no hay mensajes",
+    selectContacts: "Seleccionar contactos",
     ok: "Aceptar",
     confirmAction: "Confirmar",
     passwordsMustMatch: "Las contraseñas no coinciden",
@@ -411,6 +438,15 @@ const translations: Record<LangCode, Translations> = {
     couldNotLoadSettings: "Impossible de charger les paramètres",
     chat: "Chat",
     openConversation: "Ouvrez une conversation depuis la face Discussions.",
+    newChat: "Nouveau chat",
+    openChat: "Ouvrir le chat",
+    createGroup: "Créer un groupe",
+    groupTitle: "Titre du groupe",
+    groupTitleRequired: "Un titre est requis pour les chats de groupe",
+    sendMessage: "Envoyer",
+    typeMessage: "Tapez un message…",
+    noMessagesYet: "Aucun message pour l'instant",
+    selectContacts: "Sélectionner des contacts",
     ok: "OK",
     confirmAction: "Confirmer",
     passwordsMustMatch: "Les mots de passe ne correspondent pas",
@@ -510,6 +546,15 @@ const translations: Record<LangCode, Translations> = {
     couldNotLoadSettings: "Einstellungen konnten nicht geladen werden",
     chat: "Chat",
     openConversation: "Öffnen Sie ein Gespräch von der Chats-Seite.",
+    newChat: "Neuer Chat",
+    openChat: "Chat öffnen",
+    createGroup: "Gruppe erstellen",
+    groupTitle: "Gruppenname",
+    groupTitleRequired: "Ein Titel ist für Gruppen-Chats erforderlich",
+    sendMessage: "Senden",
+    typeMessage: "Nachricht eingeben…",
+    noMessagesYet: "Noch keine Nachrichten",
+    selectContacts: "Kontakte auswählen",
     ok: "OK",
     confirmAction: "Bestätigen",
     passwordsMustMatch: "Passwörter stimmen nicht überein",
@@ -609,6 +654,15 @@ const translations: Record<LangCode, Translations> = {
     couldNotLoadSettings: "Nastavenia sa nepodarilo načítať",
     chat: "Chat",
     openConversation: "Otvorte konverzáciu zo strany Chaty.",
+    newChat: "Nový chat",
+    openChat: "Otvoriť chat",
+    createGroup: "Vytvoriť skupinu",
+    groupTitle: "Názov skupiny",
+    groupTitleRequired: "Pre skupinové chaty je potrebný názov",
+    sendMessage: "Odoslať",
+    typeMessage: "Napíšte správu…",
+    noMessagesYet: "Zatiaľ žiadne správy",
+    selectContacts: "Vybrať kontakty",
     ok: "OK",
     confirmAction: "Potvrdiť",
     passwordsMustMatch: "Heslá sa nezhodujú",
@@ -708,6 +762,15 @@ const translations: Record<LangCode, Translations> = {
     couldNotLoadSettings: "Nastavení se nepodařilo načíst",
     chat: "Chat",
     openConversation: "Otevřete konverzaci ze strany Chaty.",
+    newChat: "Nový chat",
+    openChat: "Otevřít chat",
+    createGroup: "Vytvořit skupinu",
+    groupTitle: "Název skupiny",
+    groupTitleRequired: "Pro skupinové chaty je vyžadován název",
+    sendMessage: "Odeslat",
+    typeMessage: "Napište zprávu…",
+    noMessagesYet: "Zatím žádné zprávy",
+    selectContacts: "Vybrat kontakty",
     ok: "OK",
     confirmAction: "Potvrdit",
     passwordsMustMatch: "Hesla se neshodují",

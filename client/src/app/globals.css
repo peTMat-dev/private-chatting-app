@@ -1114,10 +1114,30 @@ a:hover {
 .chats-list .list-group-item {
   border-color: rgba(3, 160, 98, 0.2);
   border-bottom: 1px solid rgba(3, 160, 98, 0.2);
+  padding: 0.4rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.chats-list .list-group-item:hover {
+  background-color: rgba(3, 160, 98, 0.08);
 }
 
 .chats-list .list-group-item:last-child {
   border-bottom: none;
+}
+
+.chats-list .contact-header {
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.chats-list .last-Message-text {
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .contact-header {

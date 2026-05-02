@@ -38,10 +38,11 @@ router.get("/", async (req: Request, res: Response) => {
     const userId = userRows[0].user_id;
 
     // Get user system details
-    const settingsRows = await query<UserSystemDetails>(
-      `SELECT user_language, default_max_chat_participants, public_st, user_timezone, can_be_added_to_contacts 
-       FROM user_system_details 
-       WHERE user_id = ? LIMIT 1`,
+    const settingsRows = await query<UserSystemDetails & { display_name: string }>(
+      `SELECT usd.user_language, usd.default_max_chat_participants, usd.public_st, usd.user_timezone, usd.can_be_added_to_contacts, umd.display_name
+       FROM user_system_details usd
+       JOIN user_main_details umd ON umd.user_id = usd.user_id
+       WHERE usd.user_id = ? LIMIT 1`,
       [userId]
     );
 
@@ -49,12 +50,13 @@ router.get("/", async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, error: "User settings not found" });
     }
 
-    const settings: UserSystemDetails = {
+    const settings = {
       user_language: settingsRows[0].user_language,
       default_max_chat_participants: settingsRows[0].default_max_chat_participants,
       public_st: Boolean(settingsRows[0].public_st),
       user_timezone: settingsRows[0].user_timezone,
       can_be_added_to_contacts: Boolean(settingsRows[0].can_be_added_to_contacts),
+      display_name: settingsRows[0].display_name,
     };
 
     res.json({ success: true, data: settings });

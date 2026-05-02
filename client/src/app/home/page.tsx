@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Contact from "../components/Contact";
 import { buildApiUrl, postJson } from "../../lib/api";
 import { LANGUAGES, getLang, setLang, t, type LangCode } from "../../lib/i18n";
 import { useCubeNavigation, type CubeFace } from "../../lib/useCubeNavigation";
+import { useSocket } from "../../lib/useSocket";
 
 type ContactSummary = {
   id: number | string;
   name: string;
   lastMessage: string;
+  isGroup: boolean;
 };
 
 type ContactItem = {
@@ -23,7 +25,7 @@ type ContactItem = {
 type ApiChatsResponse = {
   success: boolean;
   count?: number;
-  data?: Array<{ id: number; name: string; lastMessage: string }>;
+  data?: Array<{ id: number; name: string; lastMessage: string; isGroup: boolean }>;
   error?: string;
 };
 
@@ -63,6 +65,7 @@ type UserSettings = {
   public: boolean;
   user_timezone: string;
   can_be_added_to_contacts: boolean;
+  display_name?: string;
 };
 
 type ApiSettingsResponse = {
@@ -77,7 +80,16 @@ type ApiTimezonesResponse = {
   error?: string;
 };
 
-// Cube faces: front=Chats, left=Contacts, right=Chat view (placeholder), back=Settings, top=Logout
+type ChatMessage = {
+  messageId: number;
+  text: string;
+  senderUserId: number;
+  senderDisplayName: string;
+  sentAt: string;
+  isOwn: boolean;
+};
+
+// Cube faces: front=Chats, left=Contacts, right=Chat view, back=Settings, top=Logout
 // CubeFace type imported from useCubeNavigation
 
 export default function HomeCube() {
@@ -92,6 +104,7 @@ export default function HomeCube() {
     goRight,
     goDown,
     goUp,
+    setFace,
     handleKeyDown,
     handleTouchStart,
     handleTouchEnd,
@@ -135,6 +148,23 @@ export default function HomeCube() {
   const [rejectingRequestId, setRejectingRequestId] = useState<number | null>(null);
   const [cancellingRequestId, setCancellingRequestId] = useState<number | null>(null);
 
+  const [activeChatId, setActiveChatId] = useState<number | null>(null);
+  const [activeChatName, setActiveChatName] = useState<string>("");
+  const [activeChatIsGroup, setActiveChatIsGroup] = useState(false);
+  const [activeChatMessages, setActiveChatMessages] = useState<ChatMessage[]>([]);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatError, setChatError] = useState<string | null>(null);
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [messageInput, setMessageInput] = useState("");
+  const [showNewChat, setShowNewChat] = useState(false);
+  const [newChatSelectedIds, setNewChatSelectedIds] = useState<number[]>([]);
+  const [newChatTitle, setNewChatTitle] = useState("");
+  const [creatingChat, setCreatingChat] = useState(false);
+  const [newChatError, setNewChatError] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const activeChatIdRef = useRef<number | null>(null);
+  const [currentUserDisplayName, setCurrentUserDisplayName] = useState("");
+
   useEffect(() => {
     setLangState(getLang());
   }, []);
@@ -149,34 +179,41 @@ export default function HomeCube() {
     }
   }, []);
 
-  useEffect(() => {
-    let aborted = false;
-    const fetchChats = async () => {
-      if (!username) {
+  const { socket } = useSocket(username);
+
+  const fetchChats = useCallback(async () => {
+    if (!username) return;
+    try {
+      const url = buildApiUrl(`/chats?username=${encodeURIComponent(username)}`);
+      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      const data = (await res.json()) as ApiChatsResponse;
+      if (!res.ok || !data.success) {
+        setError(data.error || "Unable to load chats");
         return;
       }
-      try {
-        const url = buildApiUrl(`/chats?username=${encodeURIComponent(username)}`);
-        const res = await fetch(url, { headers: { Accept: "application/json" } });
-        const data = (await res.json()) as ApiChatsResponse;
-        if (!res.ok || !data.success) {
-          if (!aborted) setError(data.error || "Unable to load chats");
-          return;
-        }
-        const list: ContactSummary[] = (data.data || []).map((d) => ({
-          id: d.id,
-          name: d.name,
-          lastMessage: d.lastMessage || "",
-        }));
-        if (!aborted) setContacts(list);
-      } catch (err) {
-        if (!aborted) setError((err as Error).message);
-      }
-    };
+      const list: ContactSummary[] = (data.data || []).map((d) => ({
+        id: d.id,
+        name: d.name,
+        lastMessage: d.lastMessage || "",
+        isGroup: d.isGroup,
+      }));
+      setContacts(list);
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }, [username]);
+
+  useEffect(() => {
     fetchChats();
-    return () => {
-      aborted = true;
-    };
+  }, [fetchChats]);
+
+  // Fetch own display name once username is available
+  useEffect(() => {
+    if (!username) return;
+    fetch(buildApiUrl(`/settings?username=${encodeURIComponent(username)}`), { headers: { Accept: "application/json" } })
+      .then((r) => r.json())
+      .then((d: ApiSettingsResponse) => { if (d.success && d.data?.display_name) setCurrentUserDisplayName(d.data.display_name); })
+      .catch(() => {});
   }, [username]);
 
   useEffect(() => {
@@ -463,6 +500,91 @@ export default function HomeCube() {
     }
   };
 
+  const fetchMessages = useCallback(async (conversationId: number) => {
+    if (!username) return;
+    setChatLoading(true);
+    setChatError(null);
+    try {
+      const url = buildApiUrl(`/chats/${conversationId}/messages?username=${encodeURIComponent(username)}`);
+      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      const data = (await res.json()) as { success: boolean; data?: ChatMessage[]; error?: string };
+      if (!res.ok || !data.success) {
+        setChatError(data.error || "Unable to load messages");
+        return;
+      }
+      setActiveChatMessages(data.data || []);
+    } catch (err) {
+      setChatError((err as Error).message);
+    } finally {
+      setChatLoading(false);
+    }
+  }, [username]);
+
+  // Keep activeChatIdRef in sync so socket handler can read it without re-subscribing
+  useEffect(() => {
+    activeChatIdRef.current = activeChatId;
+  }, [activeChatId]);
+
+  // Auto-scroll to latest message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [activeChatMessages]);
+
+  // Load messages whenever the right face becomes active with a selected chat
+  useEffect(() => {
+    if (activeFace === "right" && activeChatId !== null) {
+      fetchMessages(activeChatId);
+    }
+  }, [activeFace, activeChatId, fetchMessages]);
+
+  // Phase 6: real-time contact_approved push
+  useEffect(() => {
+    if (!socket) return;
+    const handler = ({ userId }: { userId: number; displayName: string }) => {
+      fetchUserContacts();
+      setOutgoingRequests((prev) => prev.filter((r) => r.userId !== userId));
+      setPublicUsers((prev) =>
+        prev.map((u) => u.id === userId ? { ...u, isAlreadyContact: true, hasPendingRequest: false } : u)
+      );
+    };
+    socket.on("contact_approved", handler);
+    return () => { socket.off("contact_approved", handler); };
+  }, [socket]);
+
+  // Phases 8+9: real-time new_message push
+  useEffect(() => {
+    if (!socket) return;
+    const handler = (payload: {
+      conversationId: number; messageId: number; text: string;
+      senderUserId: number; senderDisplayName: string; sentAt: string;
+    }) => {
+      // Append to the open chat (dedup against optimistic messages)
+      if (activeChatIdRef.current === payload.conversationId) {
+        setActiveChatMessages((prev) => {
+          if (prev.some((m) => m.messageId === payload.messageId)) return prev;
+          return [...prev, {
+            messageId: payload.messageId,
+            text: payload.text,
+            senderUserId: payload.senderUserId,
+            senderDisplayName: payload.senderDisplayName,
+            sentAt: payload.sentAt,
+            isOwn: false,
+          }];
+        });
+      }
+      // Update chats list last message
+      setContacts((prev) => {
+        const idx = prev.findIndex((c) => c.id === payload.conversationId);
+        if (idx === -1) { fetchChats(); return prev; }
+        const next = [...prev];
+        next[idx] = { ...next[idx], lastMessage: payload.text };
+        return next;
+      });
+    };
+    socket.on("new_message", handler);
+    return () => { socket.off("new_message", handler); };
+  }, [socket, fetchChats]);
+
   const sortedPublicUsers = useMemo(() => {
     const sorted = [...publicUsers];
     sorted.sort((a, b) => {
@@ -487,10 +609,85 @@ export default function HomeCube() {
     return term ? sorted.filter((c) => c.displayName.toLowerCase().includes(term)) : sorted;
   }, [userContacts, contactSortOrder, contactSearch]);
 
-  const openChat = (_id: number | string) => {
-    // Rotation-only for now: move to the right face
-    setActiveFace("right");
-    setYTicks((t) => t - 1);
+  const handleOpenChat = (conversationId: number, name: string, isGroup: boolean) => {
+    setActiveChatId(conversationId);
+    setActiveChatName(name);
+    setActiveChatIsGroup(isGroup);
+    setActiveChatMessages([]);
+    setChatError(null);
+    setFace("right");
+  };
+
+  const handleChatWithContact = async (contactId: number) => {
+    try {
+      const { ok, data } = await postJson("/chats", { username, participantUserIds: [contactId] });
+      if (!ok || !data.success) {
+        setAlertDialog({ show: true, title: "Error", message: data.error || "Failed to open chat" });
+        return;
+      }
+      fetchChats();
+      handleOpenChat(data.data.conversationId, data.data.name, data.data.isGroup);
+    } catch (err) {
+      setAlertDialog({ show: true, title: "Error", message: (err as Error).message });
+    }
+  };
+
+  const handleCreateChat = async () => {
+    if (newChatSelectedIds.length === 0) return;
+    const isGroup = newChatSelectedIds.length > 1;
+    if (isGroup && !newChatTitle.trim()) {
+      setNewChatError(t(lang).groupTitleRequired);
+      return;
+    }
+    setCreatingChat(true);
+    setNewChatError(null);
+    try {
+      const { ok, data } = await postJson("/chats", {
+        username,
+        participantUserIds: newChatSelectedIds,
+        ...(isGroup ? { title: newChatTitle.trim() } : {}),
+      });
+      if (!ok || !data.success) {
+        setNewChatError(data.error || "Failed to create chat");
+        return;
+      }
+      setShowNewChat(false);
+      setNewChatSelectedIds([]);
+      setNewChatTitle("");
+      fetchChats();
+      handleOpenChat(data.data.conversationId, data.data.name, data.data.isGroup);
+    } catch (err) {
+      setNewChatError((err as Error).message);
+    } finally {
+      setCreatingChat(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!messageInput.trim() || !activeChatId || sendingMessage) return;
+    const text = messageInput.trim();
+    setMessageInput("");
+    setSendingMessage(true);
+    const tempId = -Date.now();
+    setActiveChatMessages((prev) => [...prev, {
+      messageId: tempId, text, senderUserId: -1, senderDisplayName: currentUserDisplayName, sentAt: new Date().toISOString(), isOwn: true,
+    }]);
+    try {
+      const { ok, data } = await postJson(`/chats/${activeChatId}/messages`, { username, text });
+      if (!ok || !data.success) {
+        setActiveChatMessages((prev) => prev.filter((m) => m.messageId !== tempId));
+        setMessageInput(text);
+        return;
+      }
+      setActiveChatMessages((prev) =>
+        prev.map((m) => m.messageId === tempId ? { ...m, messageId: data.data.messageId, sentAt: data.data.sentAt } : m)
+      );
+    } catch {
+      setActiveChatMessages((prev) => prev.filter((m) => m.messageId !== tempId));
+      setMessageInput(text);
+    } finally {
+      setSendingMessage(false);
+    }
   };
 
   const handleSaveSettings = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -581,6 +778,92 @@ export default function HomeCube() {
                   <div className="cube-face-header" onClick={handleHeaderTripleTap}>
                     <h2>{tr.chats}</h2>
                   </div>
+
+                  {/* New Chat accordion */}
+                  <div style={{ padding: "0.6rem 1.25rem", borderBottom: "1px solid rgba(3, 160, 98, 0.15)" }}>
+                    <button
+                      className="add-contact-btn"
+                      onClick={() => {
+                        setShowNewChat(!showNewChat);
+                        setNewChatSelectedIds([]);
+                        setNewChatTitle("");
+                        setNewChatError(null);
+                      }}
+                      style={{ width: "100%" }}
+                    >
+                      {tr.newChat}
+                    </button>
+                    {showNewChat && (
+                      <div style={{ marginTop: "0.65rem" }}>
+                        {userContacts.length === 0 ? (
+                          <div style={{ padding: "0.5rem 0", color: "rgba(3,160,98,0.5)", fontSize: "0.8rem", textAlign: "center" }}>
+                            {tr.noContactsYet}
+                          </div>
+                        ) : (
+                          <>
+                            <div style={{ fontSize: "0.7rem", color: "rgba(3,160,98,0.55)", paddingBottom: "0.35rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                              {tr.selectContacts}
+                            </div>
+                            <div className="auth-input" style={{ padding: 0, maxHeight: "150px", overflowY: "auto" }}>
+                              {userContacts.map((c) => (
+                                <div
+                                  key={c.id}
+                                  onClick={() => setNewChatSelectedIds((prev) =>
+                                    prev.includes(c.id) ? prev.filter((id) => id !== c.id) : [...prev, c.id]
+                                  )}
+                                  style={{
+                                    display: "flex", alignItems: "center", gap: "0.5rem",
+                                    padding: "0.45rem 0.75rem",
+                                    borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                                    cursor: "pointer",
+                                    color: newChatSelectedIds.includes(c.id) ? "#00FFFF" : "var(--color-green)",
+                                    backgroundColor: newChatSelectedIds.includes(c.id) ? "rgba(3,160,98,0.1)" : "transparent",
+                                  }}
+                                >
+                                  <span style={{ flex: 1, fontSize: "0.85rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    {c.displayName}
+                                  </span>
+                                  <span style={{ fontSize: "0.8rem" }}>{newChatSelectedIds.includes(c.id) ? "\u2611" : "\u2610"}</span>
+                                </div>
+                              ))}
+                            </div>
+                            {newChatSelectedIds.length >= 2 && (
+                              <input
+                                type="text"
+                                value={newChatTitle}
+                                onChange={(e) => setNewChatTitle(e.target.value)}
+                                placeholder={tr.groupTitle}
+                                style={{
+                                  marginTop: "0.5rem", width: "100%", fontSize: "0.8rem",
+                                  padding: "0.35rem 0.5rem",
+                                  background: "rgba(3,160,98,0.08)",
+                                  border: "1px solid rgba(3,160,98,0.3)",
+                                  borderRadius: "0.25rem",
+                                  color: "var(--color-green)", outline: "none",
+                                }}
+                              />
+                            )}
+                            {newChatError && (
+                              <p style={{ color: "rgba(255,80,80,0.8)", fontSize: "0.75rem", margin: "0.35rem 0 0" }}>
+                                {newChatError}
+                              </p>
+                            )}
+                            {newChatSelectedIds.length > 0 && (
+                              <button
+                                className="add-contact-btn"
+                                onClick={handleCreateChat}
+                                disabled={creatingChat}
+                                style={{ width: "100%", marginTop: "0.5rem" }}
+                              >
+                                {creatingChat ? "\u2026" : newChatSelectedIds.length === 1 ? tr.openChat : tr.createGroup}
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
                   {error ? (
                     <div className="empty-state">
                       <div className="empty-icon" aria-hidden="true" />
@@ -596,7 +879,7 @@ export default function HomeCube() {
                   ) : (
                     <ul className="list-group list-group-flush chats-list">
                       {contacts.map((c) => (
-                        <Contact key={c.id} contact_name={c.name} onClick={() => openChat(c.id)}>
+                        <Contact key={c.id} contact_name={c.name} onClick={() => handleOpenChat(Number(c.id), c.name, c.isGroup)}>
                           {c.lastMessage}
                         </Contact>
                       ))}
@@ -894,8 +1177,8 @@ export default function HomeCube() {
                                 </span>
                                 <button
                                   className="contact-action-btn contact-action-btn--chat"
-                                  disabled
-                                  title={tr.chatSoon}
+                                  onClick={() => handleChatWithContact(c.id)}
+                                  title="💬"
                                 >
                                   💬
                                 </button>
@@ -1321,14 +1604,114 @@ export default function HomeCube() {
             </article>
           </section>
 
-          {/* Right: Chat view placeholder */}
+          {/* Right: Chat view */}
           <section className="cube-face cube-face-right">
             <article className="auth-card cube-face-panel">
-              <div className="cube-face-content">
-                <div className="cube-face-header" onClick={handleHeaderTripleTap}>
-                  <h2>{tr.chat}</h2>
+              <div className="cube-face-content" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+                <div className="cube-face-header" onClick={handleHeaderTripleTap} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <button
+                    type="button"
+                    className="ghost-btn"
+                    onClick={() => setFace("front")}
+                    style={{ padding: "0.2rem 0.5rem", fontSize: "0.8rem", minWidth: 0 }}
+                  >
+                    ←
+                  </button>
+                  <h2 style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>
+                    {activeChatName || tr.chat}
+                  </h2>
                 </div>
-                <p className="hero-copy">{tr.openConversation}</p>
+
+                {!activeChatId ? (
+                  <p className="hero-copy">{tr.openConversation}</p>
+                ) : chatLoading ? (
+                  <div className="empty-state"><p>{tr.loadingUsers}</p></div>
+                ) : chatError ? (
+                  <div className="empty-state"><p>{chatError}</p></div>
+                ) : (
+                  <>
+                    <div style={{ flex: 1, overflowY: "auto", padding: "0.75rem 1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                      {activeChatMessages.length === 0 ? (
+                        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <p style={{ color: "rgba(3,160,98,0.5)", fontSize: "0.85rem" }}>{tr.noMessagesYet}</p>
+                        </div>
+                      ) : (
+                        activeChatMessages.map((m, i) => {
+                          const msgDate = new Date(m.sentAt);
+                          const msgDay = msgDate.toDateString();
+                          const prevDay = i > 0 ? new Date(activeChatMessages[i - 1].sentAt).toDateString() : null;
+                          const showSeparator = msgDay !== prevDay;
+                          const today = new Date().toDateString();
+                          const yesterday = new Date(Date.now() - 864e5).toDateString();
+                          const separatorLabel = msgDay === today ? "Today" : msgDay === yesterday ? "Yesterday" : msgDate.toLocaleDateString([], { day: "2-digit", month: "2-digit", year: "numeric" });
+                          return (
+                            <div key={m.messageId}>
+                              {showSeparator && (
+                                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", margin: "0.5rem 0" }}>
+                                  <div style={{ flex: 1, height: "1px", background: "rgba(3,160,98,0.2)" }} />
+                                  <span style={{ fontSize: "0.7rem", color: "var(--color-green)", whiteSpace: "nowrap" }}>{separatorLabel}</span>
+                                  <div style={{ flex: 1, height: "1px", background: "rgba(3,160,98,0.2)" }} />
+                                </div>
+                              )}
+                              <div style={{ display: "flex", flexDirection: "column", alignItems: m.isOwn ? "flex-end" : "flex-start" }}>
+                                {activeChatIsGroup && m.senderDisplayName && (
+                                  <span style={{ fontSize: "0.7rem", color: "var(--color-green)", marginBottom: "0.15rem" }}>
+                                    {m.senderDisplayName}
+                                  </span>
+                                )}
+                                <div style={{
+                                  maxWidth: "75%",
+                                  padding: "0.4rem 0.65rem",
+                                  borderRadius: m.isOwn ? "1rem 1rem 0.25rem 1rem" : "1rem 1rem 1rem 0.25rem",
+                                  background: m.isOwn ? "rgba(3,160,98,0.25)" : "rgba(3,160,98,0.1)",
+                                  border: "1px solid rgba(3,160,98,0.3)",
+                                  color: "var(--color-green)",
+                                  fontSize: "0.85rem",
+                                  wordBreak: "break-word",
+                                }}>
+                                  {m.text}
+                                </div>
+                                <span style={{ fontSize: "0.65rem", color: "var(--color-green)", marginTop: "0.1rem" }}>
+                                  {msgDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                      <div ref={messagesEndRef} />
+                    </div>
+
+                    <div style={{ padding: "0.5rem 0.75rem", borderTop: "1px solid rgba(3, 160, 98, 0.15)", display: "flex", gap: "0.4rem", alignItems: "flex-end" }}>
+                      <textarea
+                        value={messageInput}
+                        onChange={(e) => setMessageInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(); }
+                        }}
+                        placeholder={tr.typeMessage}
+                        rows={1}
+                        style={{
+                          flex: 1, resize: "none", fontSize: "0.85rem",
+                          padding: "0.4rem 0.6rem",
+                          background: "rgba(3,160,98,0.08)",
+                          border: "1px solid rgba(3,160,98,0.3)",
+                          borderRadius: "0.5rem",
+                          color: "var(--color-green)", outline: "none", fontFamily: "inherit",
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="contact-action-btn contact-action-btn--add"
+                        onClick={handleSendMessage}
+                        disabled={sendingMessage || !messageInput.trim()}
+                        style={{ fontSize: "0.75rem", padding: "0.4rem 0.6rem" }}
+                      >
+                        {sendingMessage ? "\u2026" : tr.sendMessage}
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </article>
           </section>

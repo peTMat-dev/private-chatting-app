@@ -10,8 +10,8 @@ const Contact = ({contact_name,children,onClick}: Props) => {
     
   return (
     <li className="list-group-item flex" onClick={onClick}>
-        <div className='contact-header fs-5'>{contact_name}</div>
-        <div className='last-Message-text fs-6'>Last message: {children}</div>
+        <div className='contact-header'>{contact_name}</div>
+        <div className='last-Message-text'>Last message: {children}</div>
     </li>
   )
 }

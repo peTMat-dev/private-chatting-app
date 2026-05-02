@@ -295,14 +295,16 @@ router.post("/:id/messages", async (req: Request, res: Response) => {
     );
     const sentAt = sentRow[0]?.sent_at || new Date().toISOString();
 
-    // Emit new_message to all participants
+    // Emit new_message to all participants except the sender (sender uses optimistic UI)
     const participants = await query<{ user_id: number }>(
       "SELECT user_id FROM conversations_participants WHERE conversation_id = ?",
       [conversationId]
     );
     const payload = { conversationId, messageId, text: text.trim(), senderUserId: userId, senderDisplayName, sentAt };
     for (const p of participants) {
-      emitToUser(p.user_id, "new_message", payload);
+      if (p.user_id !== userId) {
+        emitToUser(p.user_id, "new_message", payload);
+      }
     }
 
     res.json({ success: true, data: { messageId, sentAt } });
