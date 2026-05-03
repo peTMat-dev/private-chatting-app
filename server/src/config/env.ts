@@ -72,4 +72,12 @@ export const env = {
     pass: process.env.MAIL_PASS ?? "",
     from: process.env.MAIL_FROM ?? "",
   },
+  encryption: {
+    key: process.env.ENCRYPTION_KEY ?? "",
+  },
 };
+
+const encKey = process.env.ENCRYPTION_KEY ?? "";
+if (!encKey || !/^[0-9a-fA-F]{64}$/.test(encKey)) {
+  throw new Error("ENCRYPTION_KEY must be set to a 64-character hex string (32 bytes). Generate one with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"");
+}

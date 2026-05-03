@@ -10,8 +10,8 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_main_details` (
     `user_id` SMALLINT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT COMMENT 'Primary key for users',
     `ldap_uid_id` VARCHAR(32) NOT NULL UNIQUE COMMENT 'Unique LDAP user ID (immutable)',
     `display_name` VARCHAR(48) NOT NULL COMMENT 'User-chosen public display name',
-    `last_seen_at` TIMESTAMP DEFAULT NULL COMMENT 'Last time user was seen online'*,
-    `last_login_at` DATETIME DEFAULT NULL COMMENT 'Last login timestamp, admin purpose'*
+    `last_seen_at` TIMESTAMP DEFAULT NULL COMMENT 'Last time user was seen online',
+    `last_login_at` DATETIME DEFAULT NULL COMMENT 'Last login timestamp, admin purpose',
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores main user details';
 
 -- Create a table for disabled user details, not created in live db yet. 
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`contacts` (
     `owner_user_id` SMALLINT UNSIGNED NOT NULL COMMENT 'User who owns this contact',
     `contact_user_id` SMALLINT UNSIGNED NOT NULL COMMENT 'User who is the contact',
     `status_st` BOOLEAN DEFAULT TRUE COMMENT 'Contact status added/removed or closed account)',
-    `added_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'When contact was added',*
+    `added_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'When contact was added',
     PRIMARY KEY (`owner_user_id`, `contact_user_id`),
     FOREIGN KEY (`owner_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
     FOREIGN KEY (`contact_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)
@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`conversations` (
     `title` VARCHAR(64) DEFAULT NULL,
     `group_id` INT UNSIGNED DEFAULT NULL,
     FOREIGN KEY (`creator_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
-    FOREIGN KEY (`group_id`) REFERENCES `cubcha_v1`.`user_groups`(`group_id`) not in live db yet
+    FOREIGN KEY (`group_id`) REFERENCES `cubcha_v1`.`user_groups`(`group_id`) -- not in live db yet
     ,KEY `idx_conversations_creator` (`creator_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

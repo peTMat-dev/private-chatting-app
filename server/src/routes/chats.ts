@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { query } from "../services/db";
 import { emitToUser } from "../services/socket.service";
+import { encryptText, decryptText } from "../services/crypto.service";
 
 const router = Router();
 
@@ -62,7 +63,7 @@ router.get("/", async (req: Request, res: Response) => {
     const data = rows.map((r) => ({
       id: r.conversation_id,
       name: r.title && r.title.trim() ? r.title : r.participants || "Untitled",
-      lastMessage: r.last_message_text || "",
+      lastMessage: r.last_message_text ? decryptText(r.last_message_text) : "",
       lastAt: r.last_message_at || null,
       isGroup: Boolean(r.is_group),
     }));
@@ -233,7 +234,7 @@ router.get("/:id/messages", async (req: Request, res: Response) => {
 
     const data = messages.map((m) => ({
       messageId: m.message_id,
-      text: m.message_text,
+      text: decryptText(m.message_text),
       sentAt: m.sent_at,
       senderDisplayName: m.sender_display_name,
       senderUserId: m.sender_user_id,
@@ -284,7 +285,7 @@ router.post("/:id/messages", async (req: Request, res: Response) => {
     // Insert message
     const result = await query<{ insertId: number }>(
       "INSERT INTO messages (conversation_id, sender_user_id, sender_username, message_text, sent_at) VALUES (?, ?, ?, ?, NOW())",
-      [conversationId, userId, username, text.trim()]
+      [conversationId, userId, username, encryptText(text.trim())]
     );
     const messageId = (result as any).insertId;
 
