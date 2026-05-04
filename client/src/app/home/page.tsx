@@ -1646,7 +1646,7 @@ export default function HomeCube() {
           </section>
 
           {/* Right: Chat view */}
-          <section className="cube-face cube-face-right" style={{ position: "relative" }}>
+          <section className="cube-face cube-face-right">
             {confirmDialog?.show && (
               <div
                 onClick={(e) => e.stopPropagation()}
