@@ -163,6 +163,7 @@ export default function HomeCube() {
   const [newChatError, setNewChatError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const activeChatIdRef = useRef<number | null>(null);
+  const lastTapRef = useRef<{ messageId: number; time: number } | null>(null);
   const [currentUserDisplayName, setCurrentUserDisplayName] = useState("");
 
   useEffect(() => {
@@ -687,6 +688,42 @@ export default function HomeCube() {
       setMessageInput(text);
     } finally {
       setSendingMessage(false);
+    }
+  };
+
+  const handleDeleteMessage = (messageId: number) => {
+    if (!activeChatId || !username) return;
+    setConfirmDialog({
+      show: true,
+      message: "Delete this message?",
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        try {
+          const url = buildApiUrl(
+            `/chats/${activeChatId}/messages/${messageId}?username=${encodeURIComponent(username)}`
+          );
+          const res = await fetch(url, { method: "DELETE", headers: { Accept: "application/json" } });
+          const data = await res.json();
+          if (!res.ok || !data.success) {
+            setAlertDialog({ show: true, title: "Error", message: data.error || "Failed to delete message" });
+            return;
+          }
+          setActiveChatMessages((prev) => prev.filter((m) => m.messageId !== messageId));
+        } catch (err) {
+          setAlertDialog({ show: true, title: "Error", message: (err as Error).message });
+        }
+      },
+    });
+  };
+
+  const handleMessageDoubleTap = (messageId: number) => {
+    const now = Date.now();
+    const last = lastTapRef.current;
+    if (last && last.messageId === messageId && now - last.time < 400) {
+      lastTapRef.current = null;
+      handleDeleteMessage(messageId);
+    } else {
+      lastTapRef.current = { messageId, time: now };
     }
   };
 
@@ -1659,16 +1696,21 @@ export default function HomeCube() {
                                     {m.senderDisplayName}
                                   </span>
                                 )}
-                                <div style={{
-                                  maxWidth: "75%",
-                                  padding: "0.4rem 0.65rem",
-                                  borderRadius: m.isOwn ? "1rem 1rem 0.25rem 1rem" : "1rem 1rem 1rem 0.25rem",
-                                  background: m.isOwn ? "rgba(3,160,98,0.25)" : "rgba(3,160,98,0.1)",
-                                  border: "1px solid rgba(3,160,98,0.3)",
-                                  color: "var(--color-green)",
-                                  fontSize: "0.85rem",
-                                  wordBreak: "break-word",
-                                }}>
+                                <div
+                                  style={{
+                                    maxWidth: "75%",
+                                    padding: "0.4rem 0.65rem",
+                                    borderRadius: m.isOwn ? "1rem 1rem 0.25rem 1rem" : "1rem 1rem 1rem 0.25rem",
+                                    background: m.isOwn ? "rgba(3,160,98,0.25)" : "rgba(3,160,98,0.1)",
+                                    border: "1px solid rgba(3,160,98,0.3)",
+                                    color: "var(--color-green)",
+                                    fontSize: "0.85rem",
+                                    wordBreak: "break-word",
+                                    cursor: m.isOwn ? "pointer" : "default",
+                                  }}
+                                  onDoubleClick={m.isOwn ? () => handleDeleteMessage(m.messageId) : undefined}
+                                  onTouchEnd={m.isOwn ? () => handleMessageDoubleTap(m.messageId) : undefined}
+                                >
                                   {m.text}
                                 </div>
                                 <span style={{ fontSize: "0.65rem", color: "var(--color-green)", marginTop: "0.1rem" }}>
@@ -1740,9 +1782,10 @@ export default function HomeCube() {
             </article>
           </section>
         </div>
+      </div>
 
-        {/* Custom Confirm Dialog - Inside cube context */}
-        {confirmDialog?.show && (
+      {/* Custom Confirm Dialog - Outside cube stage to avoid fixed-in-transform trap */}
+      {confirmDialog?.show && (
           <div 
             className="auth-card" 
             onClick={(e) => e.stopPropagation()} 
@@ -1782,8 +1825,8 @@ export default function HomeCube() {
             </div>
         )}
 
-        {/* Custom Alert Dialog - Inside cube context */}
-        {alertDialog?.show && (
+      {/* Custom Alert Dialog - Outside cube stage to avoid fixed-in-transform trap */}
+      {alertDialog?.show && (
           <div 
             className="auth-card" 
             onClick={(e) => e.stopPropagation()} 
@@ -1817,7 +1860,6 @@ export default function HomeCube() {
               </button>
             </div>
         )}
-      </div>
     </div>
 
   );

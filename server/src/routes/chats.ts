@@ -314,4 +314,42 @@ router.post("/:id/messages", async (req: Request, res: Response) => {
   }
 });
 
+// DELETE /chats/:id/messages/:messageId - Delete own message
+router.delete("/:id/messages/:messageId", async (req: Request, res: Response) => {
+  const conversationId = Number(req.params.id);
+  const messageId = Number(req.params.messageId);
+  const username = String(req.query.username || "").trim();
+
+  if (!username) {
+    return res.status(400).json({ success: false, error: "username is required" });
+  }
+  if (!conversationId || !messageId) {
+    return res.status(400).json({ success: false, error: "invalid conversation or message id" });
+  }
+
+  try {
+    const userRows = await query<{ user_id: number }>(
+      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
+      [username]
+    );
+    if (userRows.length === 0) {
+      return res.status(404).json({ success: false, error: "user not found" });
+    }
+    const userId = userRows[0].user_id;
+
+    const result = await query<{ deleted: number }>(
+      "CALL messages_2_delete(?, ?, ?)",
+      [userId, conversationId, messageId]
+    );
+    const deleted = (result as any)[0]?.[0]?.deleted ?? 0;
+    if (!deleted) {
+      return res.status(404).json({ success: false, error: "Message not found or not yours" });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
 export default router;
