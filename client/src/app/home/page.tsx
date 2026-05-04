@@ -1642,7 +1642,54 @@ export default function HomeCube() {
           </section>
 
           {/* Right: Chat view */}
-          <section className="cube-face cube-face-right">
+          <section className="cube-face cube-face-right" style={{ position: "relative" }}>
+            {confirmDialog?.show && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  zIndex: 10,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "rgba(0,0,0,0.55)",
+                  borderRadius: "inherit",
+                }}
+              >
+                <div
+                  className="auth-card"
+                  style={{
+                    width: "fit-content",
+                    maxWidth: "220px",
+                    padding: "0.85rem 1rem",
+                    boxShadow: "0 10px 40px rgba(6, 236, 144, 0.4)",
+                  }}
+                >
+                  <p style={{ color: "var(--color-green)", fontSize: "0.9rem", margin: "0 0 1rem 0", textAlign: "center" }}>
+                    {confirmDialog.message}
+                  </p>
+                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                    <button
+                      type="button"
+                      className="ghost-btn"
+                      onClick={() => setConfirmDialog(null)}
+                      style={{ flex: 1, padding: "0.5rem", fontSize: "0.85rem" }}
+                    >
+                      {tr.cancel}
+                    </button>
+                    <button
+                      type="button"
+                      className="auth-btn"
+                      onClick={confirmDialog.onConfirm}
+                      style={{ flex: 1, padding: "0.5rem", fontSize: "0.85rem" }}
+                    >
+                      {tr.confirmAction}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             <article className="auth-card cube-face-panel">
               <div className="cube-face-content" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
                 <div className="cube-face-header" onClick={handleHeaderTripleTap} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -1784,46 +1831,7 @@ export default function HomeCube() {
         </div>
       </div>
 
-      {/* Custom Confirm Dialog - Outside cube stage to avoid fixed-in-transform trap */}
-      {confirmDialog?.show && (
-          <div 
-            className="auth-card" 
-            onClick={(e) => e.stopPropagation()} 
-            style={{ 
-              position: "fixed",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: "calc(100% - 3rem)",
-              maxWidth: "280px", 
-              padding: "1.25rem",
-              zIndex: 100,
-              boxShadow: "0 10px 40px rgba(6, 236, 144, 0.4)"
-            }}
-            >
-              <p style={{ color: "var(--color-green)", fontSize: "0.9rem", margin: "0 0 1rem 0", textAlign: "center" }}>
-                {confirmDialog.message}
-              </p>
-              <div style={{ display: "flex", gap: "0.5rem" }}>
-                <button
-                  type="button"
-                  className="ghost-btn"
-                  onClick={() => setConfirmDialog(null)}
-                  style={{ flex: 1, padding: "0.5rem", fontSize: "0.85rem" }}
-                >
-                  {tr.cancel}
-                </button>
-                <button
-                  type="button"
-                  className="auth-btn"
-                  onClick={confirmDialog.onConfirm}
-                  style={{ flex: 1, padding: "0.5rem", fontSize: "0.85rem" }}
-                >
-                  {tr.confirmAction}
-                </button>
-              </div>
-            </div>
-        )}
+      {/* Confirm Dialog is now rendered as an absolute overlay inside the chat face */}
 
       {/* Custom Alert Dialog - Outside cube stage to avoid fixed-in-transform trap */}
       {alertDialog?.show && (
