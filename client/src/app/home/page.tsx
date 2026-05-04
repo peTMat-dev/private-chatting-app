@@ -109,6 +109,7 @@ export default function HomeCube() {
     handleTouchStart,
     handleTouchEnd,
     handleHeaderTripleTap,
+    handleFooterTripleTap,
   } = useCubeNavigation("front");
   const [contacts, setContacts] = useState<ContactSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -923,6 +924,7 @@ export default function HomeCube() {
                     </ul>
                   )}
                 </div>
+                <div className="cube-face-footer" onClick={handleFooterTripleTap}>▼</div>
               </article>
             </section>
           </section>
@@ -1406,6 +1408,7 @@ export default function HomeCube() {
                   </div>
                 </div>
               </div>
+                <div className="cube-face-footer" onClick={handleFooterTripleTap}>▼</div>
             </article>
           </section>
 
@@ -1637,6 +1640,7 @@ export default function HomeCube() {
                     </button>
                   </form>
                 )}
+                <div className="cube-face-footer" onClick={handleFooterTripleTap}>▼</div>
               </div>
             </article>
           </section>
@@ -1801,6 +1805,28 @@ export default function HomeCube() {
                     </div>
                   </>
                 )}
+                <div className="cube-face-footer" onClick={handleFooterTripleTap}>▼</div>
+              </div>
+            </article>
+          </section>
+
+          {/* Bottom: Info / Announcements */}
+          <section className="cube-face cube-face-bottom">
+            <article className="auth-card cube-face-panel">
+              <div className="cube-face-content">
+                <div className="cube-face-header">
+                  <h2>Info</h2>
+                </div>
+                <p style={{ color: "rgba(3, 160, 98, 0.7)", fontSize: "0.9rem", textAlign: "center", marginTop: "1rem" }}>
+                  Updates, announcements, and manual coming soon.
+                </p>
+                <button
+                  className="ghost-btn mt-3"
+                  type="button"
+                  onClick={goDown}
+                >
+                  {tr.cancel}
+                </button>
               </div>
             </article>
           </section>

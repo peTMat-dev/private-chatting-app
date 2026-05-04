@@ -31,6 +31,7 @@ body {
   font-family: var(--font-sans);
   min-height: 100vh;
   margin: 0;
+  overscroll-behavior: none;
 }
 
 /* Visually hidden but accessible text */
@@ -265,6 +266,21 @@ a:hover {
   margin: 0;
 }
 
+.cube-face-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.75rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(3, 160, 98, 0.1);
+  cursor: default;
+  user-select: none;
+  opacity: 0.3;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: var(--color-green);
+}
+
 .cube-face-content {
   width: 100%;
   max-width: 320px;
@@ -298,6 +314,10 @@ a:hover {
 
 .cube-face-top {
   transform: rotateX(90deg) translateZ(calc(var(--cube-width) / 2));
+}
+
+.cube-face-bottom {
+  transform: rotateX(-90deg) translateZ(calc(var(--cube-width) / 2));
 }
 
 .auth-card,
