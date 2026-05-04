@@ -617,7 +617,7 @@ export default function HomeCube() {
     setActiveChatIsGroup(isGroup);
     setActiveChatMessages([]);
     setChatError(null);
-    setFace("right");
+    goRight();
   };
 
   const handleChatWithContact = async (contactId: number) => {
