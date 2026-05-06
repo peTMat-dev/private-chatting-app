@@ -57,9 +57,14 @@ Only one of the four sections is open at a time. Opening a section closes all ot
 | `GET` | `/contacts` | username query param | Get current user's contact list |
 | `GET` | `/contacts/public-users` | username query param | List all public users with contact status |
 | `GET` | `/contacts/whose-contact-am-i` | username query param | Find users who have added me as contact |
+| `GET` | `/contacts/requests/incoming` | username query param | Get incoming contact requests |
+| `GET` | `/contacts/requests/outgoing` | username query param | Get outgoing contact requests |
 | `POST` | `/contacts/add-public` | body: `{ username, contactUserId }` | Add a public user as contact |
 | `POST` | `/contacts/remove` | body: `{ username, contactUserId }` | Remove a contact |
 | `POST` | `/contacts/request` | body: `{ username, displayName }` | Request contact with private user |
+| `POST` | `/contacts/requests/approve` | body: `{ username, requestId }` | Approve an incoming contact request |
+| `POST` | `/contacts/requests/reject` | body: `{ username, requestId }` | Reject an incoming contact request |
+| `POST` | `/contacts/requests/cancel` | body: `{ username, requestId }` | Cancel an outgoing contact request |
 
 All endpoints resolve LDAP username to `user_id` using:
 ```sql
@@ -70,13 +75,18 @@ SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1
 
 ## Stored Procedures
 
-| Stored Procedure | Used In | Arguments |
+| Stored Procedure | Arguments | Endpoint |
 |---|---|---|
-| `contact_2lookup_public_user(userId)` | `GET /contacts/public-users` | Caller's `user_id` |
-| `contact_2add_public_user(userId, contactUserId)` | `POST /contacts/add-public` | Caller + target `user_id` |
-| `contact_2lookup_added_private_user(userId, displayName)` | `POST /contacts/request` | Caller `user_id` + display name string |
-| `contact_whose_contact_am_I(userId)` | `GET /contacts/whose-contact-am-i` | Caller's `user_id` |
-| `contact_list_2remove_user(userId, contactUserId)` | `POST /contacts/remove` | Caller + target `user_id` |
+| `contact_2lookup_public_user` | `(userId)` | `GET /contacts/public-users` |
+| `contact_2send_public_request` | `(userId, contactUserId)` | `POST /contacts/add-public` |
+| `contact_2send_private_request` | `(userId, displayName)` | `POST /contacts/request` |
+| `contact_whose_contact_am_I` | `(userId)` | `GET /contacts/whose-contact-am-i` |
+| `contact_list_2remove_user` | `(userId, contactUserId)` | `POST /contacts/remove` |
+| `contact_2get_incoming_requests` | `(userId)` | `GET /contacts/requests/incoming`, `POST /contacts/requests/approve` |
+| `contact_2get_outgoing_requests` | `(userId)` | `GET /contacts/requests/outgoing` |
+| `contact_2approve_contact_request` | `(userId, requestId)` | `POST /contacts/requests/approve` |
+| `contact_2reject_contact_request` | `(userId, requestId)` | `POST /contacts/requests/reject` |
+| `contact_2cancel_contact_request` | `(userId, requestId)` | `POST /contacts/requests/cancel` |
 
 **IMPORTANT — SP result unwrapping:** MySQL stored procedures return results in a nested array. Always unwrap:
 ```ts

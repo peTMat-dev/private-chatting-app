@@ -326,7 +326,7 @@ export default function HomeCube() {
       }
       setUserContacts((prev) => prev.filter((c) => c.id !== contactId));
       setPublicUsers((prev) =>
-        prev.map((u) => (u.id === contactId ? { ...u, isAlreadyContact: false } : u))
+        prev.map((u) => (u.id === contactId ? { ...u, isAlreadyContact: false, hasPendingRequest: false } : u))
       );
     } catch (err) {
       setAlertDialog({ show: true, title: "Error", message: (err as Error).message });

@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`contacts_requests` (
     -- allows new requests after approval/rejection, but prevents duplicate pending requests.
     `requester_user_id` SMALLINT UNSIGNED NOT NULL,  -- Who sent request (FK to user_id)
     `target_user_id` SMALLINT UNSIGNED NOT NULL,     -- Who receives request (FK to user_id)
-    `status_st` ENUM('pending','approved','rejected','cancelled') DEFAULT 'pending',
+    `status_st` ENUM('pending','approved','rejected','cancelled','removed') DEFAULT 'pending',
     `requested_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `responded_at` DATETIME NULL DEFAULT NULL,
     `removed_at` DATETIME NULL,
