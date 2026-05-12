@@ -288,7 +288,7 @@ export default function HomeCube() {
     const fetchTimezones = async () => {
       try {
         const url = buildApiUrl("/settings/timezones");
-        const res = await fetch(url, { headers: { Accept: "application/json" } });
+        const res = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } });
         const data = (await res.json()) as ApiTimezonesResponse;
         if (res.ok && data.success && data.data) {
           if (!aborted) setTimezones(data.data);
@@ -1735,13 +1735,15 @@ export default function HomeCube() {
                         </div>
                       ) : (
                         activeChatMessages.map((m, i) => {
+                          const tz = settings?.user_timezone || undefined;
+                          const tzOpts = tz ? { timeZone: tz } : {};
                           const msgDate = new Date(m.sentAt);
-                          const msgDay = msgDate.toDateString();
-                          const prevDay = i > 0 ? new Date(activeChatMessages[i - 1].sentAt).toDateString() : null;
+                          const msgDay = msgDate.toLocaleDateString([], { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" });
+                          const prevDay = i > 0 ? new Date(activeChatMessages[i - 1].sentAt).toLocaleDateString([], { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }) : null;
                           const showSeparator = msgDay !== prevDay;
-                          const today = new Date().toDateString();
-                          const yesterday = new Date(Date.now() - 864e5).toDateString();
-                          const separatorLabel = msgDay === today ? "Today" : msgDay === yesterday ? "Yesterday" : msgDate.toLocaleDateString([], { day: "2-digit", month: "2-digit", year: "numeric" });
+                          const today = new Date().toLocaleDateString([], { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" });
+                          const yesterday = new Date(Date.now() - 864e5).toLocaleDateString([], { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" });
+                          const separatorLabel = msgDay === today ? "Today" : msgDay === yesterday ? "Yesterday" : msgDate.toLocaleDateString([], { ...tzOpts, day: "2-digit", month: "2-digit", year: "numeric" });
                           return (
                             <div key={m.messageId}>
                               {showSeparator && (
@@ -1775,7 +1777,7 @@ export default function HomeCube() {
                                   {m.text}
                                 </div>
                                 <span style={{ fontSize: "0.65rem", color: "var(--color-green)", marginTop: "0.1rem" }}>
-                                  {msgDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}
+                                  {msgDate.toLocaleTimeString([], { ...tzOpts, hour: "2-digit", minute: "2-digit", hour12: false })}
                                 </span>
                               </div>
                             </div>

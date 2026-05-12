@@ -30,7 +30,7 @@ router.get("/", async (req: Request, res: Response) => {
                 LIMIT 1
               ) AS last_message_text,
               (
-                SELECT DATE_FORMAT(m.sent_at, '%Y-%m-%d %H:%i:%s')
+                SELECT DATE_FORMAT(CONVERT_TZ(m.sent_at, @@session.time_zone, '+00:00'), '%Y-%m-%dT%H:%i:%sZ')
                 FROM messages m
                 WHERE m.conversation_id = c.conversation_id
                 ORDER BY m.sent_at DESC
@@ -194,7 +194,7 @@ router.get("/:id/messages", async (req: Request, res: Response) => {
       sender_user_id: number;
     };
     const messages = await query<MessageRow>(
-      `SELECT m.message_id, m.message_text, DATE_FORMAT(m.sent_at, '%Y-%m-%dT%H:%i:%sZ') AS sent_at,
+      `SELECT m.message_id, m.message_text, DATE_FORMAT(CONVERT_TZ(m.sent_at, @@session.time_zone, '+00:00'), '%Y-%m-%dT%H:%i:%sZ') AS sent_at,
               umd.display_name AS sender_display_name, umd.user_id AS sender_user_id
        FROM messages m
        JOIN user_main_details umd ON umd.user_id = m.sender_user_id
@@ -261,7 +261,7 @@ router.post("/:id/messages", async (req: Request, res: Response) => {
 
     // Get sent_at back from DB
     const sentRow = await query<{ sent_at: string }>(
-      "SELECT DATE_FORMAT(sent_at, '%Y-%m-%dT%H:%i:%sZ') AS sent_at FROM messages WHERE message_id = ? LIMIT 1",
+      "SELECT DATE_FORMAT(CONVERT_TZ(sent_at, @@session.time_zone, '+00:00'), '%Y-%m-%dT%H:%i:%sZ') AS sent_at FROM messages WHERE message_id = ? LIMIT 1",
       [messageId]
     );
     const sentAt = sentRow[0]?.sent_at || new Date().toISOString();
