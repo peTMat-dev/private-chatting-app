@@ -1,6 +1,7 @@
 import http from "http";
 import express, { Request, Response } from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 import { env } from "./config/env";
 import authRouter from "./routes/auth";
@@ -10,6 +11,7 @@ import contactsRouter from "./routes/contacts";
 import { query, pool } from "./services/db";
 import { LDAP_getUser, testLDAPConnection } from "./services/ldap.service";
 import { initSocketService } from "./services/socket.service";
+import { authMiddleware } from "./middleware/auth.middleware";
 
 const app = express();
 
@@ -19,6 +21,7 @@ const corsOptions: cors.CorsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -61,9 +64,9 @@ const checkLDAPWithTimeout = async (timeoutMs = 5000) => {
 };
 
 app.use("/auth", authRouter);
-app.use("/chats", chatsRouter);
-app.use("/settings", settingsRouter);
-app.use("/contacts", contactsRouter);
+app.use("/chats", authMiddleware, chatsRouter);
+app.use("/settings", authMiddleware, settingsRouter);
+app.use("/contacts", authMiddleware, contactsRouter);
 
 // Debug endpoint removed
 

@@ -16,27 +16,11 @@ type TimezoneRow = {
   display_name: string;
 };
 
-// GET /settings?username=<ldap_uid>
+// GET /settings
 router.get("/", async (req: Request, res: Response) => {
-  const { username } = req.query;
-  
-  if (!username || typeof username !== "string") {
-    return res.status(400).json({ success: false, error: "Username is required" });
-  }
+  const { userId } = req.user;
 
   try {
-    // Get user_id from ldap_uid_id
-    const userRows = await query<{ user_id: number }>(
-      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
-      [username]
-    );
-
-    if (!userRows || userRows.length === 0) {
-      return res.status(404).json({ success: false, error: "User not found" });
-    }
-
-    const userId = userRows[0].user_id;
-
     // Get user system details
     const settingsRows = await query<UserSystemDetails & { display_name: string }>(
       `SELECT usd.user_language, usd.default_max_chat_participants, usd.public_st, usd.user_timezone, usd.can_be_added_to_contacts, umd.display_name
@@ -87,24 +71,10 @@ router.get("/timezones", async (_req: Request, res: Response) => {
 
 // PUT /settings
 router.put("/", async (req: Request, res: Response) => {
-  const { username, user_language, default_max_chat_participants, public_st: isPublic, user_timezone, can_be_added_to_contacts } = req.body;
-
-  if (!username || typeof username !== "string") {
-    return res.status(400).json({ success: false, error: "Username is required" });
-  }
+  const { user_language, default_max_chat_participants, public_st: isPublic, user_timezone, can_be_added_to_contacts } = req.body;
+  const { userId } = req.user;
 
   try {
-    // Get user_id from ldap_uid_id
-    const userRows = await query<{ user_id: number }>(
-      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
-      [username]
-    );
-
-    if (!userRows || userRows.length === 0) {
-      return res.status(404).json({ success: false, error: "User not found" });
-    }
-
-    const userId = userRows[0].user_id;
 
     // Build dynamic update query
     const updates: string[] = [];

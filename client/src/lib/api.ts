@@ -16,6 +16,7 @@ export const buildApiUrl = (path: string): string => {
 export const postJson = async (path: string, payload: unknown): Promise<{ ok: boolean; data: any }> => {
   const response = await fetch(buildApiUrl(path), {
     method: "POST",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });

@@ -1,3 +1,9 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import Contact from "../components/Contact";
+import AuthGuard from "../components/AuthGuard";
+
 export default function ChatLayout({ children }: { children: React.ReactNode }) {
   const contacts = [
     { id: 1, name: "Alice", lastMessage: "Hey!" },
@@ -10,6 +16,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
   };
 
   return (
+    <AuthGuard>
     <div className="container-fluid py-3">
       <div className="row g-3">
         {/* Left: Contacts */}
@@ -44,5 +51,6 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
         </main>
       </div>
     </div>
+    </AuthGuard>
   );
 }

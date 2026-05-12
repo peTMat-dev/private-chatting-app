@@ -29,21 +29,9 @@ type Contact = {
 
 // GET /contacts - Get user's contact list
 router.get("/", async (req: Request, res: Response) => {
-  const username = String(req.query.username || "").trim();
-  if (!username) {
-    return res.status(400).json({ success: false, error: "username is required" });
-  }
+  const { userId } = req.user;
 
   try {
-    // Get user_id from ldap_uid_id
-    const userRows = await query<{ user_id: number }>(
-      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
-      [username]
-    );
-    if (userRows.length === 0) {
-      return res.status(404).json({ success: false, error: "user not found" });
-    }
-    const userId = userRows[0].user_id;
 
     // Get user's contacts
     const contacts = await query<Contact>(
@@ -73,22 +61,9 @@ router.get("/", async (req: Request, res: Response) => {
 
 // GET /contacts/public-users - List all publicly available users
 router.get("/public-users", async (req: Request, res: Response) => {
-  const username = String(req.query.username || "").trim();
-  if (!username) {
-    return res.status(400).json({ success: false, error: "username is required" });
-  }
+  const { userId } = req.user;
 
   try {
-    // Get user_id from ldap_uid_id
-    const userRows = await query<{ user_id: number }>(
-      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
-      [username]
-    );
-    if (userRows.length === 0) {
-      return res.status(404).json({ success: false, error: "user not found" });
-    }
-    const userId = userRows[0].user_id;
-
     // Call stored procedure to get public users with contact status
     const users = await query<PublicUser>("CALL contact_2lookup_public_user(?)", [userId]);
     
@@ -111,25 +86,14 @@ router.get("/public-users", async (req: Request, res: Response) => {
 
 // POST /contacts/add-public - Add a public user as contact
 router.post("/add-public", async (req: Request, res: Response) => {
-  const { username, contactUserId } = req.body;
+  const { contactUserId } = req.body;
+  const { userId } = req.user;
 
-  if (!username || typeof username !== "string") {
-    return res.status(400).json({ success: false, error: "username is required" });
-  }
   if (!contactUserId || typeof contactUserId !== "number") {
     return res.status(400).json({ success: false, error: "contactUserId is required and must be a number" });
   }
 
   try {
-    // Get user_id from ldap_uid_id
-    const userRows = await query<{ user_id: number }>(
-      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
-      [username]
-    );
-    if (userRows.length === 0) {
-      return res.status(404).json({ success: false, error: "user not found" });
-    }
-    const userId = userRows[0].user_id;
 
     // Prevent adding self as contact
     if (userId === contactUserId) {
@@ -160,25 +124,14 @@ router.post("/add-public", async (req: Request, res: Response) => {
 
 // POST /contacts/request - Look up private user and notify them (notification mechanism TBD)
 router.post("/request", async (req: Request, res: Response) => {
-  const { username, displayName } = req.body;
+  const { displayName } = req.body;
+  const { userId } = req.user;
 
-  if (!username || typeof username !== "string") {
-    return res.status(400).json({ success: false, error: "username is required" });
-  }
   if (!displayName || typeof displayName !== "string") {
     return res.status(400).json({ success: false, error: "displayName is required" });
   }
 
   try {
-    const userRows = await query<{ user_id: number }>(
-      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
-      [username]
-    );
-    if (userRows.length === 0) {
-      // Still return success — do not reveal anything to caller
-      return res.json({ success: true });
-    }
-    const userId = userRows[0].user_id;
 
     // Call SP — result intentionally ignored to preserve privacy
     await query("CALL contact_2send_private_request(?, ?)", [userId, displayName.trim()]);
@@ -193,20 +146,9 @@ router.post("/request", async (req: Request, res: Response) => {
 
 // GET /contacts/whose-contact-am-i - Find users who have added the current user as a contact
 router.get("/whose-contact-am-i", async (req: Request, res: Response) => {
-  const username = String(req.query.username || "").trim();
-  if (!username) {
-    return res.status(400).json({ success: false, error: "username is required" });
-  }
+  const { userId } = req.user;
 
   try {
-    const userRows = await query<{ user_id: number }>(
-      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
-      [username]
-    );
-    if (userRows.length === 0) {
-      return res.status(404).json({ success: false, error: "user not found" });
-    }
-    const userId = userRows[0].user_id;
 
     const rows = await query<{ user_id: number; display_name: string }>(
       "CALL contact_whose_contact_am_I(?)",
@@ -229,24 +171,14 @@ router.get("/whose-contact-am-i", async (req: Request, res: Response) => {
 
 // POST /contacts/remove - Remove a contact
 router.post("/remove", async (req: Request, res: Response) => {
-  const { username, contactUserId } = req.body;
+  const { contactUserId } = req.body;
+  const { userId } = req.user;
 
-  if (!username || typeof username !== "string") {
-    return res.status(400).json({ success: false, error: "username is required" });
-  }
   if (!contactUserId || typeof contactUserId !== "number") {
     return res.status(400).json({ success: false, error: "contactUserId is required and must be a number" });
   }
 
   try {
-    const userRows = await query<{ user_id: number }>(
-      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
-      [username]
-    );
-    if (userRows.length === 0) {
-      return res.status(404).json({ success: false, error: "user not found" });
-    }
-    const userId = userRows[0].user_id;
 
     await query(
       "CALL contact_list_2remove_user(?, ?)",
@@ -265,20 +197,9 @@ router.post("/remove", async (req: Request, res: Response) => {
 
 // GET /contacts/requests/incoming - Get incoming contact requests
 router.get("/requests/incoming", async (req: Request, res: Response) => {
-  const username = String(req.query.username || "").trim();
-  if (!username) {
-    return res.status(400).json({ success: false, error: "username is required" });
-  }
+  const { userId } = req.user;
 
   try {
-    const userRows = await query<{ user_id: number }>(
-      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
-      [username]
-    );
-    if (userRows.length === 0) {
-      return res.status(404).json({ success: false, error: "user not found" });
-    }
-    const userId = userRows[0].user_id;
 
     const rows = await query<ContactRequest>("CALL contact_2get_incoming_requests(?)", [userId]);
     const resultRows = Array.isArray(rows[0]) ? rows[0] : rows;
@@ -298,20 +219,9 @@ router.get("/requests/incoming", async (req: Request, res: Response) => {
 
 // GET /contacts/requests/outgoing - Get outgoing contact requests
 router.get("/requests/outgoing", async (req: Request, res: Response) => {
-  const username = String(req.query.username || "").trim();
-  if (!username) {
-    return res.status(400).json({ success: false, error: "username is required" });
-  }
+  const { userId } = req.user;
 
   try {
-    const userRows = await query<{ user_id: number }>(
-      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
-      [username]
-    );
-    if (userRows.length === 0) {
-      return res.status(404).json({ success: false, error: "user not found" });
-    }
-    const userId = userRows[0].user_id;
 
     const rows = await query<ContactRequest>("CALL contact_2get_outgoing_requests(?)", [userId]);
     const resultRows = Array.isArray(rows[0]) ? rows[0] : rows;
@@ -331,24 +241,21 @@ router.get("/requests/outgoing", async (req: Request, res: Response) => {
 
 // POST /contacts/requests/approve - Approve an incoming contact request
 router.post("/requests/approve", async (req: Request, res: Response) => {
-  const { username, requestId } = req.body;
+  const { requestId } = req.body;
+  const { userId } = req.user;
 
-  if (!username || typeof username !== "string") {
-    return res.status(400).json({ success: false, error: "username is required" });
-  }
   if (!requestId || typeof requestId !== "number") {
     return res.status(400).json({ success: false, error: "requestId is required and must be a number" });
   }
 
   try {
-    const userRows = await query<{ user_id: number; display_name: string }>(
-      "SELECT user_id, display_name FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
-      [username]
+    const userRows = await query<{ display_name: string }>(
+      "SELECT display_name FROM user_main_details WHERE user_id = ? LIMIT 1",
+      [userId]
     );
     if (userRows.length === 0) {
       return res.status(404).json({ success: false, error: "user not found" });
     }
-    const userId = userRows[0].user_id;
     const approverDisplayName = userRows[0].display_name;
 
     // Use existing SP to find the requester before approving
@@ -375,24 +282,14 @@ router.post("/requests/approve", async (req: Request, res: Response) => {
 
 // POST /contacts/requests/reject - Reject an incoming contact request
 router.post("/requests/reject", async (req: Request, res: Response) => {
-  const { username, requestId } = req.body;
+  const { requestId } = req.body;
+  const { userId } = req.user;
 
-  if (!username || typeof username !== "string") {
-    return res.status(400).json({ success: false, error: "username is required" });
-  }
   if (!requestId || typeof requestId !== "number") {
     return res.status(400).json({ success: false, error: "requestId is required and must be a number" });
   }
 
   try {
-    const userRows = await query<{ user_id: number }>(
-      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
-      [username]
-    );
-    if (userRows.length === 0) {
-      return res.status(404).json({ success: false, error: "user not found" });
-    }
-    const userId = userRows[0].user_id;
 
     await query("CALL contact_2reject_contact_request(?, ?)", [userId, requestId]);
 
@@ -408,24 +305,14 @@ router.post("/requests/reject", async (req: Request, res: Response) => {
 
 // POST /contacts/requests/cancel - Cancel an outgoing contact request
 router.post("/requests/cancel", async (req: Request, res: Response) => {
-  const { username, requestId } = req.body;
+  const { requestId } = req.body;
+  const { userId } = req.user;
 
-  if (!username || typeof username !== "string") {
-    return res.status(400).json({ success: false, error: "username is required" });
-  }
   if (!requestId || typeof requestId !== "number") {
     return res.status(400).json({ success: false, error: "requestId is required and must be a number" });
   }
 
   try {
-    const userRows = await query<{ user_id: number }>(
-      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
-      [username]
-    );
-    if (userRows.length === 0) {
-      return res.status(404).json({ success: false, error: "user not found" });
-    }
-    const userId = userRows[0].user_id;
 
     await query("CALL contact_2cancel_contact_request(?, ?)", [userId, requestId]);
 

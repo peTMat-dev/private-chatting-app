@@ -62,7 +62,7 @@ type ApiPublicUsersResponse = {
 type UserSettings = {
   user_language: string;
   default_max_chat_participants: number;
-  public: boolean;
+  public_st: boolean;
   user_timezone: string;
   can_be_added_to_contacts: boolean;
   display_name?: string;
@@ -173,12 +173,27 @@ export default function HomeCube() {
 
   const [confirmDialog, setConfirmDialog] = useState<{ show: boolean; message: string; onConfirm: () => void } | null>(null);
   const [alertDialog, setAlertDialog] = useState<{ show: boolean; message: string; title?: string } | null>(null);
-  const username = useMemo(() => {
-    try {
-      return localStorage.getItem("cubcha_username") || "";
-    } catch {
-      return "";
-    }
+  const [username, setUsername] = useState<string>("");
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    fetch(buildApiUrl("/auth/me"), { credentials: "include" })
+      .then((res) => {
+        if (!res.ok) {
+          window.location.href = "/";
+          return;
+        }
+        return res.json();
+      })
+      .then((d) => {
+        if (d?.username) {
+          setUsername(d.username);
+          setAuthChecked(true);
+        }
+      })
+      .catch(() => {
+        window.location.href = "/";
+      });
   }, []);
 
   const { socket } = useSocket(username);
@@ -186,8 +201,8 @@ export default function HomeCube() {
   const fetchChats = useCallback(async () => {
     if (!username) return;
     try {
-      const url = buildApiUrl(`/chats?username=${encodeURIComponent(username)}`);
-      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      const url = buildApiUrl("/chats");
+      const res = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } });
       const data = (await res.json()) as ApiChatsResponse;
       if (!res.ok || !data.success) {
         setError(data.error || "Unable to load chats");
@@ -212,7 +227,7 @@ export default function HomeCube() {
   // Fetch own display name once username is available
   useEffect(() => {
     if (!username) return;
-    fetch(buildApiUrl(`/settings?username=${encodeURIComponent(username)}`), { headers: { Accept: "application/json" } })
+    fetch(buildApiUrl("/settings"), { credentials: "include", headers: { Accept: "application/json" } })
       .then((r) => r.json())
       .then((d: ApiSettingsResponse) => { if (d.success && d.data?.display_name) setCurrentUserDisplayName(d.data.display_name); })
       .catch(() => {});
@@ -225,8 +240,8 @@ export default function HomeCube() {
         return;
       }
       try {
-        const url = buildApiUrl(`/contacts?username=${encodeURIComponent(username)}`);
-        const res = await fetch(url, { headers: { Accept: "application/json" } });
+        const url = buildApiUrl("/contacts");
+        const res = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } });
         const data = (await res.json()) as ApiContactsResponse;
         if (!res.ok || !data.success) {
           if (!aborted) setContactsError(data.error || "Unable to load contacts");
@@ -257,8 +272,8 @@ export default function HomeCube() {
     
     const fetchSettings = async () => {
       try {
-        const url = buildApiUrl(`/settings?username=${encodeURIComponent(username)}`);
-        const res = await fetch(url, { headers: { Accept: "application/json" } });
+        const url = buildApiUrl("/settings");
+        const res = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } });
         const data = (await res.json()) as ApiSettingsResponse;
         if (!res.ok || !data.success) {
           if (!aborted) setSettingsError(data.error || "Unable to load settings");
@@ -298,8 +313,8 @@ export default function HomeCube() {
     }
     setLoadingPublicUsers(true);
     try {
-      const url = buildApiUrl(`/contacts/public-users?username=${encodeURIComponent(username)}`);
-      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      const url = buildApiUrl("/contacts/public-users");
+      const res = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } });
       const data = (await res.json()) as ApiPublicUsersResponse;
       if (!res.ok || !data.success) {
         setAlertDialog({ show: true, title: "Error", message: data.error || "Unable to load public users" });
@@ -317,7 +332,6 @@ export default function HomeCube() {
     setRemovingContactId(contactId);
     try {
       const { ok, data } = await postJson("/contacts/remove", {
-        username,
         contactUserId: contactId,
       });
       if (!ok || !data.success) {
@@ -339,7 +353,6 @@ export default function HomeCube() {
     setRemovingPublicUserId(userId);
     try {
       const { ok, data } = await postJson("/contacts/remove", {
-        username,
         contactUserId: userId,
       });
       if (!ok || !data.success) {
@@ -362,7 +375,6 @@ export default function HomeCube() {
     setAddingPublicUserId(userId);
     try {
       const { ok, data } = await postJson("/contacts/add-public", {
-        username,
         contactUserId: userId,
       });
       if (!ok || !data.success) {
@@ -384,8 +396,8 @@ export default function HomeCube() {
     if (!username) return;
     setLoadingWhoseContactAmI(true);
     try {
-      const url = buildApiUrl(`/contacts/whose-contact-am-i?username=${encodeURIComponent(username)}`);
-      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      const url = buildApiUrl("/contacts/whose-contact-am-i");
+      const res = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } });
       const data = (await res.json()) as { success: boolean; data?: { id: number; displayName: string }[]; error?: string };
       if (!res.ok || !data.success) {
         setAlertDialog({ show: true, title: "Error", message: data.error || "Unable to load" });
@@ -404,8 +416,8 @@ export default function HomeCube() {
     setLoadingRequests(true);
     try {
       const [incomingRes, outgoingRes] = await Promise.all([
-        fetch(buildApiUrl(`/contacts/requests/incoming?username=${encodeURIComponent(username)}`), { headers: { Accept: "application/json" } }),
-        fetch(buildApiUrl(`/contacts/requests/outgoing?username=${encodeURIComponent(username)}`), { headers: { Accept: "application/json" } }),
+        fetch(buildApiUrl("/contacts/requests/incoming"), { credentials: "include", headers: { Accept: "application/json" } }),
+        fetch(buildApiUrl("/contacts/requests/outgoing"), { credentials: "include", headers: { Accept: "application/json" } }),
       ]);
       const [incomingData, outgoingData] = await Promise.all([
         incomingRes.json() as Promise<{ success: boolean; data?: ContactRequest[]; error?: string }>,
@@ -423,7 +435,7 @@ export default function HomeCube() {
   const handleApproveRequest = async (requestId: number) => {
     setApprovingRequestId(requestId);
     try {
-      const { ok, data } = await postJson("/contacts/requests/approve", { username, requestId });
+      const { ok, data } = await postJson("/contacts/requests/approve", { requestId });
       if (!ok || !data.success) {
         setAlertDialog({ show: true, title: "Error", message: data.error || "Failed to approve request" });
         return;
@@ -440,7 +452,7 @@ export default function HomeCube() {
   const handleRejectRequest = async (requestId: number) => {
     setRejectingRequestId(requestId);
     try {
-      const { ok, data } = await postJson("/contacts/requests/reject", { username, requestId });
+      const { ok, data } = await postJson("/contacts/requests/reject", { requestId });
       if (!ok || !data.success) {
         setAlertDialog({ show: true, title: "Error", message: data.error || "Failed to reject request" });
         return;
@@ -456,7 +468,7 @@ export default function HomeCube() {
   const handleCancelRequest = async (requestId: number, targetId: number) => {
     setCancellingRequestId(requestId);
     try {
-      const { ok, data } = await postJson("/contacts/requests/cancel", { username, requestId });
+      const { ok, data } = await postJson("/contacts/requests/cancel", { requestId });
       if (!ok || !data.success) {
         setAlertDialog({ show: true, title: "Error", message: data.error || "Failed to cancel request" });
         return;
@@ -474,7 +486,6 @@ export default function HomeCube() {
     if (!requestDisplayName.trim()) return;
     try {
       await postJson("/contacts/request", {
-        username,
         displayName: requestDisplayName.trim(),
       });
       if (showRequests) fetchRequests();
@@ -488,8 +499,8 @@ export default function HomeCube() {
   const fetchUserContacts = async () => {
     if (!username) return;
     try {
-      const url = buildApiUrl(`/contacts?username=${encodeURIComponent(username)}`);
-      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      const url = buildApiUrl("/contacts");
+      const res = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } });
       const data = (await res.json()) as ApiContactsResponse;
       if (!res.ok || !data.success) {
         setContactsError(data.error || "Unable to load contacts");
@@ -507,8 +518,8 @@ export default function HomeCube() {
     setChatLoading(true);
     setChatError(null);
     try {
-      const url = buildApiUrl(`/chats/${conversationId}/messages?username=${encodeURIComponent(username)}`);
-      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      const url = buildApiUrl(`/chats/${conversationId}/messages`);
+      const res = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } });
       const data = (await res.json()) as { success: boolean; data?: ChatMessage[]; error?: string };
       if (!res.ok || !data.success) {
         setChatError(data.error || "Unable to load messages");
@@ -622,7 +633,7 @@ export default function HomeCube() {
 
   const handleChatWithContact = async (contactId: number) => {
     try {
-      const { ok, data } = await postJson("/chats", { username, participantUserIds: [contactId] });
+      const { ok, data } = await postJson("/chats", { participantUserIds: [contactId] });
       if (!ok || !data.success) {
         setAlertDialog({ show: true, title: "Error", message: data.error || "Failed to open chat" });
         return;
@@ -645,7 +656,6 @@ export default function HomeCube() {
     setNewChatError(null);
     try {
       const { ok, data } = await postJson("/chats", {
-        username,
         participantUserIds: newChatSelectedIds,
         ...(isGroup ? { title: newChatTitle.trim() } : {}),
       });
@@ -675,7 +685,7 @@ export default function HomeCube() {
       messageId: tempId, text, senderUserId: -1, senderDisplayName: currentUserDisplayName, sentAt: new Date().toISOString(), isOwn: true,
     }]);
     try {
-      const { ok, data } = await postJson(`/chats/${activeChatId}/messages`, { username, text });
+      const { ok, data } = await postJson(`/chats/${activeChatId}/messages`, { text });
       if (!ok || !data.success) {
         setActiveChatMessages((prev) => prev.filter((m) => m.messageId !== tempId));
         setMessageInput(text);
@@ -700,10 +710,8 @@ export default function HomeCube() {
       onConfirm: async () => {
         setConfirmDialog(null);
         try {
-          const url = buildApiUrl(
-            `/chats/${activeChatId}/messages/${messageId}?username=${encodeURIComponent(username)}`
-          );
-          const res = await fetch(url, { method: "DELETE", headers: { Accept: "application/json" } });
+          const url = buildApiUrl(`/chats/${activeChatId}/messages/${messageId}`);
+          const res = await fetch(url, { method: "DELETE", credentials: "include", headers: { Accept: "application/json" } });
           const data = await res.json();
           if (!res.ok || !data.success) {
             setAlertDialog({ show: true, title: "Error", message: data.error || "Failed to delete message" });
@@ -740,12 +748,12 @@ export default function HomeCube() {
       const url = buildApiUrl("/settings");
       const res = await fetch(url, {
         method: "PUT",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
         body: JSON.stringify({
-          username,
           ...settings,
         }),
       });
@@ -778,12 +786,12 @@ export default function HomeCube() {
     // Step 2: After animation, rotate left and logout
     setTimeout(() => {
       goLeft();
-      setTimeout(() => {
-        // Clear session and redirect
+      setTimeout(async () => {
+        // Clear session on server and redirect
         try {
-          localStorage.removeItem("cubcha_username");
-        } catch (e) {
-          // Ignore storage errors
+          await fetch(buildApiUrl("/auth/logout"), { method: "POST", credentials: "include" });
+        } catch {
+          // Ignore errors — redirect regardless
         }
         window.location.href = "/";
       }, 500); // Wait for rotation to complete
@@ -791,6 +799,8 @@ export default function HomeCube() {
   };
 
   const tr = t(lang);
+
+  if (!authChecked) return null;
 
   return (
     <div

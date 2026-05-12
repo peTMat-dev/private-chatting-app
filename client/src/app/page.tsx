@@ -181,10 +181,6 @@ export default function AuthScreen() {
 				return;
 			}
 			try {
-				// persist username for chats fetch
-				if (data.user?.username) {
-					localStorage.setItem("cubcha_username", data.user.username);
-				}
 				// sync language preference from server (covers cross-browser/device logins)
 				if (data.user?.user_language) {
 					const serverLang = data.user.user_language as LangCode;

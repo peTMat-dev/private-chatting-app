@@ -15,19 +15,8 @@ type ChatRow = {
 };
 
 router.get("/", async (req: Request, res: Response) => {
-  const username = String(req.query.username || "").trim();
-  if (!username) {
-    return res.status(400).json({ success: false, error: "username is required" });
-  }
+  const { userId } = req.user;
   try {
-    const userRows = await query<{ user_id: number }>(
-      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
-      [username]
-    );
-    if (userRows.length === 0) {
-      return res.status(404).json({ success: false, error: "user not found" });
-    }
-    const userId = userRows[0].user_id;
 
     const rows = await query<ChatRow>(
       `SELECT c.conversation_id,
@@ -76,15 +65,12 @@ router.get("/", async (req: Request, res: Response) => {
 
 // POST /chats - Create or retrieve a conversation
 router.post("/", async (req: Request, res: Response) => {
-  const { username, participantUserIds, title } = req.body as {
-    username: string;
+  const { participantUserIds, title } = req.body as {
     participantUserIds: number[];
     title?: string;
   };
+  const { userId } = req.user;
 
-  if (!username || typeof username !== "string") {
-    return res.status(400).json({ success: false, error: "username is required" });
-  }
   if (!Array.isArray(participantUserIds) || participantUserIds.length === 0) {
     return res.status(400).json({ success: false, error: "participantUserIds must be a non-empty array" });
   }
@@ -94,18 +80,17 @@ router.post("/", async (req: Request, res: Response) => {
   }
 
   try {
-    // Resolve caller
-    const userRows = await query<{ user_id: number; default_max_chat_participants: number }>(
-      `SELECT umd.user_id, usd.default_max_chat_participants
-       FROM user_main_details umd
-       JOIN user_system_details usd ON usd.user_id = umd.user_id
-       WHERE umd.ldap_uid_id = ? LIMIT 1`,
-      [username]
+    // Resolve caller settings
+    const userRows = await query<{ default_max_chat_participants: number }>(
+      `SELECT usd.default_max_chat_participants
+       FROM user_system_details usd
+       WHERE usd.user_id = ? LIMIT 1`,
+      [userId]
     );
     if (userRows.length === 0) {
       return res.status(404).json({ success: false, error: "user not found" });
     }
-    const { user_id: userId, default_max_chat_participants: maxParticipants } = userRows[0];
+    const { default_max_chat_participants: maxParticipants } = userRows[0];
 
     // Security: all participantUserIds must be in caller's contacts
     const placeholders = participantUserIds.map(() => "?").join(", ");
@@ -185,26 +170,13 @@ router.post("/", async (req: Request, res: Response) => {
 // GET /chats/:id/messages - Get last 100 messages for a conversation
 router.get("/:id/messages", async (req: Request, res: Response) => {
   const conversationId = Number(req.params.id);
-  const username = String(req.query.username || "").trim();
+  const { userId } = req.user;
 
-  if (!username) {
-    return res.status(400).json({ success: false, error: "username is required" });
-  }
   if (!conversationId) {
     return res.status(400).json({ success: false, error: "invalid conversation id" });
   }
 
   try {
-    // Resolve caller
-    const userRows = await query<{ user_id: number }>(
-      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
-      [username]
-    );
-    if (userRows.length === 0) {
-      return res.status(404).json({ success: false, error: "user not found" });
-    }
-    const userId = userRows[0].user_id;
-
     // Verify membership
     const membership = await query<{ user_id: number }>(
       "SELECT user_id FROM conversations_participants WHERE conversation_id = ? AND user_id = ? LIMIT 1",
@@ -250,11 +222,9 @@ router.get("/:id/messages", async (req: Request, res: Response) => {
 // POST /chats/:id/messages - Send a message
 router.post("/:id/messages", async (req: Request, res: Response) => {
   const conversationId = Number(req.params.id);
-  const { username, text } = req.body as { username: string; text: string };
+  const { text } = req.body as { text: string };
+  const { userId, username } = req.user;
 
-  if (!username || typeof username !== "string") {
-    return res.status(400).json({ success: false, error: "username is required" });
-  }
   if (!text || !text.trim()) {
     return res.status(400).json({ success: false, error: "text is required" });
   }
@@ -263,15 +233,15 @@ router.post("/:id/messages", async (req: Request, res: Response) => {
   }
 
   try {
-    // Resolve caller
-    const userRows = await query<{ user_id: number; display_name: string }>(
-      "SELECT user_id, display_name FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
-      [username]
+    // Resolve caller display name
+    const userRows = await query<{ display_name: string }>(
+      "SELECT display_name FROM user_main_details WHERE user_id = ? LIMIT 1",
+      [userId]
     );
     if (userRows.length === 0) {
       return res.status(404).json({ success: false, error: "user not found" });
     }
-    const { user_id: userId, display_name: senderDisplayName } = userRows[0];
+    const senderDisplayName = userRows[0].display_name;
 
     // Verify membership
     const membership = await query<{ user_id: number }>(
@@ -318,25 +288,13 @@ router.post("/:id/messages", async (req: Request, res: Response) => {
 router.delete("/:id/messages/:messageId", async (req: Request, res: Response) => {
   const conversationId = Number(req.params.id);
   const messageId = Number(req.params.messageId);
-  const username = String(req.query.username || "").trim();
+  const { userId } = req.user;
 
-  if (!username) {
-    return res.status(400).json({ success: false, error: "username is required" });
-  }
   if (!conversationId || !messageId) {
     return res.status(400).json({ success: false, error: "invalid conversation or message id" });
   }
 
   try {
-    const userRows = await query<{ user_id: number }>(
-      "SELECT user_id FROM user_main_details WHERE ldap_uid_id = ? LIMIT 1",
-      [username]
-    );
-    if (userRows.length === 0) {
-      return res.status(404).json({ success: false, error: "user not found" });
-    }
-    const userId = userRows[0].user_id;
-
     const result = await query<{ deleted: number }>(
       "CALL messages_2_delete(?, ?, ?)",
       [userId, conversationId, messageId]

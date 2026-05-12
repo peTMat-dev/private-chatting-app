@@ -15,8 +15,14 @@ import {
   updateLastLogin,
   isUserActive,
 } from "../services/user.service";
+import { query } from "../services/db";
+import { authMiddleware } from "../middleware/auth.middleware";
 
 const router = Router();
+
+const toMySqlDateTime = (date: Date): string => {
+  return date.toISOString().slice(0, 19).replace("T", " ");
+};
 
 router.post("/login", async (req: Request, res: Response) => {
   const { username, password } = req.body as { username?: string; password?: string };
@@ -38,6 +44,20 @@ router.post("/login", async (req: Request, res: Response) => {
 
     await bindUser(user.ldapUid, password);
     await updateLastLogin(user);
+
+    const sessionToken = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    await query(
+      "INSERT INTO user_sessions (token, user_id, expires_at) VALUES (?, ?, ?)",
+      [sessionToken, user.userId, toMySqlDateTime(expiresAt)]
+    );
+
+    res.cookie("cubcha_session", sessionToken, {
+      httpOnly: true,
+      sameSite: "strict",
+      expires: expiresAt,
+      secure: process.env.NODE_ENV === "production",
+    });
 
     const userLang = await getUserLanguage(user.userId);
     res.json({ success: true, message: "Login successful", user: { username: user.username, user_language: userLang } });
@@ -138,6 +158,23 @@ router.post("/reset-password", async (req: Request, res: Response) => {
   }
 });
 
+router.get("/me", authMiddleware, (req: Request, res: Response) => {
+  res.json({ success: true, username: req.user.username });
+});
+
+router.post("/logout", authMiddleware, async (req: Request, res: Response) => {
+  const token = req.cookies?.cubcha_session as string | undefined;
+  if (token) {
+    try {
+      await query("DELETE FROM user_sessions WHERE token = ?", [token]);
+    } catch {
+      // Proceed with logout even if DB delete fails
+    }
+  }
+  res.clearCookie("cubcha_session", { httpOnly: true, sameSite: "strict" });
+  res.json({ success: true });
+});
+
 const normalizeRegistrationInput = (input: Partial<RegistrationInput>): RegistrationInput => ({
   firstName: (input.firstName ?? "").trim(),
   lastName: (input.lastName ?? "").trim(),
@@ -164,10 +201,6 @@ const validateRegistrationPayload = (payload: RegistrationInput): string[] => {
     errors.push("Password must be at least 6 characters long");
   }
   return errors;
-};
-
-const toMySqlDateTime = (date: Date): string => {
-  return date.toISOString().slice(0, 19).replace("T", " ");
 };
 
 const normalizeBaseUrl = (value: string): string => value.replace(/\/+$/, "");

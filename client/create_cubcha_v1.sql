@@ -240,6 +240,19 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`infos` (
     KEY idx_infos_language_order (language_code, display_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Manual information for users';
 
+CREATE TABLE IF NOT EXISTS user_sessions (
+  session_id   INT UNSIGNED        NOT NULL AUTO_INCREMENT,
+  token        CHAR(64)            NOT NULL,
+  user_id      INT UNSIGNED        NOT NULL,
+  created_at   DATETIME            NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  expires_at   DATETIME            NOT NULL,
+  PRIMARY KEY  (session_id),
+  UNIQUE KEY   uq_token   (token),
+  INDEX        idx_user_id (user_id),
+  CONSTRAINT fk_user_sessions_user
+    FOREIGN KEY (user_id) REFERENCES user_main_details (user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
