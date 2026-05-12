@@ -1,9 +1,3 @@
-import { redirect } from "next/navigation";
-
-export default function ResetPasswordPage() {
-  redirect("/");
-}
-
 type ApiResponse = {
   success: boolean;
   message?: string;

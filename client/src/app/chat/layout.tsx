@@ -1,9 +1,3 @@
-import { redirect } from "next/navigation";
-
-export default function ChatLayout() {
-  redirect("/home");
-}
-
 export default function ChatLayout({ children }: { children: React.ReactNode }) {
   const contacts = [
     { id: 1, name: "Alice", lastMessage: "Hey!" },

@@ -1,9 +1,3 @@
-import { redirect } from "next/navigation";
-
-export default function ChatDetail() {
-  redirect("/home");
-}
-
 export default function ChatDetail({ params }: { params: { id: string } }) {
   const chatId = params.id;
 
