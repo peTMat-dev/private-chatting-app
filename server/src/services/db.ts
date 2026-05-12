@@ -8,6 +8,7 @@ const pool: Pool = mysql.createPool({
   database: env.db.name,
   port: env.db.port,
   connectionLimit: 10,
+  timezone: "Z",
 });
 
 export type QueryValues = Array<string | number | null>;

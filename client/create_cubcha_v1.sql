@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_main_details` (
     `display_name` VARCHAR(48) NOT NULL COMMENT 'User-chosen public display name',
     `last_seen_at` TIMESTAMP DEFAULT NULL COMMENT 'Last time user was seen online',
     `last_login_at` DATETIME DEFAULT NULL COMMENT 'Last login timestamp, admin purpose',
+    `active` TINYINT(1) DEFAULT 0 COMMENT 'Indicates if the user account is deleted'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores main user details';
 
 -- Create a table for disabled user details, not created in live db yet. 
@@ -235,7 +236,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`infos` (
     `heading_cube` VARCHAR(48) NOT NULL COMMENT 'heading to the section of the manual',
     `language_code` VARCHAR(8) NOT NULL DEFAULT 'en' COMMENT 'language code for the manual section (e.g., en, de)',
     `display_order`  SMALLINT(5) UNSIGNED NOT NULL DEFAULT 1 COMMENT 'order of display for manual sections',
-    `text_description` VARCHAR(256) COMMENT 'text of the section of the manual',
+    `text_description` VARCHAR(256) NOT NULL COMMENT 'text of the section of the manual',
     UNIQUE KEY uq_infos_heading_language (heading_cube, language_code),
     KEY idx_infos_language_order (language_code, display_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Manual information for users';
@@ -243,7 +244,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`infos` (
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_sessions` (
   `session_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `token` CHAR(64) NOT NULL,
-  `user_id` INT UNSIGNED NOT NULL,
+  `user_id` SMALLINT UNSIGNED NOT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `expires_at` DATETIME NOT NULL,
   PRIMARY KEY (`session_id`),
