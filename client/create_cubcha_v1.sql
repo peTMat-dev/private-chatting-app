@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`banned_users` (
 -- Create user system details for profile setting
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_system_details` (
     `user_id` SMALLINT UNSIGNED PRIMARY KEY NOT NULL COMMENT 'FK to user_main_details.user_id',
-    `user_language` VARCHAR(32) NOT NULL COMMENT 'Preferred language for UI',
+    `user_language` ENUM('en', 'sk', 'es', 'fr', 'de', 'cz') NOT NULL COMMENT 'Preferred language for UI',
     `default_max_chat_participants` TINYINT UNSIGNED DEFAULT 10 COMMENT 'Default max chat participants for new conversations',
     `public_st` BOOLEAN DEFAULT TRUE COMMENT 'Indicates if the user profile is public(on) or private (off)',
     `can_be_added_to_contacts` BOOLEAN DEFAULT FALSE COMMENT 'Indicates if the user can be added to contacts',
@@ -234,12 +234,23 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`password_reset_alarms` (
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`infos` (
     `info_id` SMALLINT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT COMMENT 'Primary key for manual info entries',
     `heading_cube` VARCHAR(48) NOT NULL COMMENT 'heading to the section of the manual',
-    `language_code` VARCHAR(8) NOT NULL DEFAULT 'en' COMMENT 'language code for the manual section (e.g., en, de)',
+    `category` ENUM('update', 'manual','announcement') NOT NULL DEFAULT 'manual' COMMENT 'Distinguishes latest-update entries from manual/help entries',
+    `language_code` ENUM('en', 'sk', 'es', 'fr', 'de', 'cz') NOT NULL COMMENT 'language code for the manual section (e.g., en, de)',
     `display_order`  SMALLINT(5) UNSIGNED NOT NULL DEFAULT 1 COMMENT 'order of display for manual sections',
     `text_description` VARCHAR(256) NOT NULL COMMENT 'text of the section of the manual',
     UNIQUE KEY uq_infos_heading_language (heading_cube, language_code),
-    KEY idx_infos_language_order (language_code, display_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Manual information for users';
+
+-- Table to store manual information for users
+CREATE TABLE IF NOT EXISTS `cubcha_v1`.`report_bug` (
+    `bug_id` SMALLINT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT COMMENT 'Primary key for bug reports',
+    `user_id` SMALLINT UNSIGNED NOT NULL COMMENT 'FK to user_main_details.user_id',
+    `description` VARCHAR(256) NOT NULL COMMENT 'Description of the bug',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When the bug was reported',
+    FOREIGN KEY (`user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores bug reports from users';
+
 
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_sessions` (
   `session_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
