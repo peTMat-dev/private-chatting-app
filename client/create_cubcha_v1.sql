@@ -34,6 +34,14 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`banned_users` (
   COMMENT='Banned user identifiers — hashed only, no recoverable PII';
 
 -- Create user system details for profile setting
+CREATE TABLE IF NOT EXISTS `cubcha_v1`.`timezones` (
+    `timezone_id` SMALLINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    `timezone_name` VARCHAR(64) NOT NULL UNIQUE,  -- e.g., 'Europe/Amsterdam'
+    `utc_offset` VARCHAR(8) NOT NULL,             -- e.g., '+01:00'
+    `display_name` VARCHAR(64) NOT NULL,          -- e.g., 'Amsterdam (UTC+1)'
+    KEY `idx_display_name` (`display_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_system_details` (
     `user_id` SMALLINT UNSIGNED PRIMARY KEY NOT NULL COMMENT 'FK to user_main_details.user_id',
     `user_language` ENUM('en', 'sk', 'es', 'fr', 'de', 'cz') NOT NULL COMMENT 'Preferred language for UI',
@@ -142,6 +150,18 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`messages` (
     ,KEY `idx_messages_sender` (`sender_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_conversations` (
+    `conversation_id` INT UNSIGNED PRIMARY KEY,
+    `max_participants` SMALLINT UNSIGNED DEFAULT NULL,
+    `creator_user_id` SMALLINT UNSIGNED NOT NULL,
+    `created_at` DATETIME DEFAULT NULL,
+    `is_group` BOOLEAN DEFAULT FALSE,
+    `title` VARCHAR(64) DEFAULT NULL,
+    `group_id` INT UNSIGNED DEFAULT NULL,
+    `archived_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+    ,KEY `idx_archived_conversations_creator` (`creator_user_id`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_messages` (
     `archive_id` INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     `message_id` INT UNSIGNED NOT NULL,
@@ -156,18 +176,6 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_messages` (
     ,KEY `idx_archived_messages_conv_sent` (`conversation_id`, `archived_at`)
     ,KEY `idx_archived_messages_sender` (`sender_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_conversations` (
-    `conversation_id` INT UNSIGNED PRIMARY KEY,
-    `max_participants` SMALLINT UNSIGNED DEFAULT NULL,
-    `creator_user_id` SMALLINT UNSIGNED NOT NULL,
-    `created_at` DATETIME DEFAULT NULL,
-    `is_group` BOOLEAN DEFAULT FALSE,
-    `title` VARCHAR(64) DEFAULT NULL,
-    `group_id` INT UNSIGNED DEFAULT NULL,
-    `archived_at` DATETIME DEFAULT CURRENT_TIMESTAMP
-    ,KEY `idx_archived_conversations_creator` (`creator_user_id`)
- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_conversations_participants` (
     `conversation_id` INT UNSIGNED NOT NULL,
@@ -200,21 +208,13 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_group_members` (
     FOREIGN KEY (`member_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`) -- Consistent user reference
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE IF NOT EXISTS `cubcha_v1`.`timezones` (
-    `timezone_id` SMALLINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    `timezone_name` VARCHAR(64) NOT NULL UNIQUE,  -- e.g., 'Europe/Amsterdam'
-    `utc_offset` VARCHAR(8) NOT NULL,             -- e.g., '+01:00'
-    `display_name` VARCHAR(64) NOT NULL,          -- e.g., 'Amsterdam (UTC+1)'
-    KEY `idx_display_name` (`display_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 -- Create  password reset token table
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`password_resets` (
     `resetoken_id` INT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT,
     `user_id` SMALLINT UNSIGNED NOT NULL COMMENT 'FK to user_main_details.user_id',
     `resettoken` BOOLEAN NOT NULL COMMENT 'Password reset token created YES or NO',
     `resettokenexpiry` DATETIME NOT NULL COMMENT 'Expiry time of the reset token',
-    `resetused` BOOLEAN DEFAULT CURRENT_TIMESTAMP COMMENT 'confirmation if the token was used',   
+    `resetused` BOOLEAN DEFAULT FALSE COMMENT 'confirmation if the token was used',   
     FOREIGN KEY (`user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='handles password reset tokens for users';
@@ -234,17 +234,18 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`password_reset_alarms` (
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`infos` (
     `info_id` SMALLINT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT COMMENT 'Primary key for manual info entries',
     `heading_cube` VARCHAR(48) NOT NULL COMMENT 'heading to the section of the manual',
-    `category` ENUM('update', 'manual','announcement') NOT NULL DEFAULT 'manual' COMMENT 'Distinguishes latest-update entries from manual/help entries',
+    `category` ENUM('update', 'manual','announcement', 'reported_bugs') NOT NULL DEFAULT 'manual' COMMENT 'Distinguishes latest-update entries from manual/help entries',
     `language_code` ENUM('en', 'sk', 'es', 'fr', 'de', 'cz') NOT NULL COMMENT 'language code for the manual section (e.g., en, de)',
     `display_order`  SMALLINT(5) UNSIGNED NOT NULL DEFAULT 1 COMMENT 'order of display for manual sections',
     `text_description` VARCHAR(256) NOT NULL COMMENT 'text of the section of the manual',
-    UNIQUE KEY uq_infos_heading_language (heading_cube, language_code),
+    UNIQUE KEY uq_infos_heading_language (heading_cube, language_code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Manual information for users';
 
 -- Table to store manual information for users
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`report_bug` (
     `bug_id` SMALLINT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT COMMENT 'Primary key for bug reports',
     `user_id` SMALLINT UNSIGNED NOT NULL COMMENT 'FK to user_main_details.user_id',
+    `title` VARCHAR(64) NOT NULL COMMENT 'Title of the bug',
     `description` VARCHAR(256) NOT NULL COMMENT 'Description of the bug',
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When the bug was reported',
     FOREIGN KEY (`user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)

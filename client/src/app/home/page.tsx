@@ -89,6 +89,21 @@ type ChatMessage = {
   isOwn: boolean;
 };
 
+type InfoItem = {
+  info_id: number;
+  heading_cube: string;
+  text_description: string;
+  display_order: number;
+};
+
+type ReportedBug = {
+  bug_id: number;
+  title: string;
+  description: string;
+  created_at: string;
+  display_name: string;
+};
+
 // Cube faces: front=Chats, left=Contacts, right=Chat view, back=Settings, top=Logout
 // CubeFace type imported from useCubeNavigation
 
@@ -175,6 +190,20 @@ export default function HomeCube() {
   const [alertDialog, setAlertDialog] = useState<{ show: boolean; message: string; title?: string } | null>(null);
   const [username, setUsername] = useState<string>("");
   const [authChecked, setAuthChecked] = useState(false);
+
+  // Bottom face state
+  type InfoTab = "update" | "manual" | "announcement" | "reported_bugs";
+  const [activeInfoTab, setActiveInfoTab] = useState<InfoTab>("update");
+  const [infoItems, setInfoItems] = useState<InfoItem[]>([]);
+  const [loadingInfoItems, setLoadingInfoItems] = useState(false);
+  const [selectedInfo, setSelectedInfo] = useState<InfoItem | null>(null);
+  const [reportedBugs, setReportedBugs] = useState<ReportedBug[]>([]);
+  const [loadingBugs, setLoadingBugs] = useState(false);
+  const [bugTitleInput, setBugTitleInput] = useState("");
+  const [bugInput, setBugInput] = useState("");
+  const [submittingBug, setSubmittingBug] = useState(false);
+  const [bugReported, setBugReported] = useState(false);
+  const [bugSubView, setBugSubView] = useState<"list" | "report">("list");
 
   useEffect(() => {
     fetch(buildApiUrl("/auth/me"), { credentials: "include" })
@@ -796,6 +825,60 @@ export default function HomeCube() {
         window.location.href = "/";
       }, 500); // Wait for rotation to complete
     }, 500); // Wait for up movement to complete
+  };
+
+  // Fetch infos when bottom face is active (non-bugs tabs)
+  useEffect(() => {
+    if (activeFace !== "bottom" || !username) return;
+    if (activeInfoTab === "reported_bugs") {
+      if (reportedBugs.length > 0) return;
+      setLoadingBugs(true);
+      fetch(buildApiUrl("/infos/reported-bugs"), { credentials: "include", headers: { Accept: "application/json" } })
+        .then((r) => r.json())
+        .then((d: { success: boolean; data?: ReportedBug[]; error?: string }) => {
+          if (d.success) setReportedBugs(d.data || []);
+        })
+        .catch(() => {})
+        .finally(() => setLoadingBugs(false));
+      return;
+    }
+    setInfoItems([]);
+    setSelectedInfo(null);
+    setLoadingInfoItems(true);
+    fetch(buildApiUrl(`/infos?category=${activeInfoTab}&language_code=${lang}`), { credentials: "include", headers: { Accept: "application/json" } })
+      .then((r) => r.json())
+      .then((d: { success: boolean; data?: InfoItem[]; error?: string }) => {
+        if (d.success) setInfoItems(d.data || []);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingInfoItems(false));
+  }, [activeFace, activeInfoTab, username, lang, reportedBugs.length]);
+
+  const handleSubmitBug = async () => {
+    if (!bugTitleInput.trim() || !bugInput.trim() || submittingBug) return;
+    setSubmittingBug(true);
+    try {
+      const res = await fetch(buildApiUrl("/infos/report-bug"), {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ title: bugTitleInput.trim(), description: bugInput.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setBugTitleInput("");
+        setBugInput("");
+        setBugReported(true);
+        setReportedBugs([]); // reset so it reloads on next visit
+        setTimeout(() => setBugReported(false), 4000);
+      } else {
+        setAlertDialog({ show: true, title: "Error", message: data.error || "Failed to submit bug report" });
+      }
+    } catch (err) {
+      setAlertDialog({ show: true, title: "Error", message: (err as Error).message });
+    } finally {
+      setSubmittingBug(false);
+    }
   };
 
   const tr = t(lang);
@@ -1825,17 +1908,255 @@ export default function HomeCube() {
           {/* Bottom: Info / Announcements */}
           <section className="cube-face cube-face-bottom">
             <article className="auth-card cube-face-panel">
-              <div className="cube-face-content">
+              <div className="cube-face-content" style={{ position: "relative" }}>
+
+                {/* Info overlay modal */}
+                {selectedInfo && (
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    onTouchEnd={(e) => e.stopPropagation()}
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      zIndex: 10,
+                      background: "var(--color-panel)",
+                      borderRadius: "inherit",
+                      display: "flex",
+                      flexDirection: "column",
+                      padding: "1rem 1.25rem",
+                      overflowY: "auto",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                      <h3 style={{ flex: 1, color: "var(--color-green)", margin: 0, fontSize: "0.95rem" }}>
+                        {selectedInfo.heading_cube}
+                      </h3>
+                      <button
+                        type="button"
+                        className="ghost-btn"
+                        onClick={() => setSelectedInfo(null)}
+                        style={{ padding: "0.2rem 0.5rem", minWidth: 0, fontSize: "0.85rem" }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <p style={{ color: "rgba(3,160,98,0.85)", fontSize: "0.85rem", lineHeight: 1.55, margin: 0 }}>
+                      {selectedInfo.text_description}
+                    </p>
+                  </div>
+                )}
+
                 <div className="cube-face-header">
-                  <h2>Info</h2>
+                  <h2>{tr.infoFace}</h2>
                 </div>
-                <p style={{ color: "rgba(3, 160, 98, 0.7)", fontSize: "0.9rem", textAlign: "center", marginTop: "1rem" }}>
-                  Updates, announcements, and manual coming soon.
-                </p>
+
+                {/* Tab bar */}
+                <div style={{ display: "flex", borderBottom: "1px solid rgba(3,160,98,0.2)", padding: "0 0.5rem" }}>
+                  {(["update", "manual", "announcement", "reported_bugs"] as const).map((tab) => {
+                    const labels: Record<string, string> = {
+                      update: tr.whatsNew,
+                      manual: tr.manual,
+                      announcement: tr.announcements,
+                      reported_bugs: tr.reportedBugs,
+                    };
+                    return (
+                      <button
+                        key={tab}
+                        type="button"
+                        onClick={() => {
+                          setActiveInfoTab(tab);
+                          setSelectedInfo(null);
+                          if (tab !== "reported_bugs") setBugSubView("list");
+                        }}
+                        style={{
+                          flex: 1,
+                          background: "none",
+                          border: "none",
+                          borderBottom: activeInfoTab === tab ? "2px solid var(--color-green)" : "2px solid transparent",
+                          color: activeInfoTab === tab ? "var(--color-green)" : "rgba(3,160,98,0.45)",
+                          fontSize: "0.65rem",
+                          padding: "0.4rem 0.1rem",
+                          cursor: "pointer",
+                          fontFamily: "inherit",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.03em",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          transition: "color 0.2s",
+                        }}
+                      >
+                        {labels[tab]}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Tab content */}
+                <div style={{ flex: 1, overflowY: "auto", padding: "0.5rem 0" }}>
+                  {activeInfoTab === "reported_bugs" ? (
+                    <>
+                      {/* Sub-toggle: View / Report */}
+                      <div style={{ display: "flex", gap: "0.4rem", padding: "0.5rem 1.25rem 0.4rem", borderBottom: "1px solid rgba(3,160,98,0.12)" }}>
+                        <button
+                          type="button"
+                          onClick={() => setBugSubView("list")}
+                          style={{
+                            flex: 1,
+                            background: bugSubView === "list" ? "rgba(3,160,98,0.15)" : "none",
+                            border: "1px solid rgba(3,160,98,0.3)",
+                            borderRadius: "0.25rem",
+                            color: bugSubView === "list" ? "var(--color-green)" : "rgba(3,160,98,0.5)",
+                            fontSize: "0.72rem",
+                            padding: "0.3rem 0.4rem",
+                            cursor: "pointer",
+                            fontFamily: "inherit",
+                          }}
+                        >
+                          {tr.reportedBugs}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setBugSubView("report")}
+                          style={{
+                            flex: 1,
+                            background: bugSubView === "report" ? "rgba(3,160,98,0.15)" : "none",
+                            border: "1px solid rgba(3,160,98,0.3)",
+                            borderRadius: "0.25rem",
+                            color: bugSubView === "report" ? "var(--color-green)" : "rgba(3,160,98,0.5)",
+                            fontSize: "0.72rem",
+                            padding: "0.3rem 0.4rem",
+                            cursor: "pointer",
+                            fontFamily: "inherit",
+                          }}
+                        >
+                          {tr.reportBug}
+                        </button>
+                      </div>
+
+                      {bugSubView === "report" ? (
+                        /* Submit form */
+                        <div style={{ padding: "0.75rem 1.25rem" }}>
+                          {bugReported ? (
+                            <p style={{ color: "var(--color-green)", fontSize: "0.8rem", margin: 0 }}>{tr.bugReported}</p>
+                          ) : (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                              <input
+                                type="text"
+                                value={bugTitleInput}
+                                onChange={(e) => setBugTitleInput(e.target.value)}
+                                placeholder={tr.bugTitle}
+                                maxLength={64}
+                                style={{
+                                  fontSize: "0.8rem",
+                                  padding: "0.35rem 0.5rem",
+                                  background: "rgba(3,160,98,0.08)",
+                                  border: "1px solid rgba(3,160,98,0.3)",
+                                  borderRadius: "0.25rem",
+                                  color: "var(--color-green)",
+                                  outline: "none",
+                                  fontFamily: "inherit",
+                                }}
+                              />
+                              <div style={{ display: "flex", gap: "0.4rem", alignItems: "flex-end" }}>
+                                <textarea
+                                  value={bugInput}
+                                  onChange={(e) => setBugInput(e.target.value)}
+                                  placeholder={tr.bugDescription}
+                                  maxLength={256}
+                                  rows={3}
+                                  style={{
+                                    flex: 1,
+                                    resize: "none",
+                                    fontSize: "0.8rem",
+                                    padding: "0.35rem 0.5rem",
+                                    background: "rgba(3,160,98,0.08)",
+                                    border: "1px solid rgba(3,160,98,0.3)",
+                                    borderRadius: "0.25rem",
+                                    color: "var(--color-green)",
+                                    outline: "none",
+                                    fontFamily: "inherit",
+                                  }}
+                                />
+                                <button
+                                  type="button"
+                                  className="contact-action-btn contact-action-btn--add"
+                                  onClick={handleSubmitBug}
+                                  disabled={submittingBug || !bugTitleInput.trim() || !bugInput.trim()}
+                                  style={{ fontSize: "0.75rem", padding: "0.4rem 0.6rem" }}
+                                >
+                                  {submittingBug ? "…" : tr.submitBug}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        /* Bug list */
+                        <div>
+                          {loadingBugs ? (
+                            <div style={{ padding: "1rem", color: "rgba(3,160,98,0.5)", fontSize: "0.8rem", textAlign: "center" }}>{tr.loadingInfo}</div>
+                          ) : reportedBugs.length === 0 ? (
+                            <div style={{ padding: "1rem", color: "rgba(3,160,98,0.4)", fontSize: "0.8rem", textAlign: "center" }}>{tr.noBugsReported}</div>
+                          ) : (
+                            reportedBugs.map((bug) => (
+                              <div
+                                key={bug.bug_id}
+                                style={{
+                                  padding: "0.5rem 1.25rem",
+                                  borderBottom: "1px solid rgba(3,160,98,0.1)",
+                                }}
+                              >
+                                <div style={{ fontSize: "0.75rem", color: "rgba(3,160,98,0.55)", marginBottom: "0.2rem" }}>
+                                  {bug.display_name} · {new Date(bug.created_at).toLocaleDateString([], { day: "2-digit", month: "2-digit", year: "numeric" })}
+                                </div>
+                                <div style={{ color: "var(--color-green)", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.15rem", wordBreak: "break-word" }}>
+                                  {bug.title}
+                                </div>
+                                <div style={{ color: "rgba(3,160,98,0.8)", fontSize: "0.8rem", wordBreak: "break-word" }}>
+                                  {bug.description}
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </>
+                  ) : loadingInfoItems ? (
+                    <div style={{ padding: "1rem", color: "rgba(3,160,98,0.5)", fontSize: "0.8rem", textAlign: "center" }}>{tr.loadingInfo}</div>
+                  ) : infoItems.length === 0 ? (
+                    <div style={{ padding: "1rem", color: "rgba(3,160,98,0.4)", fontSize: "0.8rem", textAlign: "center" }}>{tr.noInfoEntries}</div>
+                  ) : (
+                    infoItems.map((item) => (
+                      <div
+                        key={item.info_id}
+                        onClick={() => setSelectedInfo(item)}
+                        style={{
+                          padding: "0.55rem 1.25rem",
+                          borderBottom: "1px solid rgba(3,160,98,0.1)",
+                          cursor: "pointer",
+                          color: "var(--color-green)",
+                          fontSize: "0.85rem",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                          {item.heading_cube}
+                        </span>
+                        <span style={{ color: "rgba(3,160,98,0.4)", fontSize: "0.75rem", marginLeft: "0.5rem" }}>›</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+
                 <button
-                  className="ghost-btn mt-3"
+                  className="ghost-btn"
                   type="button"
                   onClick={goDown}
+                  style={{ margin: "0.5rem 1.25rem", fontSize: "0.8rem", padding: "0.35rem 0.6rem" }}
                 >
                   {tr.cancel}
                 </button>

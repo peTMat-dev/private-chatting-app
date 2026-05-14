@@ -135,6 +135,22 @@ export type Translations = {
   unableToReset: string;
   passwordUpdated: string;
   signInNewPassword: string;
+
+  // Bottom face — Info / Help
+  infoFace: string;
+  whatsNew: string;
+  manual: string;
+  announcements: string;
+  reportedBugs: string;
+  reportBug: string;
+  bugTitle: string;
+  bugDescription: string;
+  submitBug: string;
+  submittingBug: string;
+  bugReported: string;
+  loadingInfo: string;
+  noInfoEntries: string;
+  noBugsReported: string;
 };
 
 const translations: Record<LangCode, Translations> = {
@@ -245,6 +261,20 @@ const translations: Record<LangCode, Translations> = {
     unableToReset: "Unable to reset password",
     passwordUpdated: "Password updated",
     signInNewPassword: "Sign in with your new password",
+    infoFace: "Info",
+    whatsNew: "What's New",
+    manual: "Manual",
+    announcements: "Announcements",
+    reportedBugs: "Reported Bugs",
+    reportBug: "Report a Bug",
+    bugTitle: "Bug title…",
+    bugDescription: "Describe the bug…",
+    submitBug: "Submit",
+    submittingBug: "Submitting…",
+    bugReported: "Thank you! Bug reported.",
+    loadingInfo: "Loading…",
+    noInfoEntries: "Nothing here yet.",
+    noBugsReported: "No bugs reported yet.",
   },
   es: {
     backToLogin: "Volver al inicio",
@@ -353,6 +383,20 @@ const translations: Record<LangCode, Translations> = {
     unableToReset: "No se pudo restablecer la contraseña",
     passwordUpdated: "Contraseña actualizada",
     signInNewPassword: "Inicia sesión con tu nueva contraseña",
+    infoFace: "Info",
+    whatsNew: "Novedades",
+    manual: "Manual",
+    announcements: "Anuncios",
+    reportedBugs: "Errores reportados",
+    reportBug: "Reportar un error",
+    bugTitle: "Título del error…",
+    bugDescription: "Describe el error…",
+    submitBug: "Enviar",
+    submittingBug: "Enviando…",
+    bugReported: "¡Gracias! Error reportado.",
+    loadingInfo: "Cargando…",
+    noInfoEntries: "Nada aquí todavía.",
+    noBugsReported: "No se han reportado errores aún.",
   },
   fr: {
     backToLogin: "Retour à la connexion",
@@ -459,6 +503,20 @@ const translations: Record<LangCode, Translations> = {
     unableToReset: "Impossible de réinitialiser le mot de passe",
     passwordUpdated: "Mot de passe mis à jour",
     signInNewPassword: "Connectez-vous avec votre nouveau mot de passe",
+    infoFace: "Info",
+    whatsNew: "Nouveautés",
+    manual: "Manuel",
+    announcements: "Annonces",
+    reportedBugs: "Bugs signalés",
+    reportBug: "Signaler un bug",
+    bugTitle: "Titre du bug…",
+    bugDescription: "Décrivez le bug…",
+    submitBug: "Envoyer",
+    submittingBug: "Envoi…",
+    bugReported: "Merci ! Bug signalé.",
+    loadingInfo: "Chargement…",
+    noInfoEntries: "Rien ici pour l'instant.",
+    noBugsReported: "Aucun bug signalé pour l'instant.",
   },
   de: {
     backToLogin: "Zurück zur Anmeldung",
@@ -567,6 +625,20 @@ const translations: Record<LangCode, Translations> = {
     unableToReset: "Passwort konnte nicht zurückgesetzt werden",
     passwordUpdated: "Passwort aktualisiert",
     signInNewPassword: "Melden Sie sich mit Ihrem neuen Passwort an",
+    infoFace: "Info",
+    whatsNew: "Neuigkeiten",
+    manual: "Handbuch",
+    announcements: "Ankündigungen",
+    reportedBugs: "Gemeldete Fehler",
+    reportBug: "Fehler melden",
+    bugTitle: "Fehlertitel…",
+    bugDescription: "Fehler beschreiben…",
+    submitBug: "Senden",
+    submittingBug: "Wird gesendet…",
+    bugReported: "Danke! Fehler wurde gemeldet.",
+    loadingInfo: "Laden…",
+    noInfoEntries: "Noch nichts hier.",
+    noBugsReported: "Noch keine Fehler gemeldet.",
   },
   sk: {
     backToLogin: "Späť na prihlásenie",
@@ -675,6 +747,20 @@ const translations: Record<LangCode, Translations> = {
     unableToReset: "Heslo sa nepodarilo obnoviť",
     passwordUpdated: "Heslo aktualizované",
     signInNewPassword: "Prihláste sa svojím novým heslom",
+    infoFace: "Info",
+    whatsNew: "Novinky",
+    manual: "Príručka",
+    announcements: "Oznámenia",
+    reportedBugs: "Nahlásené chyby",
+    reportBug: "Nahlásiť chybu",
+    bugTitle: "Názov chyby…",
+    bugDescription: "Opíšte chybu…",
+    submitBug: "Odoslať",
+    submittingBug: "Odosielanie…",
+    bugReported: "Ďakujeme! Chyba nahlásená.",
+    loadingInfo: "Načítanie…",
+    noInfoEntries: "Zatiaľ nič.",
+    noBugsReported: "Zatiaľ žiadne nahlásené chyby.",
   },
   cs: {
     backToLogin: "Zpět na přihlášení",
@@ -783,6 +869,20 @@ const translations: Record<LangCode, Translations> = {
     unableToReset: "Heslo se nepodařilo obnovit",
     passwordUpdated: "Heslo aktualizováno",
     signInNewPassword: "Přihlaste se novým heslem",
+    infoFace: "Info",
+    whatsNew: "Novinky",
+    manual: "Příručka",
+    announcements: "Oznámení",
+    reportedBugs: "Nahlášené chyby",
+    reportBug: "Nahlásit chybu",
+    bugTitle: "Název chyby…",
+    bugDescription: "Popište chybu…",
+    submitBug: "Odeslat",
+    submittingBug: "Odesílání…",
+    bugReported: "Děkujeme! Chyba nahlášena.",
+    loadingInfo: "Načítání…",
+    noInfoEntries: "Zatím nic.",
+    noBugsReported: "Zatím žádné nahlášené chyby.",
   },
 };
 

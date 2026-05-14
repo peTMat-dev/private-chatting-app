@@ -8,6 +8,7 @@ import authRouter from "./routes/auth";
 import chatsRouter from "./routes/chats";
 import settingsRouter from "./routes/settings";
 import contactsRouter from "./routes/contacts";
+import infosRouter from "./routes/infos";
 import { query, pool } from "./services/db";
 import { LDAP_getUser, testLDAPConnection } from "./services/ldap.service";
 import { initSocketService } from "./services/socket.service";
@@ -67,6 +68,7 @@ app.use("/auth", authRouter);
 app.use("/chats", authMiddleware, chatsRouter);
 app.use("/settings", authMiddleware, settingsRouter);
 app.use("/contacts", authMiddleware, contactsRouter);
+app.use("/infos", authMiddleware, infosRouter);
 
 // Debug endpoint removed
 
