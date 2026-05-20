@@ -13,10 +13,10 @@ const nextConfig: NextConfig = {
   // to future-proof against stricter defaults.
   allowedDevOrigins: [
     // Hostname-only form
-    "app.lenez.dev",
+    "cubcha.lenez.dev",
     // Explicit schemes as well
-    "https://app.lenez.dev",
-    "http://app.lenez.dev",
+    "https://cubcha.lenez.dev",
+    "http://cubcha.lenez.dev",
   ],
 };
 
