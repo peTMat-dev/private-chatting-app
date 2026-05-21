@@ -99,7 +99,7 @@ type InfoItem = {
 type ReportedBug = {
   bug_id: number;
   title: string;
-  description: string;
+  bug_description: string;
   created_at: string;
   display_name: string;
 };
@@ -2108,14 +2108,14 @@ export default function HomeCube() {
                                   borderBottom: "1px solid rgba(3,160,98,0.1)",
                                 }}
                               >
-                                <div style={{ fontSize: "0.75rem", color: "rgba(3,160,98,0.55)", marginBottom: "0.2rem" }}>
+                                <div style={{ fontSize: "0.75rem", color: "var(--color-green)", marginBottom: "0.2rem" }}>
                                   {bug.display_name} · {new Date(bug.created_at).toLocaleDateString([], { day: "2-digit", month: "2-digit", year: "numeric" })}
                                 </div>
-                                <div style={{ color: "var(--color-green)", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.15rem", wordBreak: "break-word" }}>
+                                <div style={{ color: "var(--color-green)", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.15rem", wordBreak: "break-word", textDecoration: "underline", textDecorationThickness: "2px" }}>
                                   {bug.title}
                                 </div>
-                                <div style={{ color: "rgba(3,160,98,0.8)", fontSize: "0.8rem", wordBreak: "break-word" }}>
-                                  {bug.description}
+                                <div style={{ color: "var(--color-green)", fontSize: "0.8rem", wordBreak: "break-word" }}>
+                                  {bug.bug_description}
                                 </div>
                               </div>
                             ))

@@ -48,11 +48,11 @@ router.get("/reported-bugs", async (_req: Request, res: Response) => {
     const rows = await query<{
       bug_id: number;
       title: string;
-      description: string;
+      bug_description: string;
       created_at: string;
       display_name: string;
     }>(
-      `SELECT rb.bug_id, rb.title, rb.description, rb.created_at, u.display_name
+      `SELECT rb.bug_id, rb.title, rb.bug_description, rb.created_at, u.display_name
        FROM cubcha_v1.report_bug rb
        JOIN cubcha_v1.user_main_details u ON u.user_id = rb.user_id
        ORDER BY rb.created_at DESC
@@ -89,7 +89,7 @@ router.post("/report-bug", async (req: Request, res: Response) => {
 
   try {
     await query(
-      "INSERT INTO cubcha_v1.report_bug (user_id, title, description) VALUES (?, ?, ?)",
+      "INSERT INTO cubcha_v1.report_bug (user_id, title, bug_description) VALUES (?, ?, ?)",
       [userId, title.trim(), description.trim()]
     );
     res.json({ success: true });
