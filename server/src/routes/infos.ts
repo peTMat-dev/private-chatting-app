@@ -48,11 +48,12 @@ router.get("/reported-bugs", async (_req: Request, res: Response) => {
     const rows = await query<{
       bug_id: number;
       title: string;
+      category: string;
       bug_description: string;
       created_at: string;
       display_name: string;
     }>(
-      `SELECT rb.bug_id, rb.title, rb.bug_description, rb.created_at, u.display_name
+      `SELECT rb.bug_id, rb.title, rb.category, rb.bug_description, rb.created_at, u.display_name
        FROM cubcha_v1.report_bug rb
        JOIN cubcha_v1.user_main_details u ON u.user_id = rb.user_id
        ORDER BY rb.created_at DESC
@@ -68,7 +69,9 @@ router.get("/reported-bugs", async (_req: Request, res: Response) => {
 // POST /infos/report-bug — submit a bug report
 router.post("/report-bug", async (req: Request, res: Response) => {
   const userId = req.user.userId;
-  const { title, description } = req.body as { title?: string; description?: string };
+  const { title, description, category } = req.body as { title?: string; description?: string; category?: string };
+
+  const allowedBugCategories = ["UI", "Functionality", "Performance", "Security", "Other"];
 
   if (!title || title.trim().length === 0) {
     res.status(400).json({ success: false, error: "title is required" });
@@ -76,6 +79,10 @@ router.post("/report-bug", async (req: Request, res: Response) => {
   }
   if (title.trim().length > 64) {
     res.status(400).json({ success: false, error: "title exceeds 64 characters" });
+    return;
+  }
+  if (!category || !allowedBugCategories.includes(category)) {
+    res.status(400).json({ success: false, error: "valid category is required" });
     return;
   }
   if (!description || description.trim().length === 0) {
@@ -89,8 +96,8 @@ router.post("/report-bug", async (req: Request, res: Response) => {
 
   try {
     await query(
-      "INSERT INTO cubcha_v1.report_bug (user_id, title, bug_description) VALUES (?, ?, ?)",
-      [userId, title.trim(), description.trim()]
+      "INSERT INTO cubcha_v1.report_bug (user_id, title, category, bug_description) VALUES (?, ?, ?, ?)",
+      [userId, title.trim(), category, description.trim()]
     );
     res.json({ success: true });
   } catch (err) {

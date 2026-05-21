@@ -99,6 +99,7 @@ type InfoItem = {
 type ReportedBug = {
   bug_id: number;
   title: string;
+  category: string;
   bug_description: string;
   created_at: string;
   display_name: string;
@@ -201,6 +202,7 @@ export default function HomeCube() {
   const [loadingBugs, setLoadingBugs] = useState(false);
   const [bugTitleInput, setBugTitleInput] = useState("");
   const [bugInput, setBugInput] = useState("");
+  const [bugCategoryInput, setBugCategoryInput] = useState("Other");
   const [submittingBug, setSubmittingBug] = useState(false);
   const [bugReported, setBugReported] = useState(false);
   const [bugSubView, setBugSubView] = useState<"list" | "report">("list");
@@ -855,19 +857,20 @@ export default function HomeCube() {
   }, [activeFace, activeInfoTab, username, lang, reportedBugs.length]);
 
   const handleSubmitBug = async () => {
-    if (!bugTitleInput.trim() || !bugInput.trim() || submittingBug) return;
+    if (!bugTitleInput.trim() || !bugInput.trim() || !bugCategoryInput || submittingBug) return;
     setSubmittingBug(true);
     try {
       const res = await fetch(buildApiUrl("/infos/report-bug"), {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ title: bugTitleInput.trim(), description: bugInput.trim() }),
+        body: JSON.stringify({ title: bugTitleInput.trim(), description: bugInput.trim(), category: bugCategoryInput }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
         setBugTitleInput("");
         setBugInput("");
+        setBugCategoryInput("Other");
         setBugReported(true);
         setReportedBugs([]); // reset so it reloads on next visit
         setTimeout(() => setBugReported(false), 4000);
@@ -2059,6 +2062,24 @@ export default function HomeCube() {
                                   fontFamily: "inherit",
                                 }}
                               />
+                              <select
+                                value={bugCategoryInput}
+                                onChange={(e) => setBugCategoryInput(e.target.value)}
+                                style={{
+                                  fontSize: "0.8rem",
+                                  padding: "0.35rem 0.5rem",
+                                  background: "rgba(3,160,98,0.08)",
+                                  border: "1px solid rgba(3,160,98,0.3)",
+                                  borderRadius: "0.25rem",
+                                  color: "var(--color-green)",
+                                  outline: "none",
+                                  fontFamily: "inherit",
+                                }}
+                              >
+                                {["UI", "Functionality", "Performance", "Security", "Other"].map((cat) => (
+                                  <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                              </select>
                               <div style={{ display: "flex", gap: "0.4rem", alignItems: "flex-end" }}>
                                 <textarea
                                   value={bugInput}
@@ -2083,7 +2104,7 @@ export default function HomeCube() {
                                   type="button"
                                   className="contact-action-btn contact-action-btn--add"
                                   onClick={handleSubmitBug}
-                                  disabled={submittingBug || !bugTitleInput.trim() || !bugInput.trim()}
+                                  disabled={submittingBug || !bugTitleInput.trim() || !bugInput.trim() || !bugCategoryInput}
                                   style={{ fontSize: "0.75rem", padding: "0.4rem 0.6rem" }}
                                 >
                                   {submittingBug ? "…" : tr.submitBug}
@@ -2113,6 +2134,9 @@ export default function HomeCube() {
                                 </div>
                                 <div style={{ color: "var(--color-green)", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.15rem", wordBreak: "break-word", textDecoration: "underline", textDecorationThickness: "2px" }}>
                                   {bug.title}
+                                </div>
+                                <div style={{ color: "var(--color-green)", fontSize: "0.7rem", marginBottom: "0.15rem", opacity: 0.7 }}>
+                                  {bug.category}
                                 </div>
                                 <div style={{ color: "var(--color-green)", fontSize: "0.8rem", wordBreak: "break-word" }}>
                                   {bug.bug_description}

@@ -246,6 +246,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`report_bug` (
     `bug_id` SMALLINT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT COMMENT 'Primary key for bug reports',
     `user_id` SMALLINT UNSIGNED NOT NULL COMMENT 'FK to user_main_details.user_id',
     `title` VARCHAR(64) NOT NULL COMMENT 'Title of the bug',
+    `category` ENUM('UI', 'Functionality', 'Performance', 'Security', 'Other') NOT NULL COMMENT 'Category of the bug',
     `bug_description` VARCHAR(256) NOT NULL COMMENT 'Description of the bug',
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When the bug was reported',
     FOREIGN KEY (`user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)
