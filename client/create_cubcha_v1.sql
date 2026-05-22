@@ -238,6 +238,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`infos` (
     `language_code` ENUM('en', 'sk', 'es', 'fr', 'de', 'cz') NOT NULL COMMENT 'language code for the manual section (e.g., en, de)',
     `display_order`  SMALLINT(5) UNSIGNED NOT NULL DEFAULT 1 COMMENT 'order of display for manual sections',
     `text_description` VARCHAR(256) NOT NULL COMMENT 'text of the section of the manual',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When the selected info was created',
     UNIQUE KEY uq_infos_heading_language (heading_cube, language_code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Manual information for users';
 
