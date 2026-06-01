@@ -84,13 +84,17 @@ This project uses open-source dependencies including:
 - **Next.js** - React framework (MIT License)
 - **React** - UI library (MIT License)
 - **React-DOM** - React rendering (MIT License)
-- **Argon2** - Password hashing (Apache-2.0/MIT License)
+- **Argon2** - Password hashing (MIT License)
 - **ldapts** - LDAP client (MIT License)
+- **ldapjs** - LDAP protocol client/server (MIT License)
 - **Nodemailer** - Email sending (MIT License)
 - **mysql** - MariaDB/MySQL driver (MIT License)
 - **Bootstrap** - UI framework (MIT License)
 - **cors** - CORS middleware (MIT License)
+- **cookie-parser** - Cookie parsing middleware (MIT License)
 - **dotenv** - Environment configuration (MIT License)
+- **socket.io** - Real-time bidirectional communication server (MIT License)
+- **socket.io-client** - Real-time bidirectional communication client (MIT License)
 
 Each dependency includes its license information in its own npm package.  
 For details, see `node_modules/[package]/package.json` or refer to their respective npm and GitHub pages.
