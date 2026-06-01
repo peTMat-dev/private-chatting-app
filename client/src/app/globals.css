@@ -1,3 +1,5 @@
+@import "bootstrap/dist/css/bootstrap.min.css";
+
 /* Match vertical spacing on reset password form to sign in/register forms */
 .cube-face-left .auth-card form {
   gap: 1.1rem;
@@ -9,8 +11,6 @@
 .cube-face-front .auth-card form .auth-btn {
   margin-top: 1.1rem;
 }
-@import "tailwindcss";
-@import "bootstrap/dist/css/bootstrap.min.css";
 
 :root {
   --color-black: #020202;

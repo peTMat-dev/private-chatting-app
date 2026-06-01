@@ -60,11 +60,15 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_system_details` (
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`contacts` (
     `owner_user_id` SMALLINT UNSIGNED NOT NULL COMMENT 'User who owns this contact',
     `contact_user_id` SMALLINT UNSIGNED NOT NULL COMMENT 'User who is the contact',
+    `contact_group_name` VARCHAR(32) DEFAULT NULL COMMENT 'group created in user_group table',
     `status_st` BOOLEAN DEFAULT TRUE COMMENT 'Contact status added/removed or closed account)',
     `added_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'When contact was added',
+    `c_group_id` INT UNSIGNED DEFAULT NULL COMMENT 'FK to user_groups.group_ug_id for contact grouping',
+    `c_group_name` VARCHAR(32) DEFAULT NULL COMMENT 'Denormalized group name for fast access, nullable if no group',
     PRIMARY KEY (`owner_user_id`, `contact_user_id`),
     FOREIGN KEY (`owner_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
-    FOREIGN KEY (`contact_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)
+    FOREIGN KEY (`contact_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
+    FOREIGN KEY (`c_group_id`) REFERENCES `cubcha_v1`.`user_groups`(`group_ug_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores user-to-user contacts';
 
 -- to finish this table
@@ -93,7 +97,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`contacts_blocked_users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_groups` (
-    `group_id` INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    `group_ug_id` INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     `group_name` VARCHAR(64) NOT NULL,
     `owner_user_id` SMALLINT UNSIGNED NOT NULL,   -- user_id of the group owner
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -101,12 +105,12 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_groups` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`group_members` (
-    `group_id` INT UNSIGNED NOT NULL,
+    `group_gm_id` INT UNSIGNED NOT NULL,
     `member_user_id` SMALLINT UNSIGNED NOT NULL,
     `is_admin` BOOLEAN DEFAULT FALSE,
     `joined_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`group_id`, `member_user_id`),
-    FOREIGN KEY (`group_id`) REFERENCES `cubcha_v1`.`user_groups`(`group_id`),
+    PRIMARY KEY (`group_gm_id`, `member_user_id`),
+    FOREIGN KEY (`group_gm_id`) REFERENCES `cubcha_v1`.`user_groups`(`group_ug_id`),
     FOREIGN KEY (`member_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -120,7 +124,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`conversations` (
     `title` VARCHAR(64) DEFAULT NULL,
     `group_id` INT UNSIGNED DEFAULT NULL,
     FOREIGN KEY (`creator_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
-    FOREIGN KEY (`group_id`) REFERENCES `cubcha_v1`.`user_groups`(`group_id`) -- not in live db yet
+    FOREIGN KEY (`group_id`) REFERENCES `cubcha_v1`.`user_groups`(`group_ug_id`) -- not in live db yet
     ,KEY `idx_conversations_creator` (`creator_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -236,10 +240,9 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`infos` (
     `heading_cube` VARCHAR(48) NOT NULL COMMENT 'heading to the section of the manual',
     `category` ENUM('update', 'manual','announcement', 'reported_bugs') NOT NULL DEFAULT 'manual' COMMENT 'Distinguishes latest-update entries from manual/help entries',
     `language_code` ENUM('en', 'sk', 'es', 'fr', 'de', 'cz') NOT NULL COMMENT 'language code for the manual section (e.g., en, de)',
-    `display_order`  SMALLINT(5) UNSIGNED NOT NULL DEFAULT 1 COMMENT 'order of display for manual sections',
+    `display_order`  SMALLINT(5) UNSIGNED NULL DEFAULT 1 COMMENT 'order of display for manual sections',
     `text_description` VARCHAR(256) NOT NULL COMMENT 'text of the section of the manual',
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When the selected info was created',
-    UNIQUE KEY uq_infos_heading_language (heading_cube, language_code)
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When the selected info was created'   
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Manual information for users';
 
 -- Table to store manual information for users
