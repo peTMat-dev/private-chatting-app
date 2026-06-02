@@ -1,5 +1,6 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { query } from "../services/db";
+import { authMiddleware } from "../middleware/auth.middleware";
 
 const router = Router();
 
@@ -73,8 +74,8 @@ router.get("/reported-bugs", async (_req: Request, res: Response) => {
   }
 });
 
-// POST /infos/report-bug — submit a bug report
-router.post("/report-bug", async (req: Request, res: Response) => {
+// POST /infos/report-bug — submit a bug report (requires authentication)
+router.post("/report-bug", authMiddleware as (req: Request, res: Response, next: NextFunction) => void, async (req: Request, res: Response) => {
   const userId = req.user.userId;
   const { title, description, category } = req.body as { title?: string; description?: string; category?: string };
 

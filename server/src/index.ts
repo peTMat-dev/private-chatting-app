@@ -68,7 +68,7 @@ app.use("/auth", authRouter);
 app.use("/chats", authMiddleware, chatsRouter);
 app.use("/settings", authMiddleware, settingsRouter);
 app.use("/contacts", authMiddleware, contactsRouter);
-app.use("/infos", authMiddleware, infosRouter);
+app.use("/infos", infosRouter);
 
 // Debug endpoint removed
 

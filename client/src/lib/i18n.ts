@@ -151,6 +151,7 @@ export type Translations = {
   loadingInfo: string;
   noInfoEntries: string;
   noBugsReported: string;
+  anonymized: string;
 };
 
 const translations: Record<LangCode, Translations> = {
@@ -275,6 +276,7 @@ const translations: Record<LangCode, Translations> = {
     loadingInfo: "Loading…",
     noInfoEntries: "Nothing here yet.",
     noBugsReported: "No bugs reported yet.",
+    anonymized: "Anonymized",
   },
   es: {
     backToLogin: "Volver al inicio",
@@ -397,6 +399,7 @@ const translations: Record<LangCode, Translations> = {
     loadingInfo: "Cargando…",
     noInfoEntries: "Nada aquí todavía.",
     noBugsReported: "No se han reportado errores aún.",
+    anonymized: "Anónimo",
   },
   fr: {
     backToLogin: "Retour à la connexion",
@@ -517,6 +520,7 @@ const translations: Record<LangCode, Translations> = {
     loadingInfo: "Chargement…",
     noInfoEntries: "Rien ici pour l'instant.",
     noBugsReported: "Aucun bug signalé pour l'instant.",
+    anonymized: "Anonymisé",
   },
   de: {
     backToLogin: "Zurück zur Anmeldung",
@@ -639,6 +643,7 @@ const translations: Record<LangCode, Translations> = {
     loadingInfo: "Laden…",
     noInfoEntries: "Noch nichts hier.",
     noBugsReported: "Noch keine Fehler gemeldet.",
+    anonymized: "Anonymisiert",
   },
   sk: {
     backToLogin: "Späť na prihlásenie",
@@ -761,6 +766,7 @@ const translations: Record<LangCode, Translations> = {
     loadingInfo: "Načítanie…",
     noInfoEntries: "Zatiaľ nič.",
     noBugsReported: "Zatiaľ žiadne nahlásené chyby.",
+    anonymized: "Anonymizované",
   },
   cs: {
     backToLogin: "Zpět na přihlášení",
@@ -883,6 +889,7 @@ const translations: Record<LangCode, Translations> = {
     loadingInfo: "Načítání…",
     noInfoEntries: "Zatím nic.",
     noBugsReported: "Zatím žádné nahlášené chyby.",
+    anonymized: "Anonymizováno",
   },
 };
 
