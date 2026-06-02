@@ -11,6 +11,7 @@ export const LANGUAGES: { code: LangCode; label: string }[] = [
 
 export type Translations = {
   // Shared / navigation
+  back: string;
   backToLogin: string;
   changeLanguage: string;
   logout: string;
@@ -156,6 +157,7 @@ export type Translations = {
 
 const translations: Record<LangCode, Translations> = {
   en: {
+    back: "Back",
     backToLogin: "Back to login",
     changeLanguage: "Change language",
     logout: "Logout",
@@ -279,6 +281,7 @@ const translations: Record<LangCode, Translations> = {
     anonymized: "Anonymized",
   },
   es: {
+    back: "Atrás",
     backToLogin: "Volver al inicio",
     changeLanguage: "Cambiar idioma",
     logout: "Cerrar sesión",
@@ -402,6 +405,7 @@ const translations: Record<LangCode, Translations> = {
     anonymized: "Anónimo",
   },
   fr: {
+    back: "Retour",
     backToLogin: "Retour à la connexion",
     changeLanguage: "Changer de langue",
     logout: "Déconnexion",
@@ -523,6 +527,7 @@ const translations: Record<LangCode, Translations> = {
     anonymized: "Anonymisé",
   },
   de: {
+    back: "Zurück",
     backToLogin: "Zurück zur Anmeldung",
     changeLanguage: "Sprache ändern",
     logout: "Abmelden",
@@ -646,6 +651,7 @@ const translations: Record<LangCode, Translations> = {
     anonymized: "Anonymisiert",
   },
   sk: {
+    back: "Späť",
     backToLogin: "Späť na prihlásenie",
     changeLanguage: "Zmeniť jazyk",
     logout: "Odhlásiť sa",
@@ -769,6 +775,7 @@ const translations: Record<LangCode, Translations> = {
     anonymized: "Anonymizované",
   },
   cs: {
+    back: "Zpět",
     backToLogin: "Zpět na přihlášení",
     changeLanguage: "Změnit jazyk",
     logout: "Odhlásit se",

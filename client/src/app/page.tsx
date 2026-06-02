@@ -918,10 +918,10 @@ export default function AuthScreen() {
 								<button
 									className="ghost-btn"
 									type="button"
-									onClick={goUp}
+									onClick={goDown}
 									style={{ margin: "0.5rem 1.25rem", fontSize: "0.8rem", padding: "0.35rem 0.6rem" }}
 								>
-									{tr.backToLogin}
+									{tr.back}
 								</button>
 							</div>
 						</article>
