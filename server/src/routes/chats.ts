@@ -78,6 +78,9 @@ router.post("/", async (req: Request, res: Response) => {
   if (isGroup && (!title || !title.trim())) {
     return res.status(400).json({ success: false, error: "title is required for group chats" });
   }
+  if (isGroup && title && title.trim().length > 32) {
+    return res.status(400).json({ success: false, error: "title exceeds 32 characters" });
+  }
 
   try {
     // Resolve caller settings

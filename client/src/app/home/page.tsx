@@ -51,6 +51,12 @@ type ContactRequest = {
   requestedAt: string;
 };
 
+type ContactGroup = {
+  id: number;
+  name: string;
+  memberIds: number[];
+};
+
 type ApiPublicUsersResponse = {
   success: boolean;
   count?: number;
@@ -164,6 +170,13 @@ export default function HomeCube() {
   const [approvingRequestId, setApprovingRequestId] = useState<number | null>(null);
   const [rejectingRequestId, setRejectingRequestId] = useState<number | null>(null);
   const [cancellingRequestId, setCancellingRequestId] = useState<number | null>(null);
+  const [showContactListGroups, setShowContactListGroups] = useState(false);
+  const [contactGroups, setContactGroups] = useState<ContactGroup[]>([]);
+  const [contactGroupsError, setContactGroupsError] = useState<string | null>(null);
+  const [loadingContactGroups, setLoadingContactGroups] = useState(false);
+  const [removingGroupId, setRemovingGroupId] = useState<number | null>(null);
+  const [groupChatTitleEdit, setGroupChatTitleEdit] = useState<{ groupId: number; value: string } | null>(null);
+  const [groupChatCreating, setGroupChatCreating] = useState(false);
 
   const [activeChatId, setActiveChatId] = useState<number | null>(null);
   const [activeChatName, setActiveChatName] = useState<string>("");
@@ -423,6 +436,26 @@ export default function HomeCube() {
     }
   };
 
+  const fetchContactGroups = async () => {
+    if (!username) return;
+    setLoadingContactGroups(true);
+    setContactGroupsError(null);
+    try {
+      const url = buildApiUrl("/contacts/groups");
+      const res = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } });
+      const data = (await res.json()) as { success: boolean; data?: ContactGroup[]; error?: string };
+      if (!res.ok || !data.success) {
+        setContactGroupsError(data.error || "Unable to load groups");
+        return;
+      }
+      setContactGroups(data.data || []);
+    } catch (err) {
+      setContactGroupsError((err as Error).message);
+    } finally {
+      setLoadingContactGroups(false);
+    }
+  };
+
   const fetchWhoseContactAmI = async () => {
     if (!username) return;
     setLoadingWhoseContactAmI(true);
@@ -659,7 +692,7 @@ export default function HomeCube() {
     setActiveChatIsGroup(isGroup);
     setActiveChatMessages([]);
     setChatError(null);
-    goRight();
+    setFace("right");
   };
 
   const handleChatWithContact = async (contactId: number) => {
@@ -673,6 +706,28 @@ export default function HomeCube() {
       handleOpenChat(data.data.conversationId, data.data.name, data.data.isGroup);
     } catch (err) {
       setAlertDialog({ show: true, title: "Error", message: (err as Error).message });
+    }
+  };
+
+  const handleChatWithGroup = async (group: ContactGroup, title: string) => {
+    if (group.memberIds.length === 0) return;
+    setGroupChatCreating(true);
+    try {
+      const { ok, data } = await postJson("/chats", {
+        participantUserIds: group.memberIds,
+        ...(group.memberIds.length > 1 ? { title: title.trim() || group.name } : {}),
+      });
+      if (!ok || !data.success) {
+        setAlertDialog({ show: true, title: "Error", message: data.error || "Failed to open chat" });
+        return;
+      }
+      setGroupChatTitleEdit(null);
+      fetchChats();
+      handleOpenChat(data.data.conversationId, data.data.name, data.data.isGroup);
+    } catch (err) {
+      setAlertDialog({ show: true, title: "Error", message: (err as Error).message });
+    } finally {
+      setGroupChatCreating(false);
     }
   };
 
@@ -966,6 +1021,7 @@ export default function HomeCube() {
                                 type="text"
                                 value={newChatTitle}
                                 onChange={(e) => setNewChatTitle(e.target.value)}
+                                maxLength={32}
                                 placeholder={tr.groupTitle}
                                 style={{
                                   marginTop: "0.5rem", width: "100%", fontSize: "0.8rem",
@@ -1042,6 +1098,7 @@ export default function HomeCube() {
                         setShowRequestInput(false);
                         setPrivateRequestSent(false);
                         setShowContactList(false);
+                        setShowContactListGroups(false);
                         setShowRequests(false);
                         setPublicUserSearch("");
                         if (!showPublicUserSelect && publicUsers.length === 0) {
@@ -1172,6 +1229,7 @@ export default function HomeCube() {
                         setShowRequestInput(!showRequestInput);
                         setPrivateRequestSent(false);
                         setShowPublicUserSelect(false);
+                        setShowContactListGroups(false);
                         setShowRequests(false);
                       }}
                       style={{ width: "100%" }}
@@ -1225,6 +1283,7 @@ export default function HomeCube() {
                       onClick={() => {
                         setShowContactList(!showContactList);
                         setShowPublicUserSelect(false);
+                        setShowContactListGroups(false);
                         setShowRequestInput(false);
                         setPrivateRequestSent(false);
                         setShowRequests(false);
@@ -1311,7 +1370,7 @@ export default function HomeCube() {
                                   {c.displayName}{!c.isPublic && <span style={{ marginLeft: "0.3rem", fontSize: "0.75rem" }}>🔒</span>}
                                 </span>
                                 <button
-                                  className="contact-action-btn contact-action-btn--chat"
+                                  className="contact-action-btn contact-action-btn--chat-active"
                                   onClick={() => handleChatWithContact(c.id)}
                                   title="💬"
                                 >
@@ -1337,9 +1396,125 @@ export default function HomeCube() {
                     <button
                       className="add-contact-btn"
                       onClick={() => {
+                        const next = !showContactListGroups;
+                        setShowContactListGroups(next);
+                        setShowContactList(false);
+                        setShowPublicUserSelect(false);
+                        setShowRequestInput(false);
+                        setPrivateRequestSent(false);
+                        setShowRequests(false);
+                        setShowWhoseContactAmI(false);
+                        if (next) fetchContactGroups();
+                      }}
+                      style={{ width: "100%" }}
+                    >
+                      ☰ {tr.contactListGroups}
+                    </button>
+                    {showContactListGroups && (
+                      <div style={{ marginTop: "0.75rem" }}>
+                        {contactGroupsError ? (
+                          <div style={{ padding: "0.5rem 0.75rem", color: "rgba(255,80,80,0.8)", fontSize: "0.8rem" }}>
+                            {contactGroupsError}
+                          </div>
+                        ) : loadingContactGroups ? (
+                          <div style={{ padding: "0.75rem", color: "var(--color-green)", textAlign: "center" }}>
+                            {tr.loadingUsers}
+                          </div>
+                        ) : contactGroups.length === 0 ? (
+                          <div style={{ padding: "0.5rem 0.75rem", color: "rgba(3,160,98,0.5)", fontSize: "0.8rem", textAlign: "center" }}>
+                            {tr.noGroupsYet}
+                          </div>
+                        ) : (
+                          <div
+                            className="auth-input"
+                            style={{ padding: 0, maxHeight: "180px", overflowY: "auto" }}
+                          >
+                            {contactGroups.map((g) => (
+                              <div key={g.id}>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    padding: "0.45rem 0.75rem",
+                                    borderBottom: groupChatTitleEdit?.groupId === g.id ? "none" : "1px solid rgba(3, 160, 98, 0.1)",
+                                    gap: "0.4rem",
+                                  }}
+                                >
+                                  <span style={{ color: "var(--color-green)", fontSize: "0.85rem", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    {g.name}
+                                    <span style={{ marginLeft: "0.35rem", fontSize: "0.7rem", opacity: 0.55 }}>({g.memberIds.length})</span>
+                                  </span>
+                                  <button
+                                    className={`contact-action-btn ${groupChatTitleEdit?.groupId === g.id ? "contact-action-btn--chat-active" : "contact-action-btn--chat-active"}`}
+                                    onClick={() => setGroupChatTitleEdit(
+                                      groupChatTitleEdit?.groupId === g.id ? null : { groupId: g.id, value: g.name }
+                                    )}
+                                    title="💬"
+                                  >
+                                    💬
+                                  </button>
+                                  <button
+                                    className="contact-action-btn contact-action-btn--tick"
+                                    onClick={() => setRemovingGroupId(g.id)}
+                                    disabled={removingGroupId === g.id}
+                                    title={tr.removeGroup}
+                                  >
+                                    {removingGroupId === g.id ? "…" : "☑"}
+                                  </button>
+                                </div>
+                                {groupChatTitleEdit?.groupId === g.id && (
+                                  <div style={{
+                                    display: "flex", gap: "0.4rem", alignItems: "center",
+                                    padding: "0.4rem 0.75rem 0.5rem",
+                                    borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                                    background: "rgba(3,160,98,0.05)",
+                                  }}>
+                                    <input
+                                      type="text"
+                                      value={groupChatTitleEdit.value}
+                                      onChange={(e) => setGroupChatTitleEdit({ groupId: g.id, value: e.target.value })}
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter" && groupChatTitleEdit.value.trim()) handleChatWithGroup(g, groupChatTitleEdit.value);
+                                        if (e.key === "Escape") setGroupChatTitleEdit(null);
+                                      }}
+                                      maxLength={32}
+                                      placeholder={tr.groupTitle}
+                                      autoFocus
+                                      style={{
+                                        flex: 1, minWidth: 0, fontSize: "0.8rem",
+                                        padding: "0.3rem 0.45rem",
+                                        background: "rgba(3,160,98,0.08)",
+                                        border: "1px solid rgba(3,160,98,0.3)",
+                                        borderRadius: "0.25rem",
+                                        color: "var(--color-green)", outline: "none",
+                                      }}
+                                    />
+                                    <button
+                                      className="contact-action-btn contact-action-btn--confirm"
+                                      onClick={() => handleChatWithGroup(g, groupChatTitleEdit.value)}
+                                      disabled={!groupChatTitleEdit.value.trim() || groupChatCreating}
+                                      title={tr.openChat}
+                                    >
+                                      {groupChatCreating ? "…" : "✓"}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ marginBottom: "1rem" }}>
+                    <button
+                      className="add-contact-btn"
+                      onClick={() => {
                         const next = !showRequests;
                         setShowRequests(next);
                         setShowContactList(false);
+                        setShowContactListGroups(false);
                         setShowPublicUserSelect(false);
                         setShowRequestInput(false);
                         setPrivateRequestSent(false);
@@ -1459,6 +1634,7 @@ export default function HomeCube() {
                         const next = !showWhoseContactAmI;
                         setShowWhoseContactAmI(next);
                         setShowContactList(false);
+                        setShowContactListGroups(false);
                         setShowPublicUserSelect(false);
                         setShowRequestInput(false);
                         setPrivateRequestSent(false);

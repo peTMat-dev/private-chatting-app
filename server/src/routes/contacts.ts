@@ -326,4 +326,34 @@ router.post("/requests/cancel", async (req: Request, res: Response) => {
   }
 });
 
+// GET /contacts/groups - Get user's contact groups (owner only)
+router.get("/groups", async (req: Request, res: Response) => {
+  const { userId } = req.user;
+
+  try {
+    const rows = await query<{
+      group_ug_id: number;
+      group_name: string;
+      owner_user_id: number;
+      member_user_id: number;
+    }>("CALL contact_2read_c_list_groups(?)", [userId]);
+
+    const resultRows = Array.isArray(rows[0]) ? rows[0] : rows;
+
+    // Aggregate multiple member rows into one entry per group
+    const groupMap = new Map<number, { id: number; name: string; memberIds: number[] }>();
+    for (const row of resultRows as { group_ug_id: number; group_name: string; member_user_id: number }[]) {
+      if (!groupMap.has(row.group_ug_id)) {
+        groupMap.set(row.group_ug_id, { id: row.group_ug_id, name: row.group_name, memberIds: [] });
+      }
+      groupMap.get(row.group_ug_id)!.memberIds.push(row.member_user_id);
+    }
+
+    const data = Array.from(groupMap.values());
+    res.json({ success: true, count: data.length, data });
+  } catch (error) {
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
 export default router;

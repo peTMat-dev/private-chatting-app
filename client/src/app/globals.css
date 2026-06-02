@@ -856,6 +856,42 @@ a:hover {
   opacity: 0.5;
 }
 
+.contact-action-btn--chat-active {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-green);
+  font-size: 0.7rem;
+  padding: 0 0.3rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 1;
+}
+
+.contact-action-btn--chat-active:hover {
+  background: rgba(3, 160, 98, 0.1);
+}
+
+.contact-action-btn--confirm {
+  background: linear-gradient(135deg, rgba(3, 160, 98, 0.35), rgba(3, 160, 98, 0.2));
+  border-color: rgba(3, 160, 98, 0.7);
+  color: var(--color-green);
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.3rem 0.65rem;
+  cursor: pointer;
+}
+
+.contact-action-btn--confirm:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(3, 160, 98, 0.55), rgba(3, 160, 98, 0.35));
+  border-color: var(--color-green);
+  box-shadow: 0 0 10px rgba(3, 160, 98, 0.4);
+}
+
+.contact-action-btn--confirm:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .contact-action-btn--cancel {
   background: linear-gradient(135deg, rgba(3, 160, 98, 0.1), rgba(3, 160, 98, 0.05));
   border-color: rgba(3, 160, 98, 0.3);

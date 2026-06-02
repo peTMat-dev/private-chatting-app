@@ -81,6 +81,9 @@ export type Translations = {
   added: string;
   addedDate: string;
   contactList: string;
+  contactListGroups: string;
+  noGroupsYet: string;
+  removeGroup: string;
   whoseContactAmI: string;
   chatSoon: string;
   requests: string;
@@ -217,6 +220,9 @@ const translations: Record<LangCode, Translations> = {
     added: "Added",
     addedDate: "Added:",
     contactList: "Contact List",
+    contactListGroups: "Contact List Group",
+    noGroupsYet: "No groups yet",
+    removeGroup: "Remove group",
     whoseContactAmI: "Whose contact am I?",
     chatSoon: "Chat (coming soon)",
     requests: "Requests",
@@ -341,6 +347,9 @@ const translations: Record<LangCode, Translations> = {
     added: "Añadido",
     addedDate: "Añadido:",
     contactList: "Lista de contactos",
+    contactListGroups: "Grupo de lista de contactos",
+    noGroupsYet: "Aún no hay grupos",
+    removeGroup: "Eliminar grupo",
     whoseContactAmI: "¿De quién soy contacto?",
     chatSoon: "Chat (próximamente)",
     requests: "Solicitudes",
@@ -465,6 +474,9 @@ const translations: Record<LangCode, Translations> = {
     added: "Ajouté",
     addedDate: "Ajouté :",
     contactList: "Liste de contacts",
+    contactListGroups: "Groupe de liste de contacts",
+    noGroupsYet: "Aucun groupe pour l'instant",
+    removeGroup: "Supprimer le groupe",
     whoseContactAmI: "Dont je suis le contact ?",
     chatSoon: "Chat (bientôt disponible)",    requests: "Demandes",
     incomingRequests: "Reçues",
@@ -587,6 +599,9 @@ const translations: Record<LangCode, Translations> = {
     added: "Hinzugefügt",
     addedDate: "Hinzugefügt:",
     contactList: "Kontaktliste",
+    contactListGroups: "Kontaktlistengruppe",
+    noGroupsYet: "Noch keine Gruppen",
+    removeGroup: "Gruppe entfernen",
     whoseContactAmI: "Wessen Kontakt bin ich?",
     chatSoon: "Chat (demnächst)",
     requests: "Anfragen",
@@ -711,6 +726,9 @@ const translations: Record<LangCode, Translations> = {
     added: "Pridané",
     addedDate: "Pridané:",
     contactList: "Zoznam kontaktov",
+    contactListGroups: "Skupina zoznamu kontaktov",
+    noGroupsYet: "Zatiaľ žiadne skupiny",
+    removeGroup: "Odstrániť skupinu",
     whoseContactAmI: "Čí kontakt som?",
     chatSoon: "Chat (čoskoro)",
     requests: "Žiadosti",
@@ -835,6 +853,9 @@ const translations: Record<LangCode, Translations> = {
     added: "Přidáno",
     addedDate: "Přidáno:",
     contactList: "Seznam kontaktů",
+    contactListGroups: "Skupina seznamu kontaktů",
+    noGroupsYet: "Zatím žádné skupiny",
+    removeGroup: "Odebrat skupinu",
     whoseContactAmI: "Čí kontakt jsem?",
     chatSoon: "Chat (brzy)",
     requests: "Žádosti",

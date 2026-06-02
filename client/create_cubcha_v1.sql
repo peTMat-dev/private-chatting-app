@@ -60,7 +60,6 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_system_details` (
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`contacts` (
     `owner_user_id` SMALLINT UNSIGNED NOT NULL COMMENT 'User who owns this contact',
     `contact_user_id` SMALLINT UNSIGNED NOT NULL COMMENT 'User who is the contact',
-    `contact_group_name` VARCHAR(32) DEFAULT NULL COMMENT 'group created in user_group table',
     `status_st` BOOLEAN DEFAULT TRUE COMMENT 'Contact status added/removed or closed account)',
     `added_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'When contact was added',
     `c_group_id` INT UNSIGNED DEFAULT NULL COMMENT 'FK to user_groups.group_ug_id for contact grouping',
@@ -98,7 +97,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`contacts_blocked_users` (
 
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_groups` (
     `group_ug_id` INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    `group_name` VARCHAR(64) NOT NULL,
+    `group_name` VARCHAR(32) NOT NULL,
     `owner_user_id` SMALLINT UNSIGNED NOT NULL,   -- user_id of the group owner
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`owner_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)
@@ -121,7 +120,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`conversations` (
     `creator_user_id` SMALLINT UNSIGNED NOT NULL,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `is_group` BOOLEAN DEFAULT FALSE,
-    `title` VARCHAR(64) DEFAULT NULL,
+    `title` VARCHAR(32) DEFAULT NULL,
     `group_id` INT UNSIGNED DEFAULT NULL,
     FOREIGN KEY (`creator_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
     FOREIGN KEY (`group_id`) REFERENCES `cubcha_v1`.`user_groups`(`group_ug_id`) -- not in live db yet
@@ -160,7 +159,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_conversations` (
     `creator_user_id` SMALLINT UNSIGNED NOT NULL,
     `created_at` DATETIME DEFAULT NULL,
     `is_group` BOOLEAN DEFAULT FALSE,
-    `title` VARCHAR(64) DEFAULT NULL,
+    `title` VARCHAR(32) DEFAULT NULL,
     `group_id` INT UNSIGNED DEFAULT NULL,
     `archived_at` DATETIME DEFAULT CURRENT_TIMESTAMP
     ,KEY `idx_archived_conversations_creator` (`creator_user_id`)
@@ -194,7 +193,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_conversations_participants` (
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_user_groups` (
     archived_group_id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     `group_id` INT UNSIGNED NOT NULL UNIQUE, -- Only one archived record per group_id allowed
-    `group_name` VARCHAR(64) NOT NULL,
+    `group_name` VARCHAR(32) NOT NULL,
     `owner_user_id` SMALLINT UNSIGNED NOT NULL,   -- user_id of the group owner
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `archived_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
