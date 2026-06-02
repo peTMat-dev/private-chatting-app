@@ -90,10 +90,10 @@ type ChatMessage = {
 };
 
 type InfoItem = {
-  info_id: number;
   heading_cube: string;
-  text_description: string;
-  display_order: number;
+  text_description?: string;
+  descriptions?: string[];
+  created_at?: string;
 };
 
 type ReportedBug = {
@@ -1931,7 +1931,7 @@ export default function HomeCube() {
                       overflowY: "auto",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: selectedInfo.created_at ? "0.25rem" : "0.75rem" }}>
                       <h3 style={{ flex: 1, color: "var(--color-green)", margin: 0, fontSize: "0.95rem" }}>
                         {selectedInfo.heading_cube}
                       </h3>
@@ -1944,9 +1944,22 @@ export default function HomeCube() {
                         ✕
                       </button>
                     </div>
-                    <p style={{ color: "rgba(3,160,98,0.85)", fontSize: "0.85rem", lineHeight: 1.55, margin: 0 }}>
-                      {selectedInfo.text_description}
-                    </p>
+                    {selectedInfo.created_at && (
+                      <p style={{ color: "var(--color-green)", fontSize: "0.75rem", margin: "0 0 0.75rem" }}>
+                        {new Date(selectedInfo.created_at).toLocaleDateString([], { day: "2-digit", month: "2-digit", year: "numeric" })}
+                      </p>
+                    )}
+                    {selectedInfo.descriptions ? (
+                      <ul style={{ color: "var(--color-green)", fontSize: "0.85rem", lineHeight: 1.55, margin: 0, paddingLeft: "1.2rem" }}>
+                        {selectedInfo.descriptions.map((d, i) => (
+                          <li key={i} style={{ marginBottom: "0.4rem" }}>{d}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p style={{ color: "var(--color-green)", fontSize: "0.85rem", lineHeight: 1.55, margin: 0 }}>
+                        {selectedInfo.text_description}
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -1977,7 +1990,7 @@ export default function HomeCube() {
                           background: "none",
                           border: "none",
                           borderBottom: activeInfoTab === tab ? "2px solid var(--color-green)" : "2px solid transparent",
-                          color: activeInfoTab === tab ? "var(--color-green)" : "rgba(3,160,98,0.45)",
+                          color: "var(--color-green)",
                           fontSize: "0.65rem",
                           padding: "0.4rem 0.1rem",
                           cursor: "pointer",
@@ -2010,7 +2023,7 @@ export default function HomeCube() {
                             background: bugSubView === "list" ? "rgba(3,160,98,0.15)" : "none",
                             border: "1px solid rgba(3,160,98,0.3)",
                             borderRadius: "0.25rem",
-                            color: bugSubView === "list" ? "var(--color-green)" : "rgba(3,160,98,0.5)",
+                            color: "var(--color-green)",
                             fontSize: "0.72rem",
                             padding: "0.3rem 0.4rem",
                             cursor: "pointer",
@@ -2027,7 +2040,7 @@ export default function HomeCube() {
                             background: bugSubView === "report" ? "rgba(3,160,98,0.15)" : "none",
                             border: "1px solid rgba(3,160,98,0.3)",
                             borderRadius: "0.25rem",
-                            color: bugSubView === "report" ? "var(--color-green)" : "rgba(3,160,98,0.5)",
+                            color: "var(--color-green)",
                             fontSize: "0.72rem",
                             padding: "0.3rem 0.4rem",
                             cursor: "pointer",
@@ -2117,9 +2130,9 @@ export default function HomeCube() {
                         /* Bug list */
                         <div>
                           {loadingBugs ? (
-                            <div style={{ padding: "1rem", color: "rgba(3,160,98,0.5)", fontSize: "0.8rem", textAlign: "center" }}>{tr.loadingInfo}</div>
+                            <div style={{ padding: "1rem", color: "var(--color-green)", fontSize: "0.8rem", textAlign: "center" }}>{tr.loadingInfo}</div>
                           ) : reportedBugs.length === 0 ? (
-                            <div style={{ padding: "1rem", color: "rgba(3,160,98,0.4)", fontSize: "0.8rem", textAlign: "center" }}>{tr.noBugsReported}</div>
+                            <div style={{ padding: "1rem", color: "var(--color-green)", fontSize: "0.8rem", textAlign: "center" }}>{tr.noBugsReported}</div>
                           ) : (
                             reportedBugs.map((bug) => (
                               <div
@@ -2135,7 +2148,7 @@ export default function HomeCube() {
                                 <div style={{ color: "var(--color-green)", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.15rem", wordBreak: "break-word", textDecoration: "underline", textDecorationThickness: "2px" }}>
                                   {bug.title}
                                 </div>
-                                <div style={{ color: "var(--color-green)", fontSize: "0.7rem", marginBottom: "0.15rem", opacity: 0.7 }}>
+                                <div style={{ color: "var(--color-green)", fontSize: "0.7rem", marginBottom: "0.15rem" }}>
                                   {bug.category}
                                 </div>
                                 <div style={{ color: "var(--color-green)", fontSize: "0.8rem", wordBreak: "break-word" }}>
@@ -2148,13 +2161,13 @@ export default function HomeCube() {
                       )}
                     </>
                   ) : loadingInfoItems ? (
-                    <div style={{ padding: "1rem", color: "rgba(3,160,98,0.5)", fontSize: "0.8rem", textAlign: "center" }}>{tr.loadingInfo}</div>
+                    <div style={{ padding: "1rem", color: "var(--color-green)", fontSize: "0.8rem", textAlign: "center" }}>{tr.loadingInfo}</div>
                   ) : infoItems.length === 0 ? (
-                    <div style={{ padding: "1rem", color: "rgba(3,160,98,0.4)", fontSize: "0.8rem", textAlign: "center" }}>{tr.noInfoEntries}</div>
+                    <div style={{ padding: "1rem", color: "var(--color-green)", fontSize: "0.8rem", textAlign: "center" }}>{tr.noInfoEntries}</div>
                   ) : (
                     infoItems.map((item) => (
                       <div
-                        key={item.info_id}
+                        key={item.heading_cube}
                         onClick={() => setSelectedInfo(item)}
                         style={{
                           padding: "0.55rem 1.25rem",
@@ -2170,7 +2183,10 @@ export default function HomeCube() {
                         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
                           {item.heading_cube}
                         </span>
-                        <span style={{ color: "rgba(3,160,98,0.4)", fontSize: "0.75rem", marginLeft: "0.5rem" }}>›</span>
+                        <span style={{ color: "var(--color-green)", fontSize: "0.75rem", marginLeft: "0.5rem", display: "flex", alignItems: "center", gap: "0.4rem", flexShrink: 0 }}>
+                          {item.created_at && new Date(item.created_at).toLocaleDateString([], { day: "2-digit", month: "2-digit", year: "numeric" })}
+                          ›
+                        </span>
                       </div>
                     ))
                   )}

@@ -24,19 +24,32 @@ router.get("/", async (req: Request, res: Response) => {
   }
 
   try {
-    const rows = await query<{
-      info_id: number;
+    const resultSets = await query("CALL infos_entries()", []);
+    const allRows = resultSets[0] as {
       heading_cube: string;
+      category: string;
+      language_code: string;
       text_description: string;
-      display_order: number;
-    }>(
-      `SELECT info_id, heading_cube, text_description, display_order
-       FROM cubcha_v1.infos
-       WHERE category = ? AND language_code = ?
-       ORDER BY display_order ASC`,
-      [category as string, language_code as string]
+      created_at: string;
+    }[];
+
+    const filtered = allRows.filter(
+      (r) => r.category === (category as string) && r.language_code === (language_code as string)
     );
-    res.json({ success: true, count: rows.length, data: rows });
+
+    if (category === "manual") {
+      const grouped: Record<string, { heading_cube: string; descriptions: string[] }> = {};
+      for (const row of filtered) {
+        if (!grouped[row.heading_cube]) {
+          grouped[row.heading_cube] = { heading_cube: row.heading_cube, descriptions: [] };
+        }
+        grouped[row.heading_cube].descriptions.push(row.text_description);
+      }
+      const data = Object.values(grouped);
+      res.json({ success: true, count: data.length, data });
+    } else {
+      res.json({ success: true, count: filtered.length, data: filtered });
+    }
   } catch (err) {
     res.status(500).json({ success: false, error: (err as Error).message });
   }
@@ -45,21 +58,15 @@ router.get("/", async (req: Request, res: Response) => {
 // GET /infos/reported-bugs — show all user-submitted bug reports
 router.get("/reported-bugs", async (_req: Request, res: Response) => {
   try {
-    const rows = await query<{
+    const resultSets = await query("CALL infos_reported_bugs_list()", []);
+    const rows = resultSets[0] as {
       bug_id: number;
       title: string;
       category: string;
       bug_description: string;
       created_at: string;
       display_name: string;
-    }>(
-      `SELECT rb.bug_id, rb.title, rb.category, rb.bug_description, rb.created_at, u.display_name
-       FROM cubcha_v1.report_bug rb
-       JOIN cubcha_v1.user_main_details u ON u.user_id = rb.user_id
-       ORDER BY rb.created_at DESC
-       LIMIT 100`,
-      []
-    );
+    }[];
     res.json({ success: true, count: rows.length, data: rows });
   } catch (err) {
     res.status(500).json({ success: false, error: (err as Error).message });
@@ -95,12 +102,13 @@ router.post("/report-bug", async (req: Request, res: Response) => {
   }
 
   try {
-    await query(
-      "INSERT INTO cubcha_v1.report_bug (user_id, title, category, bug_description) VALUES (?, ?, ?, ?)",
-      [userId, title.trim(), category, description.trim()]
-    );
+    await query("CALL infos_submit_bug(?, ?, ?, ?)", [userId, title.trim(), description.trim(), category]);
     res.json({ success: true });
-  } catch (err) {
+  } catch (err: any) {
+    if (err.sqlState === "45000") {
+      res.status(409).json({ success: false, error: "Bug report already exists" });
+      return;
+    }
     res.status(500).json({ success: false, error: (err as Error).message });
   }
 });
