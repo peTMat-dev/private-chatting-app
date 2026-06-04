@@ -1,5 +1,0 @@
-dn: cn=chat_groups,ou=groups,dc=contaboserver,dc=net
-objectClass: groupOfNames
-cn: chat_groups
-description: Chat Application User Group
-member: cn=admin,dc=contaboserver,dc=net
