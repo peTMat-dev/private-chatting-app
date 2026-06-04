@@ -356,4 +356,59 @@ router.get("/groups", async (req: Request, res: Response) => {
   }
 });
 
+// POST /contacts/groups/init - Phase 1: create group + auto-assign ungrouped contacts
+router.post("/groups/init", async (req: Request, res: Response) => {
+  const { groupName } = req.body;
+  const { userId } = req.user;
+
+  if (!groupName || typeof groupName !== "string" || !groupName.trim()) {
+    return res.status(400).json({ success: false, error: "groupName is required" });
+  }
+
+  try {
+    const rows = await query<{ group_id: number }>(
+      "CALL contact_2create_group_p1(?, ?)",
+      [userId, groupName.trim().slice(0, 32)]
+    );
+    const resultRows = Array.isArray(rows[0]) ? rows[0] : rows;
+    const groupId = (resultRows as { group_id: number }[])[0]?.group_id;
+    if (!groupId) {
+      return res.status(500).json({ success: false, error: "Failed to create group" });
+    }
+    res.json({ success: true, data: { groupId } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
+// POST /contacts/groups/:id/members - Phase 2: add selected contacts as group members
+router.post("/groups/:id/members", async (req: Request, res: Response) => {
+  const groupId = parseInt(req.params.id as string, 10);
+  const { memberIds } = req.body;
+  const { userId } = req.user;
+
+  if (!groupId || isNaN(groupId)) {
+    return res.status(400).json({ success: false, error: "Valid groupId is required" });
+  }
+  if (!Array.isArray(memberIds) || memberIds.length === 0) {
+    return res.status(400).json({ success: false, error: "memberIds must be a non-empty array" });
+  }
+  if (!memberIds.every((id) => Number.isInteger(id) && id > 0)) {
+    return res.status(400).json({ success: false, error: "All memberIds must be positive integers" });
+  }
+
+  const memberIdsStr = memberIds.join(",");
+
+  try {
+    await query("CALL contact_2create_group_p2(?, ?, ?)", [groupId, userId, memberIdsStr]);
+    res.json({ success: true, message: "Members added to group" });
+  } catch (error) {
+    const msg = (error as Error).message;
+    if (msg.includes("Group not found or not owned by user")) {
+      return res.status(403).json({ success: false, error: "Group not found or not owned by user" });
+    }
+    res.status(500).json({ success: false, error: msg });
+  }
+});
+
 export default router;

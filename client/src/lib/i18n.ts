@@ -84,6 +84,11 @@ export type Translations = {
   contactListGroups: string;
   noGroupsYet: string;
   removeGroup: string;
+  contactCreateGroup: string;
+  groupName: string;
+  selectGroupMembers: string;
+  noContactsForGroup: string;
+  groupNameRequired: string;
   whoseContactAmI: string;
   chatSoon: string;
   requests: string;
@@ -223,6 +228,11 @@ const translations: Record<LangCode, Translations> = {
     contactListGroups: "Contact List Group",
     noGroupsYet: "No groups yet",
     removeGroup: "Remove group",
+    contactCreateGroup: "Contact List - Create Group",
+    groupName: "Group name",
+    selectGroupMembers: "Select members",
+    noContactsForGroup: "No contacts available",
+    groupNameRequired: "Group name is required",
     whoseContactAmI: "Whose contact am I?",
     chatSoon: "Chat (coming soon)",
     requests: "Requests",
@@ -350,6 +360,11 @@ const translations: Record<LangCode, Translations> = {
     contactListGroups: "Grupo de lista de contactos",
     noGroupsYet: "Aún no hay grupos",
     removeGroup: "Eliminar grupo",
+    contactCreateGroup: "Lista de contactos - Crear grupo",
+    groupName: "Nombre del grupo",
+    selectGroupMembers: "Seleccionar miembros",
+    noContactsForGroup: "No hay contactos disponibles",
+    groupNameRequired: "Se requiere nombre del grupo",
     whoseContactAmI: "¿De quién soy contacto?",
     chatSoon: "Chat (próximamente)",
     requests: "Solicitudes",
@@ -477,6 +492,11 @@ const translations: Record<LangCode, Translations> = {
     contactListGroups: "Groupe de liste de contacts",
     noGroupsYet: "Aucun groupe pour l'instant",
     removeGroup: "Supprimer le groupe",
+    contactCreateGroup: "Liste de contacts - Créer un groupe",
+    groupName: "Nom du groupe",
+    selectGroupMembers: "Sélectionner les membres",
+    noContactsForGroup: "Aucun contact disponible",
+    groupNameRequired: "Le nom du groupe est requis",
     whoseContactAmI: "Dont je suis le contact ?",
     chatSoon: "Chat (bientôt disponible)",    requests: "Demandes",
     incomingRequests: "Reçues",
@@ -602,6 +622,11 @@ const translations: Record<LangCode, Translations> = {
     contactListGroups: "Kontaktlistengruppe",
     noGroupsYet: "Noch keine Gruppen",
     removeGroup: "Gruppe entfernen",
+    contactCreateGroup: "Kontaktliste - Gruppe erstellen",
+    groupName: "Gruppenname",
+    selectGroupMembers: "Mitglieder auswählen",
+    noContactsForGroup: "Keine Kontakte verfügbar",
+    groupNameRequired: "Gruppenname ist erforderlich",
     whoseContactAmI: "Wessen Kontakt bin ich?",
     chatSoon: "Chat (demnächst)",
     requests: "Anfragen",
@@ -729,6 +754,11 @@ const translations: Record<LangCode, Translations> = {
     contactListGroups: "Skupina zoznamu kontaktov",
     noGroupsYet: "Zatiaľ žiadne skupiny",
     removeGroup: "Odstrániť skupinu",
+    contactCreateGroup: "Zoznam kontaktov - Vytvoriť skupinu",
+    groupName: "Názov skupiny",
+    selectGroupMembers: "Vybrať členov",
+    noContactsForGroup: "Žiadne kontakty k dispozícii",
+    groupNameRequired: "Názov skupiny je povinný",
     whoseContactAmI: "Čí kontakt som?",
     chatSoon: "Chat (čoskoro)",
     requests: "Žiadosti",
@@ -856,6 +886,11 @@ const translations: Record<LangCode, Translations> = {
     contactListGroups: "Skupina seznamu kontaktů",
     noGroupsYet: "Zatím žádné skupiny",
     removeGroup: "Odebrat skupinu",
+    contactCreateGroup: "Seznam kontaktů - Vytvořit skupinu",
+    groupName: "Název skupiny",
+    selectGroupMembers: "Vybrat členy",
+    noContactsForGroup: "Žádné kontakty k dispozici",
+    groupNameRequired: "Název skupiny je povinný",
     whoseContactAmI: "Čí kontakt jsem?",
     chatSoon: "Chat (brzy)",
     requests: "Žádosti",

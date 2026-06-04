@@ -177,6 +177,11 @@ export default function HomeCube() {
   const [removingGroupId, setRemovingGroupId] = useState<number | null>(null);
   const [groupChatTitleEdit, setGroupChatTitleEdit] = useState<{ groupId: number; value: string } | null>(null);
   const [groupChatCreating, setGroupChatCreating] = useState(false);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [createGroupName, setCreateGroupName] = useState("");
+  const [createGroupSelectedIds, setCreateGroupSelectedIds] = useState<number[]>([]);
+  const [creatingGroup, setCreatingGroup] = useState(false);
+  const [createGroupError, setCreateGroupError] = useState<string | null>(null);
 
   const [activeChatId, setActiveChatId] = useState<number | null>(null);
   const [activeChatName, setActiveChatName] = useState<string>("");
@@ -453,6 +458,58 @@ export default function HomeCube() {
       setContactGroupsError((err as Error).message);
     } finally {
       setLoadingContactGroups(false);
+    }
+  };
+
+  const handleCreateGroup = async () => {
+    if (!createGroupName.trim()) {
+      setCreateGroupError(tr.groupNameRequired);
+      return;
+    }
+    setCreatingGroup(true);
+    setCreateGroupError(null);
+    try {
+      // Phase 1: create group
+      const initRes = await fetch(buildApiUrl("/contacts/groups/init"), {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ groupName: createGroupName.trim().slice(0, 32) }),
+      });
+      const initData = (await initRes.json()) as { success: boolean; data?: { groupId: number }; error?: string };
+      if (!initRes.ok || !initData.success || !initData.data?.groupId) {
+        setCreateGroupError(initData.error || "Failed to create group");
+        return;
+      }
+      const groupId = initData.data.groupId;
+
+      // Phase 2: add selected members (if any)
+      if (createGroupSelectedIds.length > 0) {
+        const membersRes = await fetch(buildApiUrl(`/contacts/groups/${groupId}/members`), {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ memberIds: createGroupSelectedIds }),
+        });
+        const membersData = (await membersRes.json()) as { success: boolean; error?: string };
+        if (!membersRes.ok || !membersData.success) {
+          setCreateGroupError(membersData.error || "Failed to add members");
+          return;
+        }
+      }
+
+      // Reset form and refresh groups list
+      setCreateGroupName("");
+      setCreateGroupSelectedIds([]);
+      setShowCreateGroup(false);
+      fetchContactGroups();
+      if (!showContactListGroups) {
+        setShowContactListGroups(true);
+      }
+    } catch (err) {
+      setCreateGroupError((err as Error).message);
+    } finally {
+      setCreatingGroup(false);
     }
   };
 
@@ -1099,6 +1156,7 @@ export default function HomeCube() {
                         setPrivateRequestSent(false);
                         setShowContactList(false);
                         setShowContactListGroups(false);
+                        setShowCreateGroup(false);
                         setShowRequests(false);
                         setPublicUserSearch("");
                         if (!showPublicUserSelect && publicUsers.length === 0) {
@@ -1230,6 +1288,7 @@ export default function HomeCube() {
                         setPrivateRequestSent(false);
                         setShowPublicUserSelect(false);
                         setShowContactListGroups(false);
+                        setShowCreateGroup(false);
                         setShowRequests(false);
                       }}
                       style={{ width: "100%" }}
@@ -1284,6 +1343,7 @@ export default function HomeCube() {
                         setShowContactList(!showContactList);
                         setShowPublicUserSelect(false);
                         setShowContactListGroups(false);
+                        setShowCreateGroup(false);
                         setShowRequestInput(false);
                         setPrivateRequestSent(false);
                         setShowRequests(false);
@@ -1403,6 +1463,7 @@ export default function HomeCube() {
                         setShowRequestInput(false);
                         setPrivateRequestSent(false);
                         setShowRequests(false);
+                        setShowCreateGroup(false);
                         setShowWhoseContactAmI(false);
                         if (next) fetchContactGroups();
                       }}
@@ -1511,10 +1572,123 @@ export default function HomeCube() {
                     <button
                       className="add-contact-btn"
                       onClick={() => {
+                        const next = !showCreateGroup;
+                        setShowCreateGroup(next);
+                        setShowContactList(false);
+                        setShowContactListGroups(false);
+                        setShowPublicUserSelect(false);
+                        setShowRequestInput(false);
+                        setPrivateRequestSent(false);
+                        setShowRequests(false);
+                        setShowWhoseContactAmI(false);
+                        if (!next) {
+                          setCreateGroupName("");
+                          setCreateGroupSelectedIds([]);
+                          setCreateGroupError(null);
+                        } else if (userContacts.filter((c) => c.status_st).length === 0) {
+                          fetchUserContacts();
+                        }
+                      }}
+                      style={{ width: "100%" }}
+                    >
+                      ☰ {tr.contactCreateGroup}
+                    </button>
+                    {showCreateGroup && (
+                      <div style={{ marginTop: "0.75rem" }}>
+                        {createGroupError && (
+                          <div style={{ padding: "0.4rem 0.75rem", color: "rgba(255,80,80,0.85)", fontSize: "0.8rem", marginBottom: "0.5rem" }}>
+                            {createGroupError}
+                          </div>
+                        )}
+                        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginBottom: "0.5rem" }}>
+                          <input
+                            type="text"
+                            value={createGroupName}
+                            onChange={(e) => setCreateGroupName(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Enter" && createGroupName.trim()) handleCreateGroup(); }}
+                            maxLength={32}
+                            placeholder={tr.groupName}
+                            style={{
+                              flex: 1,
+                              minWidth: 0,
+                              fontSize: "0.75rem",
+                              padding: "0.35rem 0.4rem",
+                              background: "rgba(3,160,98,0.08)",
+                              border: "1px solid rgba(3,160,98,0.3)",
+                              borderRadius: "0.25rem",
+                              color: "var(--color-green)",
+                              outline: "none",
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="sort-btn"
+                            onClick={handleCreateGroup}
+                            disabled={creatingGroup || !createGroupName.trim()}
+                            style={{ fontSize: "0.75rem", padding: "0.35rem 0.5rem", color: "var(--color-green)" }}
+                          >
+                            {creatingGroup ? "…" : "✓"}
+                          </button>
+                        </div>
+                        {userContacts.filter((c) => c.status_st).length === 0 ? (
+                          <div style={{ padding: "0.4rem 0.75rem", color: "rgba(3,160,98,0.5)", fontSize: "0.8rem", textAlign: "center" }}>
+                            {tr.noContactsForGroup}
+                          </div>
+                        ) : (
+                          <div
+                            className="auth-input"
+                            style={{ padding: 0, maxHeight: "150px", overflowY: "auto" }}
+                          >
+                            <div style={{ padding: "0.3rem 0.75rem 0.25rem", fontSize: "0.7rem", color: "var(--color-green)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                              {tr.selectGroupMembers}
+                            </div>
+                            {userContacts
+                              .filter((c) => c.status_st)
+                              .map((c) => {
+                                const checked = createGroupSelectedIds.includes(c.id);
+                                return (
+                                  <div
+                                    key={c.id}
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      padding: "0.45rem 0.75rem",
+                                      borderBottom: "1px solid rgba(3,160,98,0.1)",
+                                      gap: "0.4rem",
+                                    }}
+                                  >
+                                    <span style={{ color: "var(--color-green)", fontSize: "0.85rem", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                      {c.displayName}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      className="contact-action-btn contact-action-btn--tick"
+                                      onClick={() =>
+                                        setCreateGroupSelectedIds((prev) =>
+                                          checked ? prev.filter((id) => id !== c.id) : [...prev, c.id]
+                                        )
+                                      }
+                                    >
+                                      {checked ? "☑" : "☐"}
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ marginBottom: "1rem" }}>
+                    <button
+                      className="add-contact-btn"
+                      onClick={() => {
                         const next = !showRequests;
                         setShowRequests(next);
                         setShowContactList(false);
                         setShowContactListGroups(false);
+                        setShowCreateGroup(false);
                         setShowPublicUserSelect(false);
                         setShowRequestInput(false);
                         setPrivateRequestSent(false);
@@ -1635,6 +1809,7 @@ export default function HomeCube() {
                         setShowWhoseContactAmI(next);
                         setShowContactList(false);
                         setShowContactListGroups(false);
+                        setShowCreateGroup(false);
                         setShowPublicUserSelect(false);
                         setShowRequestInput(false);
                         setPrivateRequestSent(false);
