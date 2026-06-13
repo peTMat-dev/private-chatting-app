@@ -151,7 +151,7 @@ router.get("/whose-contact-am-i", async (req: Request, res: Response) => {
   try {
 
     const rows = await query<{ user_id: number; display_name: string }>(
-      "CALL contact_whose_contact_am_I(?)",
+      "CALL contact_in_whose_group_contact_am_I(?)",
       [userId]
     );
 

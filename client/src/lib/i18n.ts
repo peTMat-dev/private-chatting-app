@@ -233,7 +233,7 @@ const translations: Record<LangCode, Translations> = {
     selectGroupMembers: "Select members",
     noContactsForGroup: "No contacts available",
     groupNameRequired: "Group name is required",
-    whoseContactAmI: "Whose contact am I?",
+    whoseContactAmI: "Which group am I in?",
     chatSoon: "Chat (coming soon)",
     requests: "Requests",
     incomingRequests: "Incoming",
