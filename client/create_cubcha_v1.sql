@@ -157,7 +157,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_conversations` (
     `conversation_id` INT UNSIGNED PRIMARY KEY,
     `max_participants` SMALLINT UNSIGNED DEFAULT NULL,
     `creator_user_id` SMALLINT UNSIGNED NOT NULL,
-    `created_at` DATETIME DEFAULT NULL,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `is_group` BOOLEAN DEFAULT FALSE,
     `title` VARCHAR(32) DEFAULT NULL,
     `group_id` INT UNSIGNED DEFAULT NULL,
@@ -173,7 +173,8 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_messages` (
     `sender_username` VARCHAR(32) NOT NULL, -- denormalized for fast display
     `sender_avatar_url` VARCHAR(255) DEFAULT NULL, -- denormalized for fast display
     `message_text` TEXT NOT NULL,
-    `archived_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `archived_at` DATETIME DEFAULT CURRENT_TIMESTAMP, -- to keep this column?
+    `sent_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`conversation_id`) REFERENCES `cubcha_v1`.`archived_conversations`(`conversation_id`),
     FOREIGN KEY (`sender_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)
     ,KEY `idx_archived_messages_conv_sent` (`conversation_id`, `archived_at`)
@@ -183,7 +184,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_messages` (
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_conversations_participants` (
     `conversation_id` INT UNSIGNED NOT NULL,
     `user_id` SMALLINT UNSIGNED NOT NULL,
-    `joined_at` DATETIME DEFAULT NULL,
+    `joined_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`conversation_id`, `user_id`),
     FOREIGN KEY (`conversation_id`) REFERENCES `cubcha_v1`.`archived_conversations`(`conversation_id`),
     FOREIGN KEY (`user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)
