@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`group_members` (
     FOREIGN KEY (`member_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Conversations table (with optional link to user_groups)
+-- Conversations table (with optional link to user_groups.)
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`conversations` (
     `conversation_id` INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     `max_participants` SMALLINT UNSIGNED DEFAULT NULL, -- value set in user_system table
