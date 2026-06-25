@@ -62,12 +62,11 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`contacts` (
     `contact_user_id` SMALLINT UNSIGNED NOT NULL COMMENT 'User who is the contact',
     `status_st` BOOLEAN DEFAULT TRUE COMMENT 'Contact status added/removed or closed account)',
     `added_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'When contact was added',
-    `c_group_id` INT UNSIGNED DEFAULT NULL COMMENT 'FK to user_groups.group_ug_id for contact grouping',
-    `c_group_name` VARCHAR(32) DEFAULT NULL COMMENT 'Denormalized group name for fast access, nullable if no group',
+    --`c_group_id` INT UNSIGNED DEFAULT NULL COMMENT 'FK to user_groups.group_ug_id for contact grouping',
     PRIMARY KEY (`owner_user_id`, `contact_user_id`),
     FOREIGN KEY (`owner_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
     FOREIGN KEY (`contact_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
-    FOREIGN KEY (`c_group_id`) REFERENCES `cubcha_v1`.`user_groups`(`group_ug_id`)
+    --FOREIGN KEY (`c_group_id`) REFERENCES `cubcha_v1`.`user_groups`(`group_ug_id`) REMOVED BOTH AS limits no. of groups to one per user
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Stores user-to-user contacts';
 
 -- to finish this table
@@ -122,8 +121,9 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`conversations` (
     `is_group` BOOLEAN DEFAULT FALSE,
     `title` VARCHAR(32) DEFAULT NULL,
     `group_id` INT UNSIGNED DEFAULT NULL,
+    `last_message_id` INT UNSIGNED DEFAULT NULL,
     FOREIGN KEY (`creator_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`),
-    FOREIGN KEY (`group_id`) REFERENCES `cubcha_v1`.`user_groups`(`group_ug_id`) -- not in live db yet
+    FOREIGN KEY (`group_id`) REFERENCES `cubcha_v1`.`user_groups`(`group_ug_id`)
     ,KEY `idx_conversations_creator` (`creator_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -157,7 +157,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_conversations` (
     `conversation_id` INT UNSIGNED PRIMARY KEY,
     `max_participants` SMALLINT UNSIGNED DEFAULT NULL,
     `creator_user_id` SMALLINT UNSIGNED NOT NULL,
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `created_at` DATETIME DEFAULT NOT NULL,
     `is_group` BOOLEAN DEFAULT FALSE,
     `title` VARCHAR(32) DEFAULT NULL,
     `group_id` INT UNSIGNED DEFAULT NULL,
@@ -174,7 +174,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_messages` (
     `sender_avatar_url` VARCHAR(255) DEFAULT NULL, -- denormalized for fast display
     `message_text` TEXT NOT NULL,
     `archived_at` DATETIME DEFAULT CURRENT_TIMESTAMP, -- to keep this column?
-    `sent_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `sent_at` DATETIME DEFAULT NOT NULL,
     FOREIGN KEY (`conversation_id`) REFERENCES `cubcha_v1`.`archived_conversations`(`conversation_id`),
     FOREIGN KEY (`sender_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)
     ,KEY `idx_archived_messages_conv_sent` (`conversation_id`, `archived_at`)
@@ -184,7 +184,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_messages` (
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_conversations_participants` (
     `conversation_id` INT UNSIGNED NOT NULL,
     `user_id` SMALLINT UNSIGNED NOT NULL,
-    `joined_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `joined_at` DATETIME DEFAULT NOT NULL,
     PRIMARY KEY (`conversation_id`, `user_id`),
     FOREIGN KEY (`conversation_id`) REFERENCES `cubcha_v1`.`archived_conversations`(`conversation_id`),
     FOREIGN KEY (`user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)
