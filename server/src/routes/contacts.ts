@@ -144,13 +144,13 @@ router.post("/request", async (req: Request, res: Response) => {
   res.json({ success: true });
 });
 
-// GET /contacts/whose-contact-am-i - Find users who have added the current user as a contact
+// GET /contacts/whose-contact-am-i - Get groups the current user is a member of (where owner is in contacts)
 router.get("/whose-contact-am-i", async (req: Request, res: Response) => {
   const { userId } = req.user;
 
   try {
 
-    const rows = await query<{ user_id: number; display_name: string }>(
+    const rows = await query<{ group_ug_id: number; group_name: string; owner_user_id: number; display_name: string }>(
       "CALL contact_in_whose_group_contact_am_I(?)",
       [userId]
     );
@@ -158,9 +158,11 @@ router.get("/whose-contact-am-i", async (req: Request, res: Response) => {
     // MySQL stored procedures return results in nested array
     const resultRows = Array.isArray(rows[0]) ? rows[0] : rows;
 
-    const data = resultRows.map((r: { user_id: number; display_name: string }) => ({
-      id: r.user_id,
-      displayName: r.display_name,
+    const data = resultRows.map((r: { group_ug_id: number; group_name: string; owner_user_id: number; display_name: string }) => ({
+      groupId: r.group_ug_id,
+      groupName: r.group_name,
+      ownerId: r.owner_user_id,
+      ownerDisplayName: r.display_name,
     }));
 
     res.json({ success: true, count: data.length, data });

@@ -41,7 +41,7 @@ const [removingPublicUserId, setRemovingPublicUserId] = useState<number | null>(
 const [addingPublicUserId, setAddingPublicUserId] = useState<number | null>(null);
 
 // Whose Contact Am I
-const [whoseContactAmI, setWhoseContactAmI] = useState<{ id: number; displayName: string }[]>([]);
+const [whoseContactAmI, setWhoseContactAmI] = useState<MemberGroup[]>([]);
 const [showWhoseContactAmI, setShowWhoseContactAmI] = useState(false);
 const [loadingWhoseContactAmI, setLoadingWhoseContactAmI] = useState(false);
 ```
@@ -61,6 +61,13 @@ type PublicUser = {
   id: number;
   displayName: string;
   isAlreadyContact: boolean;
+};
+
+type MemberGroup = {
+  groupId: number;
+  groupName: string;
+  ownerId: number;
+  ownerDisplayName: string;
 };
 ```
 

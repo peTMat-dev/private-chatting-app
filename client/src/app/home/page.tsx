@@ -51,6 +51,13 @@ type ContactRequest = {
   requestedAt: string;
 };
 
+type MemberGroup = {
+  groupId: number;
+  groupName: string;
+  ownerId: number;
+  ownerDisplayName: string;
+};
+
 type ContactGroup = {
   id: number;
   name: string;
@@ -160,7 +167,7 @@ export default function HomeCube() {
   const [removingContactId, setRemovingContactId] = useState<number | null>(null);
   const [removingPublicUserId, setRemovingPublicUserId] = useState<number | null>(null);
   const [addingPublicUserId, setAddingPublicUserId] = useState<number | null>(null);
-  const [whoseContactAmI, setWhoseContactAmI] = useState<{ id: number; displayName: string }[]>([]);
+  const [whoseContactAmI, setWhoseContactAmI] = useState<MemberGroup[]>([]);
   const [showWhoseContactAmI, setShowWhoseContactAmI] = useState(false);
   const [loadingWhoseContactAmI, setLoadingWhoseContactAmI] = useState(false);
   const [incomingRequests, setIncomingRequests] = useState<ContactRequest[]>([]);
@@ -519,7 +526,7 @@ export default function HomeCube() {
     try {
       const url = buildApiUrl("/contacts/whose-contact-am-i");
       const res = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } });
-      const data = (await res.json()) as { success: boolean; data?: { id: number; displayName: string }[]; error?: string };
+      const data = (await res.json()) as { success: boolean; data?: MemberGroup[]; error?: string };
       if (!res.ok || !data.success) {
         setAlertDialog({ show: true, title: "Error", message: data.error || "Unable to load" });
         return;
@@ -1835,17 +1842,26 @@ export default function HomeCube() {
                               —
                             </div>
                           ) : (
-                            whoseContactAmI.map((user) => (
+                            whoseContactAmI.map((group) => (
                               <div
-                                key={user.id}
+                                key={group.groupId}
                                 style={{
                                   padding: "0.5rem 0.75rem",
                                   color: "var(--color-green)",
                                   borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
                                   fontSize: "0.85rem",
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "flex-start",
+                                  gap: "0.5rem",
                                 }}
                               >
-                                {user.displayName}
+                                <div style={{ flex: 0, minWidth: "fit-content" }}>
+                                  {group.ownerDisplayName}
+                                </div>
+                                <div style={{ flex: 1, textAlign: "right", wordBreak: "break-word" }}>
+                                  {group.groupName}
+                                </div>
                               </div>
                             ))
                           )}
