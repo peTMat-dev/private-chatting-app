@@ -5,6 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { buildApiUrl, postJson } from "../lib/api";
 import { LANGUAGES, getLang, setLang, t, type LangCode } from "../lib/i18n";
 import { useCubeNavigation, type CubeFace } from "../lib/useCubeNavigation";
+import LoginFace from "./components/auth/LoginFace";
+import RegisterFace from "./components/auth/RegisterFace";
+import ResetPasswordFace from "./components/auth/ResetPasswordFace";
+import LanguageFace from "./components/auth/LanguageFace";
+import AuthLogoutFace from "./components/auth/LogoutFace";
+import AuthInfoFace, { type InfoItem, type ReportedBug, type InfoTab } from "./components/auth/InfoFace";
 
 type ApiResponse = {
 	success: boolean;
@@ -20,21 +26,7 @@ type ToastMessage = {
 	body: string;
 };
 
-type InfoItem = {
-	heading_cube: string;
-	text_description?: string;
-	descriptions?: string[];
-	created_at?: string;
-};
 
-type ReportedBug = {
-	bug_id: number;
-	title: string;
-	category: string;
-	bug_description: string;
-	created_at: string;
-	display_name: string;
-};
 
 const buildEmptyRegisterForm = () => ({
 	firstName: "",
@@ -84,7 +76,6 @@ export default function AuthScreen() {
 	const [showLangSelect, setShowLangSelect] = useState(false);
 
 	// Bottom face (Infos) state
-	type InfoTab = "update" | "manual" | "announcement" | "reported_bugs";
 	const [activeInfoTab, setActiveInfoTab] = useState<InfoTab>("update");
 	const [infoItems, setInfoItems] = useState<InfoItem[]>([]);
 	const [loadingInfoItems, setLoadingInfoItems] = useState(false);
@@ -374,570 +365,204 @@ export default function AuthScreen() {
 	};
 
 	return (
+
 		<div
+
 			className={`mobile-auth-screen ${fadeOut ? "fade-out" : ""}`}
+
 			tabIndex={0}
+
 			onKeyDown={handleKeyDown}
+
 				onTouchStart={handleTouchStart}
+
 				onTouchEnd={handleTouchEnd}
+
 			>
+
 				<div className="auth-cube-stage">
+
 				<div
+
 					className="auth-cube"
+
 					style={{
+
 						transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
+
 						transition: transitionEnabled ? undefined : "none",
+
 					}}
+
 				>
-					<section className="cube-face cube-face-front">
-						<section className="auth-stack">
-							<article className="auth-card cube-face-panel">
-								<div className="cube-face-content">
-									<div className="hero-in-card">
-										<div className="status-pill">
-											<span>{tr.mobileAuth}</span>
-										</div>
-										<h1 className="cubcha-heading">CubCha v1.0</h1>
-										<p className="cubcha-subtext">{tr.appSubtext}</p>
-									</div>
-									<h2 className="sr-only">{tr.signIn}</h2>
-								<form onSubmit={handleLogin} className="d-flex flex-column gap-3">
-								<div>
-										<label htmlFor="login-username" className="auth-label">
-										{tr.username}
-									</label>
-									<input
-										id="login-username"
-										className="auth-input"
-										value={loginForm.username}
-										onChange={(event) =>
-											setLoginForm((prev) => ({ ...prev, username: event.target.value }))
-										}
-										placeholder={tr.enterLdapId}
-										/>
-									</div>
-									<div>
-										<label htmlFor="login-password" className="auth-label">
-										{tr.password}
-										</label>
-										<input
-											id="login-password"
-											type="password"
-											className="auth-input"
-											value={loginForm.password}
-											onChange={(event) =>
-												setLoginForm((prev) => ({ ...prev, password: event.target.value }))
-											}
-											placeholder="••••••••"
-										/>
-									</div>
-									<button type="submit" className="auth-btn" disabled={loginDisabled}>
-										{loading.login ? tr.authenticating : tr.signIn}
-									</button>
-									</form>
-									<div className="auth-links">
-									<button type="button" onClick={() => setFace("left")}>
-									{tr.forgotPassword}
-								</button>
-								<button type="button" onClick={() => setFace("right")}>
-									{tr.signUp}
-									</button>
-								</div>
-								</div>							{loginSuccess && (
-								<div className="auth-success" role="alert" aria-live="polite">
-									<strong>{tr.loginSuccess}</strong>
-									<p>{tr.redirectingHome}</p>
-								</div>						)}							{loginError && (
-							<div className="auth-error" role="alert" aria-live="polite">
-								<strong>{tr.loginFailed}</strong>
-								<p>{loginError}</p>
-							</div>							)}							</article>
-						</section>
-					</section>
 
-					<section className="cube-face cube-face-right">
-						<article className="register-card cube-face-panel" id="register-card">
-							<div className="cube-face-content">
-								<div className="cube-face-header">
-									<h3>{tr.register}</h3>
-									<button
-										className="ghost-btn"
-										type="button"
-													onClick={() => setFace("front")}
-									>
-										{tr.backToLogin}
-									</button>
-								</div>
-								<form onSubmit={handleRegister} className="d-flex flex-column gap-2">
+					<LoginFace
 
-								{registerErrors && registerErrors.length > 0 && (
-									<div className="auth-alert" role="alert" aria-live="polite">
-										<ul className="mb-0">
-											{registerErrors.map((e, i) => (
-												<li key={i}>{e}</li>
-											))}
-										</ul>
-									</div>
-								)}
-								<div className="row g-2">
-									<div className="col-12 col-sm-6">
-										<label htmlFor="reg-first" className="auth-label">
-										{tr.firstName}
-										</label>
-										<input
-											id="reg-first"
-											className="auth-input"
-											value={registerForm.firstName}
-											onChange={(event) =>
-												setRegisterForm((prev) => ({ ...prev, firstName: event.target.value }))
-											}
-										/>
-									</div>
-									<div className="col-12 col-sm-6">
-										<label htmlFor="reg-last" className="auth-label">
-										{tr.lastName}
-										</label>
-										<input
-											id="reg-last"
-											className="auth-input"
-											value={registerForm.lastName}
-											onChange={(event) =>
-												setRegisterForm((prev) => ({ ...prev, lastName: event.target.value }))
-											}
-										/>
-									</div>
-								</div>
+					loginForm={loginForm}
 
-								<div className="row g-2">
-									<div className="col-12 col-sm-6">
-										<label htmlFor="reg-display" className="auth-label">
-										{tr.displayName}
-									</label>
-									<input
-										id="reg-display"
-										className="auth-input"
-										value={registerForm.displayName}
-										onChange={(event) =>
-											setRegisterForm((prev) => ({ ...prev, displayName: event.target.value }))
-										}
-										placeholder={tr.visibleInChat}
-										/>
-									</div>
-									<div className="col-12 col-sm-6">
-										<label htmlFor="reg-username" className="auth-label">
-										{tr.username}
-									</label>
-									<input
-										id="reg-username"
-										className="auth-input"
-										value={registerForm.username}
-										onChange={(event) =>
-											setRegisterForm((prev) => ({ ...prev, username: event.target.value }))
-										}
-										placeholder={tr.ldapUid}
-										/>
-									</div>
-								</div>
+					setLoginForm={setLoginForm}
 
-								<div>
-									<label htmlFor="reg-email" className="auth-label">
-									{tr.email}
-								</label>
-								<input
-									id="reg-email"
-									className="auth-input"
-									type="email"
-									value={registerForm.email}
-									onChange={(event) =>
-										setRegisterForm((prev) => ({ ...prev, email: event.target.value }))
-									}
-									placeholder={tr.emailForNotifications}
-									/>
-								</div>
+					loginDisabled={loginDisabled}
 
-								<div className="row g-2">
-									<div className="col-12 col-sm-6">
-										<label htmlFor="reg-pass" className="auth-label">
-										{tr.password}
-										</label>
-										<input
-											id="reg-pass"
-											type="password"
-											className="auth-input"
-											value={registerForm.password}
-											onChange={(event) =>
-												setRegisterForm((prev) => ({ ...prev, password: event.target.value }))
-											}
-										/>
-									</div>
-									<div className="col-12 col-sm-6">
-										<label htmlFor="reg-confirm" className="auth-label">
-										{tr.confirm}
-										</label>
-										<input
-											id="reg-confirm"
-											type="password"
-											className="auth-input"
-											value={registerForm.confirmPassword}
-											onChange={(event) =>
-												setRegisterForm((prev) => ({ ...prev, confirmPassword: event.target.value }))
-											}
-										/>
-									</div>
-								</div>
+					loadingLogin={loading.login}
 
-								<button type="submit" className="auth-btn" disabled={registerDisabled}>
-									{loading.register ? tr.submitting : tr.submitRequest}
-								</button>
-							</form>
-							</div>						{registrationSuccess && (
-							<div className="auth-success" role="alert" aria-live="polite">
-								<strong>{tr.registrationSuccess}</strong>
-								<p>{tr.redirectingLogin}</p>
-							</div>
-						)}						</article>
-					</section>
+					loginSuccess={loginSuccess}
 
-					<section className="cube-face cube-face-left">
-						<article className="auth-card cube-face-panel">
-							<div className="cube-face-content">
-								<div className="cube-face-header">
-									<h2>{tr.resetPassword}</h2>
-									<button
-										className="ghost-btn"
-										type="button"
-													onClick={() => setFace("front")}
-									>
-										{tr.backToLogin}
-									</button>
-								</div>
-								{resetToken ? (
-									<>
-										<p className="hero-copy">{tr.enterNewPassword}</p>
-										<form onSubmit={handleTokenReset} className="d-flex flex-column gap-3 mt-2">
-										<div>
-											<label htmlFor="reset-pass" className="auth-label">
-												{tr.newPassword}
-											</label>
-											<input
-												id="reset-pass"
-												type="password"
-												className="auth-input"
-												value={resetPassword}
-												onChange={(event) => setResetPassword(event.target.value)}
-												placeholder="••••••••"
-											/>
-										</div>
-										<div>
-											<label htmlFor="reset-confirm" className="auth-label">
-												{tr.confirmPassword}
-											</label>
-											<input
-												id="reset-confirm"
-												type="password"
-												className="auth-input"
-												value={resetConfirmPassword}
-												onChange={(event) => setResetConfirmPassword(event.target.value)}
-												placeholder="••••••••"
-											/>
-										</div>
-											<button type="submit" className="auth-btn" disabled={resetDisabled}>
-												{loading.forgot ? tr.updating : tr.resetPassword}
-										</button>
-										</form>
-									</>
-								) : (
-									<>
-										<p className="hero-copy">{tr.sendResetLinkPrompt}</p>
-										<form onSubmit={handleForgot} className="d-flex flex-column gap-3 mt-2">
-										<div>
-											<label htmlFor="forgot-email" className="auth-label">
-												{tr.email}
-											</label>
-											<input
-												id="forgot-email"
-												type="email"
-												className="auth-input"
-												value={forgotEmail}
-												onChange={(event) => setForgotEmail(event.target.value)}
-												placeholder="EMAIL@EXAMPLE.COM"
-											/>
-										</div>
-											<button type="submit" className="auth-btn" disabled={forgotDisabled}>
-												{loading.forgot ? tr.sending : tr.sendResetLink}
-										</button>
-										</form>
-									</>
-								)}
-							</div>
-						</article>
-					</section>
+					loginError={loginError}
 
-					<section className="cube-face cube-face-back">
-						<article className="auth-card cube-face-panel">
-							<div className="cube-face-content">
-								<div className="cube-face-header">
-									<h2>{tr.changeLanguage}</h2>
-									<button
-										className="ghost-btn"
-										type="button"
-												onClick={() => setFace("front")}
-									>
-										{tr.backToLogin}
-									</button>
-								</div>
-								<div>
-									<button
-										type="button"
-										className="auth-input"
-										onClick={() => setShowLangSelect(!showLangSelect)}
-										style={{ cursor: "pointer", maxWidth: "180px", textAlign: "left" }}
-									>
-										{LANGUAGES.find((l) => l.code === lang)?.label}
-									</button>
-									{showLangSelect && (
-										<div
-											className="auth-input"
-											style={{
-												maxWidth: "180px",
-												marginTop: "0.5rem",
-												maxHeight: "220px",
-												overflowY: "auto",
-												padding: "0",
-											}}
-										>
-											{LANGUAGES.map((l) => (
-												<div
-													key={l.code}
-													onClick={() => handleLangChange(l.code)}
-													style={{
-														padding: "0.5rem 0.75rem",
-														cursor: "pointer",
-														backgroundColor: lang === l.code ? "rgba(3, 160, 98, 0.15)" : "transparent",
-														color: lang === l.code ? "#00FFFF" : "var(--color-green)",
-														borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
-														transition: "background-color 0.2s",
-													}}
-													onMouseEnter={(e) => { if (lang !== l.code) e.currentTarget.style.backgroundColor = "rgba(3, 160, 98, 0.08)"; }}
-													onMouseLeave={(e) => { if (lang !== l.code) e.currentTarget.style.backgroundColor = "transparent"; }}
-												>
-													{l.label}{lang === l.code ? " ✓" : ""}
-												</div>
-											))}
-										</div>
-									)}
-								</div>
-							</div>
-						</article>
-					</section>
+					handleLogin={handleLogin}
 
-					<section className="cube-face cube-face-top">
-						<article className="auth-card cube-face-panel">
-							<h2>{tr.logout}</h2>
-							<p className="hero-copy">
-								{tr.logoutPrompt}
-							</p>
-							<button
-								className="auth-btn"
-								type="button"
-								onClick={handleLogout}
-							>
-								{tr.logOut}
-							</button>
-							<button
-								className="ghost-btn mt-3"
-								type="button"
-												onClick={() => setFace("front")}
-							>
-								{tr.cancel}
-							</button>
-						</article>
-					</section>
+					setFace={setFace}
+
+					tr={tr}
+
+				/>
+
+
+
+					<RegisterFace
+
+					registerForm={registerForm}
+
+					setRegisterForm={setRegisterForm}
+
+					registerDisabled={registerDisabled}
+
+					loadingRegister={loading.register}
+
+					registerErrors={registerErrors}
+
+					registrationSuccess={registrationSuccess}
+
+					handleRegister={handleRegister}
+
+					setFace={setFace}
+
+					tr={tr}
+
+				/>
+
+
+
+					<ResetPasswordFace
+
+					resetToken={resetToken}
+
+					resetPassword={resetPassword}
+
+					setResetPassword={setResetPassword}
+
+					resetConfirmPassword={resetConfirmPassword}
+
+					setResetConfirmPassword={setResetConfirmPassword}
+
+					forgotEmail={forgotEmail}
+
+					setForgotEmail={setForgotEmail}
+
+					loadingForgot={loading.forgot}
+
+					resetDisabled={resetDisabled}
+
+					forgotDisabled={forgotDisabled}
+
+					handleForgot={handleForgot}
+
+					handleTokenReset={handleTokenReset}
+
+					setFace={setFace}
+
+					tr={tr}
+
+				/>
+
+
+
+					<LanguageFace
+
+					lang={lang}
+
+					showLangSelect={showLangSelect}
+
+					setShowLangSelect={setShowLangSelect}
+
+					handleLangChange={handleLangChange}
+
+					setFace={setFace}
+
+					tr={tr}
+
+				/>
+
+
+
+					<AuthLogoutFace
+
+					handleLogout={handleLogout}
+
+					setFace={setFace}
+
+					tr={tr}
+
+				/>
+
+
 
 					{/* Bottom: Infos (visible before login for potential new users) */}
-					<section className="cube-face cube-face-bottom">
-						<article className="auth-card cube-face-panel">
-							<div className="cube-face-content" style={{ position: "relative" }}>
 
-								{/* Info overlay modal */}
-								{selectedInfo && (
-									<div
-										onClick={(e) => e.stopPropagation()}
-										onTouchStart={(e) => e.stopPropagation()}
-										onTouchEnd={(e) => e.stopPropagation()}
-										style={{
-											position: "absolute",
-											inset: 0,
-											zIndex: 10,
-											background: "var(--color-panel)",
-											borderRadius: "inherit",
-											display: "flex",
-											flexDirection: "column",
-											padding: "1rem 1.25rem",
-											overflowY: "auto",
-										}}
-									>
-										<div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: selectedInfo.created_at ? "0.25rem" : "0.75rem" }}>
-											<h3 style={{ flex: 1, color: "var(--color-green)", margin: 0, fontSize: "0.95rem" }}>
-												{selectedInfo.heading_cube}
-											</h3>
-											<button
-												type="button"
-												className="ghost-btn"
-												onClick={() => setSelectedInfo(null)}
-												style={{ padding: "0.2rem 0.5rem", minWidth: 0, fontSize: "0.85rem" }}
-											>
-												✕
-											</button>
-										</div>
-										{selectedInfo.created_at && (
-											<p style={{ color: "var(--color-green)", fontSize: "0.75rem", margin: "0 0 0.75rem" }}>
-												{new Date(selectedInfo.created_at).toLocaleDateString([], { day: "2-digit", month: "2-digit", year: "numeric" })}
-											</p>
-										)}
-										{selectedInfo.descriptions ? (
-											<ul style={{ color: "var(--color-green)", fontSize: "0.85rem", lineHeight: 1.55, margin: 0, paddingLeft: "1.2rem" }}>
-												{selectedInfo.descriptions.map((d, i) => (
-													<li key={i} style={{ marginBottom: "0.4rem" }}>{d}</li>
-												))}
-											</ul>
-										) : (
-											<p style={{ color: "var(--color-green)", fontSize: "0.85rem", lineHeight: 1.55, margin: 0 }}>
-												{selectedInfo.text_description}
-											</p>
-										)}
-									</div>
-								)}
+					<AuthInfoFace
 
-								<div className="cube-face-header">
-									<h2>{tr.infoFace}</h2>
-								</div>
+						activeInfoTab={activeInfoTab}
 
-								{/* Tab bar */}
-								<div style={{ display: "flex", borderBottom: "1px solid rgba(3,160,98,0.2)", padding: "0 0.5rem" }}>
-									{(["update", "manual", "announcement", "reported_bugs"] as const).map((tab) => {
-										const labels: Record<string, string> = {
-											update: tr.whatsNew,
-											manual: tr.manual,
-											announcement: tr.announcements,
-											reported_bugs: tr.reportedBugs,
-										};
-										return (
-											<button
-												key={tab}
-												type="button"
-												onClick={() => {
-													setActiveInfoTab(tab);
-													setSelectedInfo(null);
-												}}
-												style={{
-													flex: 1,
-													background: "none",
-													border: "none",
-													borderBottom: activeInfoTab === tab ? "2px solid var(--color-green)" : "2px solid transparent",
-													color: "var(--color-green)",
-													fontSize: "0.65rem",
-													padding: "0.4rem 0.1rem",
-													cursor: "pointer",
-													fontFamily: "inherit",
-													textTransform: "uppercase",
-													letterSpacing: "0.03em",
-													whiteSpace: "nowrap",
-													overflow: "hidden",
-													textOverflow: "ellipsis",
-													transition: "color 0.2s",
-												}}
-											>
-												{labels[tab]}
-											</button>
-										);
-									})}
-								</div>
+						setActiveInfoTab={setActiveInfoTab}
 
-								{/* Tab content */}
-								<div style={{ flex: 1, overflowY: "auto", padding: "0.5rem 0" }}>
-						{activeInfoTab === "reported_bugs" ? (
-							loadingBugs ? (
-								<div style={{ padding: "1rem", color: "var(--color-green)", fontSize: "0.8rem", textAlign: "center" }}>{tr.loadingInfo}</div>
-							) : reportedBugs.length === 0 ? (
-								<div style={{ padding: "1rem", color: "var(--color-green)", fontSize: "0.8rem", textAlign: "center" }}>{tr.noBugsReported}</div>
-							) : (
-								reportedBugs.map((bug) => (
-									<div
-										key={bug.bug_id}
-										style={{
-											padding: "0.5rem 1.25rem",
-											borderBottom: "1px solid rgba(3,160,98,0.1)",
-										}}
-									>
-										<div style={{ fontSize: "0.75rem", color: "var(--color-green)", marginBottom: "0.2rem" }}>
-											{tr.anonymized} · {new Date(bug.created_at).toLocaleDateString([], { day: "2-digit", month: "2-digit", year: "numeric" })}
-										</div>
-										<div style={{ color: "var(--color-green)", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.15rem", wordBreak: "break-word", textDecoration: "underline", textDecorationThickness: "2px" }}>
-											{bug.title}
-										</div>
-										<div style={{ color: "var(--color-green)", fontSize: "0.7rem", marginBottom: "0.15rem" }}>
-											{bug.category}
-										</div>
-										<div style={{ color: "var(--color-green)", fontSize: "0.8rem", wordBreak: "break-word" }}>
-											{bug.bug_description}
-										</div>
-									</div>
-								))
-							)
-						) : loadingInfoItems ? (									<div style={{ padding: "1rem", color: "var(--color-green)", fontSize: "0.8rem", textAlign: "center" }}>{tr.loadingInfo}</div>
-								) : infoItems.length === 0 ? (										<div style={{ padding: "1rem", color: "var(--color-green)", fontSize: "0.8rem", textAlign: "center" }}>{tr.noInfoEntries}</div>
-									) : (
-										infoItems.map((item) => (
-											<div
-												key={item.heading_cube}
-												onClick={() => setSelectedInfo(item)}
-												style={{
-													padding: "0.55rem 1.25rem",
-													borderBottom: "1px solid rgba(3,160,98,0.1)",
-													cursor: "pointer",
-													color: "var(--color-green)",
-													fontSize: "0.85rem",
-													display: "flex",
-													alignItems: "center",
-													justifyContent: "space-between",
-												}}
-											>
-												<span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
-													{item.heading_cube}
-												</span>
-												<span style={{ color: "var(--color-green)", fontSize: "0.75rem", marginLeft: "0.5rem", display: "flex", alignItems: "center", gap: "0.4rem", flexShrink: 0 }}>
-													{item.created_at && new Date(item.created_at).toLocaleDateString([], { day: "2-digit", month: "2-digit", year: "numeric" })}
-													›
-												</span>
-											</div>
-										))
-									)}
-								</div>
+						infoItems={infoItems}
 
-								<button
-									className="ghost-btn"
-									type="button"
-									onClick={goDown}
-									style={{ margin: "0.5rem 1.25rem", fontSize: "0.8rem", padding: "0.35rem 0.6rem" }}
-								>
-									{tr.back}
-								</button>
-							</div>
-						</article>
-					</section>
+						loadingInfoItems={loadingInfoItems}
+
+						selectedInfo={selectedInfo}
+
+						setSelectedInfo={setSelectedInfo}
+
+						reportedBugs={reportedBugs}
+
+						loadingBugs={loadingBugs}
+
+						lang={lang}
+
+						goDown={goDown}
+
+						tr={tr}
+
+					/>				
+
 				</div>
+
 			</div>
 
+
+
 			{toast && (
+
 				<div className="toast-stack">
+
 					<div className="toast-green">
+
 						<strong>{toast.title}</strong>
+
 						<span>{toast.body}</span>
+
 					</div>
+
 				</div>
+
 			)}
+
 		</div>
+
 	);
+
 }
+
+
 

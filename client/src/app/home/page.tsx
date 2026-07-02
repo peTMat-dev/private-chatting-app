@@ -1,122 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Contact from "../components/Contact";
 import { buildApiUrl, postJson } from "../../lib/api";
 import { LANGUAGES, getLang, setLang, t, type LangCode } from "../../lib/i18n";
 import { useCubeNavigation, type CubeFace } from "../../lib/useCubeNavigation";
 import { useSocket } from "../../lib/useSocket";
+import ChatsFace from "./components/ChatsFace";
+import ContactsFace from "./components/ContactsFace";
+import SettingsFace from "./components/SettingsFace";
+import MessagesFace from "./components/MessagesFace";
+import HomeInfoFace from "./components/InfoFace";
+import HomeLogoutFace from "./components/LogoutFace";
+import type { ContactSummary, ContactItem, ApiChatsResponse, ApiContactsResponse, PublicUser, ContactRequest, MemberGroup, ContactGroup, ApiPublicUsersResponse, UserSettings, ApiSettingsResponse, ApiTimezonesResponse, ChatMessage, InfoItem, ReportedBug } from "./types";
 
-type ContactSummary = {
-  id: number | string;
-  name: string;
-  lastMessage: string;
-  isGroup: boolean;
-};
-
-type ContactItem = {
-  id: number;
-  displayName: string;
-  status_st: boolean;
-  addedAt: string;
-  isPublic: boolean;
-};
-
-type ApiChatsResponse = {
-  success: boolean;
-  count?: number;
-  data?: Array<{ id: number; name: string; lastMessage: string; isGroup: boolean }>;
-  error?: string;
-};
-
-type ApiContactsResponse = {
-  success: boolean;
-  count?: number;
-  data?: ContactItem[];
-  error?: string;
-};
-
-type PublicUser = {
-  id: number;
-  displayName: string;
-  isAlreadyContact: boolean;
-  canBeAddedToContacts: boolean;
-  hasPendingRequest: boolean;
-};
-
-type ContactRequest = {
-  requestId: number;
-  userId: number;
-  displayName: string;
-  requestedAt: string;
-};
-
-type MemberGroup = {
-  groupId: number;
-  groupName: string;
-  ownerId: number;
-  ownerDisplayName: string;
-};
-
-type ContactGroup = {
-  id: number;
-  name: string;
-  memberIds: number[];
-};
-
-type ApiPublicUsersResponse = {
-  success: boolean;
-  count?: number;
-  data?: PublicUser[];
-  error?: string;
-  message?: string;
-};
-
-type UserSettings = {
-  user_language: string;
-  default_max_chat_participants: number;
-  public_st: boolean;
-  user_timezone: string;
-  can_be_added_to_contacts: boolean;
-  display_name?: string;
-};
-
-type ApiSettingsResponse = {
-  success: boolean;
-  data?: UserSettings;
-  error?: string;
-};
-
-type ApiTimezonesResponse = {
-  success: boolean;
-  data?: Array<{ timezone_name: string; display_name: string }>;
-  error?: string;
-};
-
-type ChatMessage = {
-  messageId: number;
-  text: string;
-  senderUserId: number;
-  senderDisplayName: string;
-  sentAt: string;
-  isOwn: boolean;
-};
-
-type InfoItem = {
-  heading_cube: string;
-  text_description?: string;
-  descriptions?: string[];
-  created_at?: string;
-};
-
-type ReportedBug = {
-  bug_id: number;
-  title: string;
-  category: string;
-  bug_description: string;
-  created_at: string;
-  display_name: string;
-};
 
 // Cube faces: front=Chats, left=Contacts, right=Chat view, back=Settings, top=Logout
 // CubeFace type imported from useCubeNavigation
@@ -1024,1576 +920,183 @@ export default function HomeCube() {
           }}
         >
           {/* Front: Chats list */}
-          <section className="cube-face cube-face-front">
-            <section className="auth-stack">
-              <article className="auth-card cube-face-panel">
-                <div className="cube-face-content">
-                  <div className="cube-face-header" onClick={handleHeaderTripleTap}>
-                    <h2>{tr.chats}</h2>
-                  </div>
-
-                  {/* New Chat accordion */}
-                  <div style={{ padding: "0.6rem 1.25rem", borderBottom: "1px solid rgba(3, 160, 98, 0.15)" }}>
-                    <button
-                      className="add-contact-btn"
-                      onClick={() => {
-                        setShowNewChat(!showNewChat);
-                        setNewChatSelectedIds([]);
-                        setNewChatTitle("");
-                        setNewChatError(null);
-                      }}
-                      style={{ width: "100%" }}
-                    >
-                      {tr.newChat}
-                    </button>
-                    {showNewChat && (
-                      <div style={{ marginTop: "0.65rem" }}>
-                        {userContacts.length === 0 ? (
-                          <div style={{ padding: "0.5rem 0", color: "rgba(3,160,98,0.5)", fontSize: "0.8rem", textAlign: "center" }}>
-                            {tr.noContactsYet}
-                          </div>
-                        ) : (
-                          <>
-                            <div style={{ fontSize: "0.7rem", color: "rgba(3,160,98,0.55)", paddingBottom: "0.35rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                              {tr.selectContacts}
-                            </div>
-                            <div className="auth-input" style={{ padding: 0, maxHeight: "150px", overflowY: "auto" }}>
-                              {userContacts.map((c) => (
-                                <div
-                                  key={c.id}
-                                  onClick={() => setNewChatSelectedIds((prev) =>
-                                    prev.includes(c.id) ? prev.filter((id) => id !== c.id) : [...prev, c.id]
-                                  )}
-                                  style={{
-                                    display: "flex", alignItems: "center", gap: "0.5rem",
-                                    padding: "0.45rem 0.75rem",
-                                    borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
-                                    cursor: "pointer",
-                                    color: newChatSelectedIds.includes(c.id) ? "#00FFFF" : "var(--color-green)",
-                                    backgroundColor: newChatSelectedIds.includes(c.id) ? "rgba(3,160,98,0.1)" : "transparent",
-                                  }}
-                                >
-                                  <span style={{ flex: 1, fontSize: "0.85rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                    {c.displayName}
-                                  </span>
-                                  <span style={{ fontSize: "0.8rem" }}>{newChatSelectedIds.includes(c.id) ? "\u2611" : "\u2610"}</span>
-                                </div>
-                              ))}
-                            </div>
-                            {newChatSelectedIds.length >= 2 && (
-                              <input
-                                type="text"
-                                value={newChatTitle}
-                                onChange={(e) => setNewChatTitle(e.target.value)}
-                                maxLength={32}
-                                placeholder={tr.groupTitle}
-                                style={{
-                                  marginTop: "0.5rem", width: "100%", fontSize: "0.8rem",
-                                  padding: "0.35rem 0.5rem",
-                                  background: "rgba(3,160,98,0.08)",
-                                  border: "1px solid rgba(3,160,98,0.3)",
-                                  borderRadius: "0.25rem",
-                                  color: "var(--color-green)", outline: "none",
-                                }}
-                              />
-                            )}
-                            {newChatError && (
-                              <p style={{ color: "rgba(255,80,80,0.8)", fontSize: "0.75rem", margin: "0.35rem 0 0" }}>
-                                {newChatError}
-                              </p>
-                            )}
-                            {newChatSelectedIds.length > 0 && (
-                              <button
-                                className="add-contact-btn"
-                                onClick={handleCreateChat}
-                                disabled={creatingChat}
-                                style={{ width: "100%", marginTop: "0.5rem" }}
-                              >
-                                {creatingChat ? "\u2026" : newChatSelectedIds.length === 1 ? tr.openChat : tr.createGroup}
-                              </button>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {error ? (
-                    <div className="empty-state">
-                      <div className="empty-icon" aria-hidden="true" />
-                      <h2>{tr.couldNotLoadChats}</h2>
-                      <p>{error}</p>
-                    </div>
-                  ) : contacts.length === 0 ? (
-                    <div className="empty-state">
-                      <div className="empty-icon" aria-hidden="true" />
-                      <h2>{tr.noChatsYet}</h2>
-                      <p>{tr.addContactsToStart}</p>
-                    </div>
-                  ) : (
-                    <ul className="list-group list-group-flush chats-list">
-                      {contacts.map((c) => (
-                        <Contact key={c.id} contact_name={c.name} onClick={() => handleOpenChat(Number(c.id), c.name, c.isGroup)}>
-                          {c.lastMessage}
-                        </Contact>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-                <div className="cube-face-footer" onClick={handleFooterTripleTap}>▼</div>
-              </article>
-            </section>
-          </section>
+          <ChatsFace
+            contacts={contacts}
+            error={error}
+            showNewChat={showNewChat}
+            setShowNewChat={setShowNewChat}
+            newChatSelectedIds={newChatSelectedIds}
+            setNewChatSelectedIds={setNewChatSelectedIds}
+            newChatTitle={newChatTitle}
+            setNewChatTitle={setNewChatTitle}
+            creatingChat={creatingChat}
+            newChatError={newChatError}
+            setNewChatError={setNewChatError}
+            handleOpenChat={handleOpenChat}
+            handleCreateChat={handleCreateChat}
+            userContacts={userContacts}
+            handleHeaderTripleTap={handleHeaderTripleTap}
+            handleFooterTripleTap={handleFooterTripleTap}
+            setFace={setFace}
+            tr={tr}
+          />
 
           {/* Left: Contacts */}
-          <section className="cube-face cube-face-left">
-            <article className="auth-card cube-face-panel">
-              <div className="cube-face-content">
-                <div className="cube-face-header" onClick={handleHeaderTripleTap}>
-                  <h2>{tr.contacts}</h2>
-                </div>
-                
-                <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid rgba(3, 160, 98, 0.15)" }}>
-                  <div style={{ marginBottom: "1rem" }}>
-                    <button
-                      className="add-contact-btn"
-                      onClick={() => {
-                        setShowPublicUserSelect(!showPublicUserSelect);
-                        setShowRequestInput(false);
-                        setPrivateRequestSent(false);
-                        setShowContactList(false);
-                        setShowContactListGroups(false);
-                        setShowCreateGroup(false);
-                        setShowRequests(false);
-                        setPublicUserSearch("");
-                        if (!showPublicUserSelect && publicUsers.length === 0) {
-                          fetchPublicUsers();
-                        }
-                      }}
-                      style={{ width: "100%" }}
-                    >
-                      {tr.addPublicUser}
-                    </button>
-                    
-                    {showPublicUserSelect && (
-                      <div style={{ marginTop: "0.75rem" }}>
-                        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginBottom: "0.5rem" }}>
-                          <button
-                            type="button"
-                            className={`sort-btn ${sortOrder === "asc" ? "active" : ""}`}
-                            onClick={() => setSortOrder("asc")}
-                            style={{ fontSize: "0.75rem", padding: "0.35rem 0.5rem" }}
-                          >
-                            A-Z
-                          </button>
-                          <button
-                            type="button"
-                            className={`sort-btn ${sortOrder === "desc" ? "active" : ""}`}
-                            onClick={() => setSortOrder("desc")}
-                            style={{ fontSize: "0.75rem", padding: "0.35rem 0.5rem" }}
-                          >
-                            Z-A
-                          </button>
-                          <input
-                            type="text"
-                            value={publicUserSearch}
-                            onChange={(e) => setPublicUserSearch(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === "Escape") setPublicUserSearch(""); }}
-                            placeholder="🔍"
-                            style={{
-                              flex: 1,
-                              minWidth: 0,
-                              fontSize: "0.75rem",
-                              padding: "0.35rem 0.4rem",
-                              background: "rgba(3,160,98,0.08)",
-                              border: "1px solid rgba(3,160,98,0.3)",
-                              borderRadius: "0.25rem",
-                              color: "var(--color-green)",
-                              outline: "none",
-                            }}
-                          />
-                          {publicUserSearch && (
-                            <button
-                              type="button"
-                              className="sort-btn"
-                              onClick={() => setPublicUserSearch("")}
-                              style={{ fontSize: "0.75rem", padding: "0.35rem 0.5rem" }}
-                            >
-                              ✕
-                            </button>
-                          )}
-                        </div>
-                        <div
-                          className="auth-input"
-                          style={{ 
-                            cursor: "pointer", 
-                            width: "100%",
-                            maxHeight: "180px",
-                            overflowY: "auto",
-                            padding: "0",
-                            opacity: loadingPublicUsers ? 0.6 : 1
-                          }}
-                        >
-                          {loadingPublicUsers ? (
-                            <div style={{ padding: "0.75rem", color: "var(--color-green)", textAlign: "center" }}>
-                              {tr.loadingUsers}
-                            </div>
-                          ) : sortedPublicUsers.length === 0 ? (
-                            <div style={{ padding: "0.75rem", color: "var(--color-green)", textAlign: "center" }}>
-                              {tr.noPublicUsers}
-                            </div>
-                          ) : (
-                            sortedPublicUsers.map((user) => {
-                              const isBusy = removingPublicUserId === user.id || addingPublicUserId === user.id;
-                              return (
-                              <div
-                                key={user.id}
-                                style={{
-                                  padding: "0.45rem 0.75rem",
-                                  cursor: "default",
-                                  backgroundColor: "transparent",
-                                  color: user.isAlreadyContact ? "rgba(180,180,180,0.5)" : "var(--color-green)",
-                                  borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                  alignItems: "center",
-                                }}
-                              >
-                                <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                  {user.displayName}
-                                </span>
-                                <button
-                                  className={`contact-action-btn ${user.isAlreadyContact ? "contact-action-btn--tick" : user.hasPendingRequest ? "contact-action-btn--pending" : !user.canBeAddedToContacts ? "contact-action-btn--blocked" : "contact-action-btn--add"}`}
-                                  style={!user.canBeAddedToContacts ? { color: "#ff5555" } : {}}
-                                  onClick={() => {
-                                    if (isBusy || loadingPublicUsers || user.hasPendingRequest || !user.canBeAddedToContacts) return;
-                                    if (user.isAlreadyContact) {
-                                      handleRemovePublicUser(user.id);
-                                    } else {
-                                      handleAddPublicUser(user.id, user.displayName);
-                                    }
-                                  }}
-                                  disabled={isBusy || loadingPublicUsers || (!user.isAlreadyContact && (user.hasPendingRequest || !user.canBeAddedToContacts))}
-                                  title={user.isAlreadyContact ? "Remove contact" : user.hasPendingRequest ? tr.requestPending : !user.canBeAddedToContacts ? tr.cannotBeRequested : "Send contact request"}
-                                >
-                                  {isBusy ? "…" : user.isAlreadyContact ? "☑" : user.hasPendingRequest ? "⌛" : !user.canBeAddedToContacts ? "🚫" : "☐"}
-                                </button>
-                              </div>
-                              );
-                            })
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ marginBottom: "1rem" }}>
-                    <button
-                      className="add-contact-btn"
-                      onClick={() => {
-                        setShowRequestInput(!showRequestInput);
-                        setPrivateRequestSent(false);
-                        setShowPublicUserSelect(false);
-                        setShowContactListGroups(false);
-                        setShowCreateGroup(false);
-                        setShowRequests(false);
-                      }}
-                      style={{ width: "100%" }}
-                    >
-                      {tr.requestByName}
-                    </button>
-                    
-                    {showRequestInput && (
-                      <div style={{ marginTop: "0.75rem" }}>
-                        {privateRequestSent ? (
-                          <p style={{ fontSize: "0.75rem", color: "var(--color-green)", margin: "0", textAlign: "center", padding: "0.5rem 0", opacity: 0.75 }}>
-                            {tr.privateRequestSent}
-                          </p>
-                        ) : (
-                          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                            <input
-                              type="text"
-                              value={requestDisplayName}
-                              onChange={(e) => setRequestDisplayName(e.target.value)}
-                              onKeyDown={(e) => { if (e.key === "Enter" && requestDisplayName.trim()) handleSendRequest(); }}
-                              placeholder={tr.enterDisplayName}
-                              style={{
-                                flex: 1,
-                                minWidth: 0,
-                                fontSize: "0.75rem",
-                                padding: "0.35rem 0.4rem",
-                                background: "rgba(3,160,98,0.08)",
-                                border: "1px solid rgba(3,160,98,0.3)",
-                                borderRadius: "0.25rem",
-                                color: "var(--color-green)",
-                                outline: "none",
-                              }}
-                            />
-                            <button
-                              type="button"
-                              className="sort-btn"
-                              onClick={() => handleSendRequest()}
-                              disabled={!requestDisplayName.trim()}
-                              style={{ fontSize: "0.75rem", padding: "0.35rem 0.5rem" }}
-                            >
-                              ✓
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ marginBottom: "1rem" }}>
-                    <button
-                      className="add-contact-btn"
-                      onClick={() => {
-                        setShowContactList(!showContactList);
-                        setShowPublicUserSelect(false);
-                        setShowContactListGroups(false);
-                        setShowCreateGroup(false);
-                        setShowRequestInput(false);
-                        setPrivateRequestSent(false);
-                        setShowRequests(false);
-                        setContactSearch("");
-                      }}
-                      style={{ width: "100%" }}
-                    >
-                      ☰ {tr.contactList}
-                    </button>
-                    {showContactList && (
-                      <div style={{ marginTop: "0.75rem" }}>
-                        {contactsError ? (
-                          <div style={{ padding: "0.5rem 0.75rem", color: "rgba(255,80,80,0.8)", fontSize: "0.8rem" }}>
-                            {tr.couldNotLoadContacts}
-                          </div>
-                        ) : userContacts.length === 0 ? (
-                          <div style={{ padding: "0.5rem 0.75rem", color: "rgba(3,160,98,0.5)", fontSize: "0.8rem", textAlign: "center" }}>
-                            {tr.noContactsYet}
-                          </div>
-                        ) : (
-                          <>
-                            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginBottom: "0.5rem" }}>
-                              <button
-                                type="button"
-                                className={`sort-btn ${contactSortOrder === "asc" ? "active" : ""}`}
-                                onClick={() => setContactSortOrder("asc")}
-                                style={{ fontSize: "0.75rem", padding: "0.35rem 0.5rem" }}
-                              >
-                                A-Z
-                              </button>
-                              <button
-                                type="button"
-                                className={`sort-btn ${contactSortOrder === "desc" ? "active" : ""}`}
-                                onClick={() => setContactSortOrder("desc")}
-                                style={{ fontSize: "0.75rem", padding: "0.35rem 0.5rem" }}
-                              >
-                                Z-A
-                              </button>
-                              <input
-                                type="text"
-                                value={contactSearch}
-                                onChange={(e) => setContactSearch(e.target.value)}
-                                onKeyDown={(e) => { if (e.key === "Escape") setContactSearch(""); }}
-                                placeholder="🔍"
-                                style={{
-                                  flex: 1,
-                                  minWidth: 0,
-                                  fontSize: "0.75rem",
-                                  padding: "0.35rem 0.4rem",
-                                  background: "rgba(3,160,98,0.08)",
-                                  border: "1px solid rgba(3,160,98,0.3)",
-                                  borderRadius: "0.25rem",
-                                  color: "var(--color-green)",
-                                  outline: "none",
-                                }}
-                              />
-                              {contactSearch && (
-                                <button
-                                  type="button"
-                                  className="sort-btn"
-                                  onClick={() => setContactSearch("")}
-                                  style={{ fontSize: "0.75rem", padding: "0.35rem 0.5rem" }}
-                                >
-                                  ✕
-                                </button>
-                              )}
-                            </div>
-                            <div
-                              className="auth-input"
-                              style={{ padding: 0, maxHeight: "180px", overflowY: "auto" }}
-                            >
-                              {sortedContacts.map((c) => (
-                              <div
-                                key={c.id}
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  padding: "0.45rem 0.75rem",
-                                  borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
-                                  gap: "0.4rem",
-                                }}
-                              >
-                                <span style={{ color: "var(--color-green)", fontSize: "0.85rem", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                  {c.displayName}{!c.isPublic && <span style={{ marginLeft: "0.3rem", fontSize: "0.75rem" }}>🔒</span>}
-                                </span>
-                                <button
-                                  className="contact-action-btn contact-action-btn--chat-active"
-                                  onClick={() => handleChatWithContact(c.id)}
-                                  title="💬"
-                                >
-                                  💬
-                                </button>
-                                <button
-                                  className="contact-action-btn contact-action-btn--tick"
-                                  onClick={() => handleRemoveContact(c.id)}
-                                  disabled={removingContactId === c.id}
-                                >
-                                  {removingContactId === c.id ? "…" : "☑"}
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ marginBottom: "1rem" }}>
-                    <button
-                      className="add-contact-btn"
-                      onClick={() => {
-                        const next = !showContactListGroups;
-                        setShowContactListGroups(next);
-                        setShowContactList(false);
-                        setShowPublicUserSelect(false);
-                        setShowRequestInput(false);
-                        setPrivateRequestSent(false);
-                        setShowRequests(false);
-                        setShowCreateGroup(false);
-                        setShowWhoseContactAmI(false);
-                        if (next) fetchContactGroups();
-                      }}
-                      style={{ width: "100%" }}
-                    >
-                      ☰ {tr.contactListGroups}
-                    </button>
-                    {showContactListGroups && (
-                      <div style={{ marginTop: "0.75rem" }}>
-                        {contactGroupsError ? (
-                          <div style={{ padding: "0.5rem 0.75rem", color: "rgba(255,80,80,0.8)", fontSize: "0.8rem" }}>
-                            {contactGroupsError}
-                          </div>
-                        ) : loadingContactGroups ? (
-                          <div style={{ padding: "0.75rem", color: "var(--color-green)", textAlign: "center" }}>
-                            {tr.loadingUsers}
-                          </div>
-                        ) : contactGroups.length === 0 ? (
-                          <div style={{ padding: "0.5rem 0.75rem", color: "rgba(3,160,98,0.5)", fontSize: "0.8rem", textAlign: "center" }}>
-                            {tr.noGroupsYet}
-                          </div>
-                        ) : (
-                          <div
-                            className="auth-input"
-                            style={{ padding: 0, maxHeight: "180px", overflowY: "auto" }}
-                          >
-                            {contactGroups.map((g) => (
-                              <div key={g.id}>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    padding: "0.45rem 0.75rem",
-                                    borderBottom: groupChatTitleEdit?.groupId === g.id ? "none" : "1px solid rgba(3, 160, 98, 0.1)",
-                                    gap: "0.4rem",
-                                  }}
-                                >
-                                  <span style={{ color: "var(--color-green)", fontSize: "0.85rem", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                    {g.name}
-                                    <span style={{ marginLeft: "0.35rem", fontSize: "0.7rem", opacity: 0.55 }}>({g.memberIds.length})</span>
-                                  </span>
-                                  <button
-                                    className={`contact-action-btn ${groupChatTitleEdit?.groupId === g.id ? "contact-action-btn--chat-active" : "contact-action-btn--chat-active"}`}
-                                    onClick={() => setGroupChatTitleEdit(
-                                      groupChatTitleEdit?.groupId === g.id ? null : { groupId: g.id, value: g.name }
-                                    )}
-                                    title="💬"
-                                  >
-                                    💬
-                                  </button>
-                                  <button
-                                    className="contact-action-btn contact-action-btn--tick"
-                                    onClick={() => setRemovingGroupId(g.id)}
-                                    disabled={removingGroupId === g.id}
-                                    title={tr.removeGroup}
-                                  >
-                                    {removingGroupId === g.id ? "…" : "☑"}
-                                  </button>
-                                </div>
-                                {groupChatTitleEdit?.groupId === g.id && (
-                                  <div style={{
-                                    display: "flex", gap: "0.4rem", alignItems: "center",
-                                    padding: "0.4rem 0.75rem 0.5rem",
-                                    borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
-                                    background: "rgba(3,160,98,0.05)",
-                                  }}>
-                                    <input
-                                      type="text"
-                                      value={groupChatTitleEdit.value}
-                                      onChange={(e) => setGroupChatTitleEdit({ groupId: g.id, value: e.target.value })}
-                                      onKeyDown={(e) => {
-                                        if (e.key === "Enter" && groupChatTitleEdit.value.trim()) handleChatWithGroup(g, groupChatTitleEdit.value);
-                                        if (e.key === "Escape") setGroupChatTitleEdit(null);
-                                      }}
-                                      maxLength={32}
-                                      placeholder={tr.groupTitle}
-                                      autoFocus
-                                      style={{
-                                        flex: 1, minWidth: 0, fontSize: "0.8rem",
-                                        padding: "0.3rem 0.45rem",
-                                        background: "rgba(3,160,98,0.08)",
-                                        border: "1px solid rgba(3,160,98,0.3)",
-                                        borderRadius: "0.25rem",
-                                        color: "var(--color-green)", outline: "none",
-                                      }}
-                                    />
-                                    <button
-                                      className="contact-action-btn contact-action-btn--confirm"
-                                      onClick={() => handleChatWithGroup(g, groupChatTitleEdit.value)}
-                                      disabled={!groupChatTitleEdit.value.trim() || groupChatCreating}
-                                      title={tr.openChat}
-                                    >
-                                      {groupChatCreating ? "…" : "✓"}
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ marginBottom: "1rem" }}>
-                    <button
-                      className="add-contact-btn"
-                      onClick={() => {
-                        const next = !showCreateGroup;
-                        setShowCreateGroup(next);
-                        setShowContactList(false);
-                        setShowContactListGroups(false);
-                        setShowPublicUserSelect(false);
-                        setShowRequestInput(false);
-                        setPrivateRequestSent(false);
-                        setShowRequests(false);
-                        setShowWhoseContactAmI(false);
-                        if (!next) {
-                          setCreateGroupName("");
-                          setCreateGroupSelectedIds([]);
-                          setCreateGroupError(null);
-                        } else if (userContacts.filter((c) => c.status_st).length === 0) {
-                          fetchUserContacts();
-                        }
-                      }}
-                      style={{ width: "100%" }}
-                    >
-                      ☰ {tr.contactCreateGroup}
-                    </button>
-                    {showCreateGroup && (
-                      <div style={{ marginTop: "0.75rem" }}>
-                        {createGroupError && (
-                          <div style={{ padding: "0.4rem 0.75rem", color: "rgba(255,80,80,0.85)", fontSize: "0.8rem", marginBottom: "0.5rem" }}>
-                            {createGroupError}
-                          </div>
-                        )}
-                        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginBottom: "0.5rem" }}>
-                          <input
-                            type="text"
-                            value={createGroupName}
-                            onChange={(e) => setCreateGroupName(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === "Enter" && createGroupName.trim()) handleCreateGroup(); }}
-                            maxLength={32}
-                            placeholder={tr.groupName}
-                            style={{
-                              flex: 1,
-                              minWidth: 0,
-                              fontSize: "0.75rem",
-                              padding: "0.35rem 0.4rem",
-                              background: "rgba(3,160,98,0.08)",
-                              border: "1px solid rgba(3,160,98,0.3)",
-                              borderRadius: "0.25rem",
-                              color: "var(--color-green)",
-                              outline: "none",
-                            }}
-                          />
-                          <button
-                            type="button"
-                            className="sort-btn"
-                            onClick={handleCreateGroup}
-                            disabled={creatingGroup || !createGroupName.trim()}
-                            style={{ fontSize: "0.75rem", padding: "0.35rem 0.5rem", color: "var(--color-green)" }}
-                          >
-                            {creatingGroup ? "…" : "✓"}
-                          </button>
-                        </div>
-                        {userContacts.filter((c) => c.status_st).length === 0 ? (
-                          <div style={{ padding: "0.4rem 0.75rem", color: "rgba(3,160,98,0.5)", fontSize: "0.8rem", textAlign: "center" }}>
-                            {tr.noContactsForGroup}
-                          </div>
-                        ) : (
-                          <div
-                            className="auth-input"
-                            style={{ padding: 0, maxHeight: "150px", overflowY: "auto" }}
-                          >
-                            <div style={{ padding: "0.3rem 0.75rem 0.25rem", fontSize: "0.7rem", color: "var(--color-green)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                              {tr.selectGroupMembers}
-                            </div>
-                            {userContacts
-                              .filter((c) => c.status_st)
-                              .map((c) => {
-                                const checked = createGroupSelectedIds.includes(c.id);
-                                return (
-                                  <div
-                                    key={c.id}
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                      padding: "0.45rem 0.75rem",
-                                      borderBottom: "1px solid rgba(3,160,98,0.1)",
-                                      gap: "0.4rem",
-                                    }}
-                                  >
-                                    <span style={{ color: "var(--color-green)", fontSize: "0.85rem", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                      {c.displayName}
-                                    </span>
-                                    <button
-                                      type="button"
-                                      className="contact-action-btn contact-action-btn--tick"
-                                      onClick={() =>
-                                        setCreateGroupSelectedIds((prev) =>
-                                          checked ? prev.filter((id) => id !== c.id) : [...prev, c.id]
-                                        )
-                                      }
-                                    >
-                                      {checked ? "☑" : "☐"}
-                                    </button>
-                                  </div>
-                                );
-                              })}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ marginBottom: "1rem" }}>
-                    <button
-                      className="add-contact-btn"
-                      onClick={() => {
-                        const next = !showRequests;
-                        setShowRequests(next);
-                        setShowContactList(false);
-                        setShowContactListGroups(false);
-                        setShowCreateGroup(false);
-                        setShowPublicUserSelect(false);
-                        setShowRequestInput(false);
-                        setPrivateRequestSent(false);
-                        setShowWhoseContactAmI(false);
-                        if (next) fetchRequests();
-                      }}
-                      style={{ width: "100%" }}
-                    >
-                      📬 {tr.requests}
-                    </button>
-                    {showRequests && (
-                      <div style={{ marginTop: "0.75rem" }}>
-                        {loadingRequests ? (
-                          <div style={{ padding: "0.75rem", color: "var(--color-green)", textAlign: "center" }}>
-                            {tr.loadingUsers}
-                          </div>
-                        ) : (
-                          <>
-                            <div style={{ marginBottom: "0.75rem" }}>
-                              <div style={{ fontSize: "0.7rem", color: "rgba(3,160,98,0.55)", padding: "0 0.5rem 0.35rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                                {tr.incomingRequests}
-                              </div>
-                              <div
-                                className="auth-input"
-                                style={{ padding: 0, maxHeight: "130px", overflowY: "auto" }}
-                              >
-                                {incomingRequests.length === 0 ? (
-                                  <div style={{ padding: "0.5rem 0.75rem", color: "rgba(3,160,98,0.5)", fontSize: "0.8rem", textAlign: "center" }}>
-                                    {tr.noIncomingRequests}
-                                  </div>
-                                ) : (
-                                  incomingRequests.map((req) => (
-                                    <div
-                                      key={req.requestId}
-                                      style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        padding: "0.45rem 0.75rem",
-                                        borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
-                                        gap: "0.4rem",
-                                      }}
-                                    >
-                                      <span style={{ flex: 1, color: "var(--color-green)", fontSize: "0.85rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                        {req.displayName}
-                                      </span>
-                                      <button
-                                        className="contact-action-btn contact-action-btn--tick"
-                                        onClick={() => handleApproveRequest(req.requestId)}
-                                        disabled={approvingRequestId === req.requestId || rejectingRequestId === req.requestId}
-                                        title={tr.approveRequest}
-                                      >
-                                        {approvingRequestId === req.requestId ? "\u2026" : "\u2713"}
-                                      </button>
-                                      <button
-                                        className="contact-action-btn contact-action-btn--remove"
-                                        onClick={() => handleRejectRequest(req.requestId)}
-                                        disabled={approvingRequestId === req.requestId || rejectingRequestId === req.requestId}
-                                        title={tr.rejectRequest}
-                                      >
-                                        {rejectingRequestId === req.requestId ? "\u2026" : "\u2717"}
-                                      </button>
-                                    </div>
-                                  ))
-                                )}
-                              </div>
-                            </div>
-                            <div>
-                              <div style={{ fontSize: "0.7rem", color: "rgba(3,160,98,0.55)", padding: "0 0.5rem 0.35rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                                {tr.outgoingRequests}
-                              </div>
-                              <div
-                                className="auth-input"
-                                style={{ padding: 0, maxHeight: "130px", overflowY: "auto" }}
-                              >
-                                {outgoingRequests.length === 0 ? (
-                                  <div style={{ padding: "0.5rem 0.75rem", color: "rgba(3,160,98,0.5)", fontSize: "0.8rem", textAlign: "center" }}>
-                                    {tr.noOutgoingRequests}
-                                  </div>
-                                ) : (
-                                  outgoingRequests.map((req) => (
-                                    <div
-                                      key={req.requestId}
-                                      style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        padding: "0.45rem 0.75rem",
-                                        borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
-                                        gap: "0.4rem",
-                                      }}
-                                    >
-                                      <span style={{ flex: 1, color: "var(--color-green)", fontSize: "0.85rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                        {req.displayName}
-                                      </span>
-                                      <button
-                                        className="contact-action-btn contact-action-btn--cancel"
-                                        onClick={() => handleCancelRequest(req.requestId, req.userId)}
-                                        disabled={cancellingRequestId === req.requestId}
-                                        title={tr.cancelRequest}
-                                      >
-                                        {cancellingRequestId === req.requestId ? "\u2026" : "\u2715"}
-                                      </button>
-                                    </div>
-                                  ))
-                                )}
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <button
-                      className="add-contact-btn"
-                      onClick={() => {
-                        const next = !showWhoseContactAmI;
-                        setShowWhoseContactAmI(next);
-                        setShowContactList(false);
-                        setShowContactListGroups(false);
-                        setShowCreateGroup(false);
-                        setShowPublicUserSelect(false);
-                        setShowRequestInput(false);
-                        setPrivateRequestSent(false);
-                        setShowRequests(false);
-                        if (next) fetchWhoseContactAmI();
-                      }}
-                      style={{ width: "100%" }}
-                    >
-                      {tr.whoseContactAmI}
-                    </button>
-                    {showWhoseContactAmI && (
-                      <div style={{ marginTop: "0.75rem" }}>
-                        <div
-                          className="auth-input"
-                          style={{ padding: 0, maxHeight: "180px", overflowY: "auto", opacity: loadingWhoseContactAmI ? 0.6 : 1 }}
-                        >
-                          {loadingWhoseContactAmI ? (
-                            <div style={{ padding: "0.75rem", color: "var(--color-green)", textAlign: "center" }}>
-                              {tr.loadingUsers}
-                            </div>
-                          ) : whoseContactAmI.length === 0 ? (
-                            <div style={{ padding: "0.75rem", color: "rgba(3,160,98,0.5)", textAlign: "center", fontSize: "0.8rem" }}>
-                              —
-                            </div>
-                          ) : (
-                            whoseContactAmI.map((group) => (
-                              <div
-                                key={group.groupId}
-                                style={{
-                                  padding: "0.5rem 0.75rem",
-                                  color: "var(--color-green)",
-                                  borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
-                                  fontSize: "0.85rem",
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                  alignItems: "flex-start",
-                                  gap: "0.5rem",
-                                }}
-                              >
-                                <div style={{ flex: 0, minWidth: "fit-content" }}>
-                                  {group.ownerDisplayName}
-                                </div>
-                                <div style={{ flex: 1, textAlign: "right", wordBreak: "break-word" }}>
-                                  {group.groupName}
-                                </div>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-                <div className="cube-face-footer" onClick={handleFooterTripleTap}>▼</div>
-            </article>
-          </section>
+          <ContactsFace
+            handleHeaderTripleTap={handleHeaderTripleTap}
+            handleFooterTripleTap={handleFooterTripleTap}
+            showPublicUserSelect={showPublicUserSelect}
+            setShowPublicUserSelect={setShowPublicUserSelect}
+            sortedPublicUsers={sortedPublicUsers}
+            loadingPublicUsers={loadingPublicUsers}
+            publicUserSearch={publicUserSearch}
+            setPublicUserSearch={setPublicUserSearch}
+            sortOrder={sortOrder}
+            setSortOrder={setSortOrder}
+            removingPublicUserId={removingPublicUserId}
+            addingPublicUserId={addingPublicUserId}
+            handleRemovePublicUser={handleRemovePublicUser}
+            handleAddPublicUser={handleAddPublicUser}
+            fetchPublicUsers={fetchPublicUsers}
+            showRequestInput={showRequestInput}
+            setShowRequestInput={setShowRequestInput}
+            requestDisplayName={requestDisplayName}
+            setRequestDisplayName={setRequestDisplayName}
+            privateRequestSent={privateRequestSent}
+            setPrivateRequestSent={setPrivateRequestSent}
+            handleSendRequest={handleSendRequest}
+            showContactList={showContactList}
+            setShowContactList={setShowContactList}
+            contactsError={contactsError}
+            userContacts={userContacts}
+            contactSortOrder={contactSortOrder}
+            setContactSortOrder={setContactSortOrder}
+            contactSearch={contactSearch}
+            setContactSearch={setContactSearch}
+            sortedContacts={sortedContacts}
+            removingContactId={removingContactId}
+            handleRemoveContact={handleRemoveContact}
+            handleChatWithContact={handleChatWithContact}
+            fetchUserContacts={fetchUserContacts}
+            showContactListGroups={showContactListGroups}
+            setShowContactListGroups={setShowContactListGroups}
+            contactGroupsError={contactGroupsError}
+            loadingContactGroups={loadingContactGroups}
+            contactGroups={contactGroups}
+            groupChatTitleEdit={groupChatTitleEdit}
+            setGroupChatTitleEdit={setGroupChatTitleEdit}
+            removingGroupId={removingGroupId}
+            setRemovingGroupId={setRemovingGroupId}
+            groupChatCreating={groupChatCreating}
+            handleChatWithGroup={handleChatWithGroup}
+            fetchContactGroups={fetchContactGroups}
+            showCreateGroup={showCreateGroup}
+            setShowCreateGroup={setShowCreateGroup}
+            createGroupError={createGroupError}
+            createGroupName={createGroupName}
+            setCreateGroupName={setCreateGroupName}
+            creatingGroup={creatingGroup}
+            handleCreateGroup={handleCreateGroup}
+            createGroupSelectedIds={createGroupSelectedIds}
+            setCreateGroupSelectedIds={setCreateGroupSelectedIds}
+            showRequests={showRequests}
+            setShowRequests={setShowRequests}
+            loadingRequests={loadingRequests}
+            incomingRequests={incomingRequests}
+            outgoingRequests={outgoingRequests}
+            approvingRequestId={approvingRequestId}
+            rejectingRequestId={rejectingRequestId}
+            cancellingRequestId={cancellingRequestId}
+            handleApproveRequest={handleApproveRequest}
+            handleRejectRequest={handleRejectRequest}
+            handleCancelRequest={handleCancelRequest}
+            fetchRequests={fetchRequests}
+            showWhoseContactAmI={showWhoseContactAmI}
+            setShowWhoseContactAmI={setShowWhoseContactAmI}
+            loadingWhoseContactAmI={loadingWhoseContactAmI}
+            whoseContactAmI={whoseContactAmI}
+            fetchWhoseContactAmI={fetchWhoseContactAmI}
+            tr={tr}
+          />
 
           {/* Back: User Settings */}
-          <section className="cube-face cube-face-back">
-            <article className="auth-card cube-face-panel">
-              <div className="cube-face-content">
-                <div className="cube-face-header" onClick={handleHeaderTripleTap}>
-                  <h2>{tr.userSettings}</h2>
-                </div>
-                
-                {settingsError && !settings ? (
-                  <div className="empty-state">
-                    <div className="empty-icon" aria-hidden="true" />
-                    <h3>{tr.couldNotLoadSettings}</h3>
-                    <p>{settingsError}</p>
-                  </div>
-                ) : !settings ? (
-                  <div className="empty-state">
-                    <p>{tr.loadingSettings}</p>
-                  </div>
-                ) : (
-                  <form onSubmit={handleSaveSettings} className="d-flex flex-column" style={{ gap: "1rem" }}>
-                    {settingsSaved && (
-                      <div className="auth-alert" style={{ background: "rgba(3, 160, 98, 0.12)", border: "1px solid rgba(3, 160, 98, 0.4)" }}>
-                        <strong>{tr.settingsSaved}</strong> {tr.settingsSavedMsg}
-                      </div>
-                    )}
-                    
-                    {settingsError && (
-                      <div className="auth-alert">
-                        <strong>Error:</strong> {settingsError}
-                      </div>
-                    )}
-
-                    <div>
-                      <label htmlFor="user-language" className="auth-label" style={{ marginBottom: "0.25rem" }}>
-                        {tr.language}
-                      </label>
-                      <button
-                        id="user-language"
-                        type="button"
-                        className="auth-input"
-                        onClick={() => setShowLangSelect(!showLangSelect)}
-                        style={{ cursor: "pointer", maxWidth: "180px", textAlign: "left" }}
-                      >
-                        {LANGUAGES.find((l) => l.code === lang)?.label}
-                      </button>
-                      {showLangSelect && (
-                        <div
-                          className="auth-input"
-                          style={{
-                            maxWidth: "180px",
-                            marginTop: "0.5rem",
-                            maxHeight: "220px",
-                            overflowY: "auto",
-                            padding: "0",
-                          }}
-                        >
-                          {LANGUAGES.map((l) => (
-                            <div
-                              key={l.code}
-                              onClick={() => handleLangChange(l.code)}
-                              style={{
-                                padding: "0.5rem 0.75rem",
-                                cursor: "pointer",
-                                backgroundColor: lang === l.code ? "rgba(3, 160, 98, 0.15)" : "transparent",
-                                color: lang === l.code ? "#00FFFF" : "var(--color-green)",
-                                borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
-                                transition: "background-color 0.2s",
-                              }}
-                              onMouseEnter={(e) => { if (lang !== l.code) e.currentTarget.style.backgroundColor = "rgba(3, 160, 98, 0.08)"; }}
-                              onMouseLeave={(e) => { if (lang !== l.code) e.currentTarget.style.backgroundColor = "transparent"; }}
-                            >
-                              {l.label}{lang === l.code ? " ✓" : ""}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="auth-label" style={{ marginBottom: "0.25rem" }}>
-                        {tr.maxChatParticipants} <small style={{ color: "var(--color-form-text)", opacity: 0.7, fontSize: "0.75rem", fontWeight: "normal" }}>(2-100)</small>
-                      </label>
-                      <button
-                        type="button"
-                        className="auth-input"
-                        onClick={() => setShowMaxParticipantsSelect(!showMaxParticipantsSelect)}
-                        style={{ cursor: "pointer", maxWidth: "180px", textAlign: "left" }}
-                      >
-                        {settings.default_max_chat_participants}
-                      </button>
-                      
-                      {showMaxParticipantsSelect && (
-                        <div
-                          className="auth-input"
-                          style={{ 
-                            maxWidth: "180px", 
-                            marginTop: "0.5rem",
-                            maxHeight: "180px",
-                            overflowY: "auto",
-                            padding: "0"
-                          }}
-                        >
-                          {Array.from({ length: 99 }, (_, i) => i + 2).map((num) => (
-                            <div
-                              key={num}
-                              onClick={() => {
-                                setSettings({ ...settings, default_max_chat_participants: num });
-                                setShowMaxParticipantsSelect(false);
-                              }}
-                              style={{
-                                padding: "0.5rem 0.75rem",
-                                cursor: "pointer",
-                                backgroundColor: settings.default_max_chat_participants === num 
-                                  ? "rgba(3, 160, 98, 0.15)" 
-                                  : "transparent",
-                                color: "var(--color-green)",
-                                borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
-                                transition: "background-color 0.2s"
-                              }}
-                              onMouseEnter={(e) => {
-                                if (settings.default_max_chat_participants !== num) {
-                                  e.currentTarget.style.backgroundColor = "rgba(3, 160, 98, 0.08)";
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                if (settings.default_max_chat_participants !== num) {
-                                  e.currentTarget.style.backgroundColor = "transparent";
-                                }
-                              }}
-                            >
-                              {num}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="auth-label" style={{ marginBottom: "0.25rem", display: "block" }}>
-                        {tr.timezone}
-                      </label>
-                      <button
-                        type="button"
-                        className="auth-input"
-                        onClick={() => setShowTimezoneSelect(!showTimezoneSelect)}
-                        style={{ cursor: "pointer", maxWidth: "180px", textAlign: "left" }}
-                      >
-                        {timezones.find(tz => tz.timezone_name === settings.user_timezone)?.display_name || settings.user_timezone}
-                      </button>
-                      
-                      {showTimezoneSelect && (
-                        <div
-                          className="auth-input"
-                          style={{ 
-                            maxWidth: "180px", 
-                            marginTop: "0.5rem",
-                            maxHeight: "180px",
-                            overflowY: "auto",
-                            padding: "0"
-                          }}
-                        >
-                          {timezones.map((tz) => (
-                            <div
-                              key={tz.timezone_name}
-                              onClick={() => {
-                                setSettings({ ...settings, user_timezone: tz.timezone_name });
-                                setShowTimezoneSelect(false);
-                              }}
-                              style={{
-                                padding: "0.5rem 0.75rem",
-                                cursor: "pointer",
-                                backgroundColor: settings.user_timezone === tz.timezone_name 
-                                  ? "rgba(3, 160, 98, 0.15)" 
-                                  : "transparent",
-                                color: "var(--color-green)",
-                                borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
-                                transition: "background-color 0.2s",
-                                fontSize: "0.85rem"
-                              }}
-                              onMouseEnter={(e) => {
-                                if (settings.user_timezone !== tz.timezone_name) {
-                                  e.currentTarget.style.backgroundColor = "rgba(3, 160, 98, 0.08)";
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                if (settings.user_timezone !== tz.timezone_name) {
-                                  e.currentTarget.style.backgroundColor = "transparent";
-                                }
-                              }}
-                            >
-                              {tz.display_name}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-                      <input
-                        id="profile-public"
-                        type="checkbox"
-                        checked={settings.public_st}
-                        onChange={(e) => setSettings({ ...settings, public_st: e.target.checked })}
-                        style={{ width: "18px", height: "18px", cursor: "pointer", margin: 0 }}
-                      />
-                      <label htmlFor="profile-public" className="auth-label" style={{ marginBottom: 0, cursor: "pointer" }}>
-                        {tr.makeProfilePublic}
-                      </label>
-                    </div>
-
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-                      <input
-                        id="allow-contact-requests"
-                        type="checkbox"
-                        checked={settings.can_be_added_to_contacts}
-                        onChange={(e) => setSettings({ ...settings, can_be_added_to_contacts: e.target.checked })}
-                        style={{ width: "18px", height: "18px", cursor: "pointer", margin: 0 }}
-                      />
-                      <label htmlFor="allow-contact-requests" className="auth-label" style={{ marginBottom: 0, cursor: "pointer" }}>
-                        {tr.allowContactRequests}
-                      </label>
-                    </div>
-
-                    <button type="submit" className="auth-btn" disabled={savingSettings} style={{ marginTop: "0.25rem" }}>
-                    {savingSettings ? tr.saving : tr.saveSettings}
-                    </button>
-                  </form>
-                )}
-                <div className="cube-face-footer" onClick={handleFooterTripleTap}>▼</div>
-              </div>
-            </article>
-          </section>
+          <SettingsFace
+            settings={settings}
+            setSettings={setSettings}
+            settingsError={settingsError}
+            savingSettings={savingSettings}
+            settingsSaved={settingsSaved}
+            handleSaveSettings={handleSaveSettings}
+            timezones={timezones}
+            lang={lang}
+            showLangSelect={showLangSelect}
+            setShowLangSelect={setShowLangSelect}
+            handleLangChange={handleLangChange}
+            showMaxParticipantsSelect={showMaxParticipantsSelect}
+            setShowMaxParticipantsSelect={setShowMaxParticipantsSelect}
+            showTimezoneSelect={showTimezoneSelect}
+            setShowTimezoneSelect={setShowTimezoneSelect}
+            handleHeaderTripleTap={handleHeaderTripleTap}
+            handleFooterTripleTap={handleFooterTripleTap}
+            tr={tr}
+          />
 
           {/* Right: Chat view */}
-          <section className="cube-face cube-face-right">
-            {confirmDialog?.show && (
-              <div
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  zIndex: 10,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "rgba(0,0,0,0.55)",
-                  borderRadius: "inherit",
-                }}
-              >
-                <div
-                  className="auth-card"
-                  style={{
-                    width: "fit-content",
-                    maxWidth: "220px",
-                    padding: "0.85rem 1rem",
-                    boxShadow: "0 10px 40px rgba(6, 236, 144, 0.4)",
-                  }}
-                >
-                  <p style={{ color: "var(--color-green)", fontSize: "0.9rem", margin: "0 0 1rem 0", textAlign: "center" }}>
-                    {confirmDialog.message}
-                  </p>
-                  <div style={{ display: "flex", gap: "0.5rem" }}>
-                    <button
-                      type="button"
-                      className="ghost-btn"
-                      onClick={() => setConfirmDialog(null)}
-                      style={{ flex: 1, padding: "0.5rem", fontSize: "0.85rem" }}
-                    >
-                      {tr.cancel}
-                    </button>
-                    <button
-                      type="button"
-                      className="auth-btn"
-                      onClick={confirmDialog.onConfirm}
-                      style={{ flex: 1, padding: "0.5rem", fontSize: "0.85rem" }}
-                    >
-                      {tr.confirmAction}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-            <article className="auth-card cube-face-panel">
-              <div className="cube-face-content" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-                <div className="cube-face-header" onClick={handleHeaderTripleTap} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <button
-                    type="button"
-                    className="ghost-btn"
-                    onClick={() => setFace("front")}
-                    style={{ padding: "0.2rem 0.5rem", fontSize: "0.8rem", minWidth: 0 }}
-                  >
-                    ←
-                  </button>
-                  <h2 style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>
-                    {activeChatName || tr.chat}
-                  </h2>
-                </div>
-
-                {!activeChatId ? (
-                  <p className="hero-copy">{tr.openConversation}</p>
-                ) : chatLoading ? (
-                  <div className="empty-state"><p>{tr.loadingUsers}</p></div>
-                ) : chatError ? (
-                  <div className="empty-state"><p>{chatError}</p></div>
-                ) : (
-                  <>
-                    <div style={{ flex: 1, overflowY: "auto", padding: "0.75rem 1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                      {activeChatMessages.length === 0 ? (
-                        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <p style={{ color: "rgba(3,160,98,0.5)", fontSize: "0.85rem" }}>{tr.noMessagesYet}</p>
-                        </div>
-                      ) : (
-                        activeChatMessages.map((m, i) => {
-                          const tz = settings?.user_timezone || undefined;
-                          const tzOpts = tz ? { timeZone: tz } : {};
-                          const msgDate = new Date(m.sentAt);
-                          const msgDay = msgDate.toLocaleDateString([], { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" });
-                          const prevDay = i > 0 ? new Date(activeChatMessages[i - 1].sentAt).toLocaleDateString([], { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }) : null;
-                          const showSeparator = msgDay !== prevDay;
-                          const today = new Date().toLocaleDateString([], { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" });
-                          const yesterday = new Date(Date.now() - 864e5).toLocaleDateString([], { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" });
-                          const separatorLabel = msgDay === today ? "Today" : msgDay === yesterday ? "Yesterday" : msgDate.toLocaleDateString([], { ...tzOpts, day: "2-digit", month: "2-digit", year: "numeric" });
-                          return (
-                            <div key={m.messageId}>
-                              {showSeparator && (
-                                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", margin: "0.5rem 0" }}>
-                                  <div style={{ flex: 1, height: "1px", background: "rgba(3,160,98,0.2)" }} />
-                                  <span style={{ fontSize: "0.7rem", color: "var(--color-green)", whiteSpace: "nowrap" }}>{separatorLabel}</span>
-                                  <div style={{ flex: 1, height: "1px", background: "rgba(3,160,98,0.2)" }} />
-                                </div>
-                              )}
-                              <div style={{ display: "flex", flexDirection: "column", alignItems: m.isOwn ? "flex-end" : "flex-start" }}>
-                                {activeChatIsGroup && m.senderDisplayName && (
-                                  <span style={{ fontSize: "0.7rem", color: "var(--color-green)", marginBottom: "0.15rem" }}>
-                                    {m.senderDisplayName}
-                                  </span>
-                                )}
-                                <div
-                                  style={{
-                                    maxWidth: "75%",
-                                    padding: "0.4rem 0.65rem",
-                                    borderRadius: m.isOwn ? "1rem 1rem 0.25rem 1rem" : "1rem 1rem 1rem 0.25rem",
-                                    background: m.isOwn ? "rgba(3,160,98,0.25)" : "rgba(3,160,98,0.1)",
-                                    border: "1px solid rgba(3,160,98,0.3)",
-                                    color: "var(--color-green)",
-                                    fontSize: "0.85rem",
-                                    wordBreak: "break-word",
-                                    cursor: m.isOwn ? "pointer" : "default",
-                                  }}
-                                  onDoubleClick={m.isOwn ? () => handleDeleteMessage(m.messageId) : undefined}
-                                  onTouchEnd={m.isOwn ? () => handleMessageDoubleTap(m.messageId) : undefined}
-                                >
-                                  {m.text}
-                                </div>
-                                <span style={{ fontSize: "0.65rem", color: "var(--color-green)", marginTop: "0.1rem" }}>
-                                  {msgDate.toLocaleTimeString([], { ...tzOpts, hour: "2-digit", minute: "2-digit", hour12: false })}
-                                </span>
-                              </div>
-                            </div>
-                          );
-                        })
-                      )}
-                      <div ref={messagesEndRef} />
-                    </div>
-
-                    <div style={{ padding: "0.5rem 0.75rem", borderTop: "1px solid rgba(3, 160, 98, 0.15)", display: "flex", gap: "0.4rem", alignItems: "flex-end" }}>
-                      <textarea
-                        value={messageInput}
-                        onChange={(e) => setMessageInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(); }
-                        }}
-                        placeholder={tr.typeMessage}
-                        rows={1}
-                        style={{
-                          flex: 1, resize: "none", fontSize: "0.85rem",
-                          padding: "0.4rem 0.6rem",
-                          background: "rgba(3,160,98,0.08)",
-                          border: "1px solid rgba(3,160,98,0.3)",
-                          borderRadius: "0.5rem",
-                          color: "var(--color-green)", outline: "none", fontFamily: "inherit",
-                        }}
-                      />
-                      <button
-                        type="button"
-                        className="contact-action-btn contact-action-btn--add"
-                        onClick={handleSendMessage}
-                        disabled={sendingMessage || !messageInput.trim()}
-                        style={{ fontSize: "0.75rem", padding: "0.4rem 0.6rem" }}
-                      >
-                        {sendingMessage ? "\u2026" : tr.sendMessage}
-                      </button>
-                    </div>
-                  </>
-                )}
-                <div className="cube-face-footer" onClick={handleFooterTripleTap}>▼</div>
-              </div>
-            </article>
-          </section>
+          <MessagesFace
+            activeChatId={activeChatId}
+            activeChatName={activeChatName}
+            activeChatIsGroup={activeChatIsGroup}
+            activeChatMessages={activeChatMessages}
+            messageInput={messageInput}
+            setMessageInput={setMessageInput}
+            chatLoading={chatLoading}
+            chatError={chatError}
+            sendingMessage={sendingMessage}
+            confirmDialog={confirmDialog}
+            setConfirmDialog={setConfirmDialog}
+            handleSendMessage={handleSendMessage}
+            handleDeleteMessage={handleDeleteMessage}
+            handleMessageDoubleTap={handleMessageDoubleTap}
+            settings={settings}
+            handleHeaderTripleTap={handleHeaderTripleTap}
+            handleFooterTripleTap={handleFooterTripleTap}
+            setFace={setFace}
+            messagesEndRef={messagesEndRef}
+            tr={tr}
+          />
 
           {/* Bottom: Info / Announcements */}
-          <section className="cube-face cube-face-bottom">
-            <article className="auth-card cube-face-panel">
-              <div className="cube-face-content" style={{ position: "relative" }}>
-
-                {/* Info overlay modal */}
-                {selectedInfo && (
-                  <div
-                    onClick={(e) => e.stopPropagation()}
-                    onTouchStart={(e) => e.stopPropagation()}
-                    onTouchEnd={(e) => e.stopPropagation()}
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      zIndex: 10,
-                      background: "var(--color-panel)",
-                      borderRadius: "inherit",
-                      display: "flex",
-                      flexDirection: "column",
-                      padding: "1rem 1.25rem",
-                      overflowY: "auto",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: selectedInfo.created_at ? "0.25rem" : "0.75rem" }}>
-                      <h3 style={{ flex: 1, color: "var(--color-green)", margin: 0, fontSize: "0.95rem" }}>
-                        {selectedInfo.heading_cube}
-                      </h3>
-                      <button
-                        type="button"
-                        className="ghost-btn"
-                        onClick={() => setSelectedInfo(null)}
-                        style={{ padding: "0.2rem 0.5rem", minWidth: 0, fontSize: "0.85rem" }}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    {selectedInfo.created_at && (
-                      <p style={{ color: "var(--color-green)", fontSize: "0.75rem", margin: "0 0 0.75rem" }}>
-                        {new Date(selectedInfo.created_at).toLocaleDateString([], { day: "2-digit", month: "2-digit", year: "numeric" })}
-                      </p>
-                    )}
-                    {selectedInfo.descriptions ? (
-                      <ul style={{ color: "var(--color-green)", fontSize: "0.85rem", lineHeight: 1.55, margin: 0, paddingLeft: "1.2rem" }}>
-                        {selectedInfo.descriptions.map((d, i) => (
-                          <li key={i} style={{ marginBottom: "0.4rem" }}>{d}</li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p style={{ color: "var(--color-green)", fontSize: "0.85rem", lineHeight: 1.55, margin: 0 }}>
-                        {selectedInfo.text_description}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                <div className="cube-face-header">
-                  <h2>{tr.infoFace}</h2>
-                </div>
-
-                {/* Tab bar */}
-                <div style={{ display: "flex", borderBottom: "1px solid rgba(3,160,98,0.2)", padding: "0 0.5rem" }}>
-                  {(["update", "manual", "announcement", "reported_bugs"] as const).map((tab) => {
-                    const labels: Record<string, string> = {
-                      update: tr.whatsNew,
-                      manual: tr.manual,
-                      announcement: tr.announcements,
-                      reported_bugs: tr.reportedBugs,
-                    };
-                    return (
-                      <button
-                        key={tab}
-                        type="button"
-                        onClick={() => {
-                          setActiveInfoTab(tab);
-                          setSelectedInfo(null);
-                          if (tab !== "reported_bugs") setBugSubView("list");
-                        }}
-                        style={{
-                          flex: 1,
-                          background: "none",
-                          border: "none",
-                          borderBottom: activeInfoTab === tab ? "2px solid var(--color-green)" : "2px solid transparent",
-                          color: "var(--color-green)",
-                          fontSize: "0.65rem",
-                          padding: "0.4rem 0.1rem",
-                          cursor: "pointer",
-                          fontFamily: "inherit",
-                          textTransform: "uppercase",
-                          letterSpacing: "0.03em",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          transition: "color 0.2s",
-                        }}
-                      >
-                        {labels[tab]}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Tab content */}
-                <div style={{ flex: 1, overflowY: "auto", padding: "0.5rem 0" }}>
-                  {activeInfoTab === "reported_bugs" ? (
-                    <>
-                      {/* Sub-toggle: View / Report */}
-                      <div style={{ display: "flex", gap: "0.4rem", padding: "0.5rem 1.25rem 0.4rem", borderBottom: "1px solid rgba(3,160,98,0.12)" }}>
-                        <button
-                          type="button"
-                          onClick={() => setBugSubView("list")}
-                          style={{
-                            flex: 1,
-                            background: bugSubView === "list" ? "rgba(3,160,98,0.15)" : "none",
-                            border: "1px solid rgba(3,160,98,0.3)",
-                            borderRadius: "0.25rem",
-                            color: "var(--color-green)",
-                            fontSize: "0.72rem",
-                            padding: "0.3rem 0.4rem",
-                            cursor: "pointer",
-                            fontFamily: "inherit",
-                          }}
-                        >
-                          {tr.reportedBugs}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setBugSubView("report")}
-                          style={{
-                            flex: 1,
-                            background: bugSubView === "report" ? "rgba(3,160,98,0.15)" : "none",
-                            border: "1px solid rgba(3,160,98,0.3)",
-                            borderRadius: "0.25rem",
-                            color: "var(--color-green)",
-                            fontSize: "0.72rem",
-                            padding: "0.3rem 0.4rem",
-                            cursor: "pointer",
-                            fontFamily: "inherit",
-                          }}
-                        >
-                          {tr.reportBug}
-                        </button>
-                      </div>
-
-                      {bugSubView === "report" ? (
-                        /* Submit form */
-                        <div style={{ padding: "0.75rem 1.25rem" }}>
-                          {bugReported ? (
-                            <p style={{ color: "var(--color-green)", fontSize: "0.8rem", margin: 0 }}>{tr.bugReported}</p>
-                          ) : (
-                            <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-                              <input
-                                type="text"
-                                value={bugTitleInput}
-                                onChange={(e) => setBugTitleInput(e.target.value)}
-                                placeholder={tr.bugTitle}
-                                maxLength={64}
-                                style={{
-                                  fontSize: "0.8rem",
-                                  padding: "0.35rem 0.5rem",
-                                  background: "rgba(3,160,98,0.08)",
-                                  border: "1px solid rgba(3,160,98,0.3)",
-                                  borderRadius: "0.25rem",
-                                  color: "var(--color-green)",
-                                  outline: "none",
-                                  fontFamily: "inherit",
-                                }}
-                              />
-                              <select
-                                value={bugCategoryInput}
-                                onChange={(e) => setBugCategoryInput(e.target.value)}
-                                style={{
-                                  fontSize: "0.8rem",
-                                  padding: "0.35rem 0.5rem",
-                                  background: "rgba(3,160,98,0.08)",
-                                  border: "1px solid rgba(3,160,98,0.3)",
-                                  borderRadius: "0.25rem",
-                                  color: "var(--color-green)",
-                                  outline: "none",
-                                  fontFamily: "inherit",
-                                }}
-                              >
-                                {["UI", "Functionality", "Performance", "Security", "Other"].map((cat) => (
-                                  <option key={cat} value={cat}>{cat}</option>
-                                ))}
-                              </select>
-                              <div style={{ display: "flex", gap: "0.4rem", alignItems: "flex-end" }}>
-                                <textarea
-                                  value={bugInput}
-                                  onChange={(e) => setBugInput(e.target.value)}
-                                  placeholder={tr.bugDescription}
-                                  maxLength={256}
-                                  rows={3}
-                                  style={{
-                                    flex: 1,
-                                    resize: "none",
-                                    fontSize: "0.8rem",
-                                    padding: "0.35rem 0.5rem",
-                                    background: "rgba(3,160,98,0.08)",
-                                    border: "1px solid rgba(3,160,98,0.3)",
-                                    borderRadius: "0.25rem",
-                                    color: "var(--color-green)",
-                                    outline: "none",
-                                    fontFamily: "inherit",
-                                  }}
-                                />
-                                <button
-                                  type="button"
-                                  className="contact-action-btn contact-action-btn--add"
-                                  onClick={handleSubmitBug}
-                                  disabled={submittingBug || !bugTitleInput.trim() || !bugInput.trim() || !bugCategoryInput}
-                                  style={{ fontSize: "0.75rem", padding: "0.4rem 0.6rem" }}
-                                >
-                                  {submittingBug ? "…" : tr.submitBug}
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        /* Bug list */
-                        <div>
-                          {loadingBugs ? (
-                            <div style={{ padding: "1rem", color: "var(--color-green)", fontSize: "0.8rem", textAlign: "center" }}>{tr.loadingInfo}</div>
-                          ) : reportedBugs.length === 0 ? (
-                            <div style={{ padding: "1rem", color: "var(--color-green)", fontSize: "0.8rem", textAlign: "center" }}>{tr.noBugsReported}</div>
-                          ) : (
-                            reportedBugs.map((bug) => (
-                              <div
-                                key={bug.bug_id}
-                                style={{
-                                  padding: "0.5rem 1.25rem",
-                                  borderBottom: "1px solid rgba(3,160,98,0.1)",
-                                }}
-                              >
-                                <div style={{ fontSize: "0.75rem", color: "var(--color-green)", marginBottom: "0.2rem" }}>
-                                  {bug.display_name} · {new Date(bug.created_at).toLocaleDateString([], { day: "2-digit", month: "2-digit", year: "numeric" })}
-                                </div>
-                                <div style={{ color: "var(--color-green)", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.15rem", wordBreak: "break-word", textDecoration: "underline", textDecorationThickness: "2px" }}>
-                                  {bug.title}
-                                </div>
-                                <div style={{ color: "var(--color-green)", fontSize: "0.7rem", marginBottom: "0.15rem" }}>
-                                  {bug.category}
-                                </div>
-                                <div style={{ color: "var(--color-green)", fontSize: "0.8rem", wordBreak: "break-word" }}>
-                                  {bug.bug_description}
-                                </div>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      )}
-                    </>
-                  ) : loadingInfoItems ? (
-                    <div style={{ padding: "1rem", color: "var(--color-green)", fontSize: "0.8rem", textAlign: "center" }}>{tr.loadingInfo}</div>
-                  ) : infoItems.length === 0 ? (
-                    <div style={{ padding: "1rem", color: "var(--color-green)", fontSize: "0.8rem", textAlign: "center" }}>{tr.noInfoEntries}</div>
-                  ) : (
-                    infoItems.map((item) => (
-                      <div
-                        key={item.heading_cube}
-                        onClick={() => setSelectedInfo(item)}
-                        style={{
-                          padding: "0.55rem 1.25rem",
-                          borderBottom: "1px solid rgba(3,160,98,0.1)",
-                          cursor: "pointer",
-                          color: "var(--color-green)",
-                          fontSize: "0.85rem",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
-                          {item.heading_cube}
-                        </span>
-                        <span style={{ color: "var(--color-green)", fontSize: "0.75rem", marginLeft: "0.5rem", display: "flex", alignItems: "center", gap: "0.4rem", flexShrink: 0 }}>
-                          {item.created_at && new Date(item.created_at).toLocaleDateString([], { day: "2-digit", month: "2-digit", year: "numeric" })}
-                          ›
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                <button
-                  className="ghost-btn"
-                  type="button"
-                  onClick={goDown}
-                  style={{ margin: "0.5rem 1.25rem", fontSize: "0.8rem", padding: "0.35rem 0.6rem" }}
-                >
-                  {tr.cancel}
-                </button>
-              </div>
-            </article>
-          </section>
+          <HomeInfoFace
+            activeInfoTab={activeInfoTab}
+            setActiveInfoTab={setActiveInfoTab}
+            infoItems={infoItems}
+            loadingInfoItems={loadingInfoItems}
+            selectedInfo={selectedInfo}
+            setSelectedInfo={setSelectedInfo}
+            reportedBugs={reportedBugs}
+            loadingBugs={loadingBugs}
+            bugTitleInput={bugTitleInput}
+            setBugTitleInput={setBugTitleInput}
+            bugInput={bugInput}
+            setBugInput={setBugInput}
+            bugCategoryInput={bugCategoryInput}
+            setBugCategoryInput={setBugCategoryInput}
+            submittingBug={submittingBug}
+            bugReported={bugReported}
+            bugSubView={bugSubView}
+            setBugSubView={setBugSubView}
+            handleSubmitBug={handleSubmitBug}
+            lang={lang}
+            goDown={goDown}
+            tr={tr}
+          />
 
           {/* Top: Logout */}
-          <section className="cube-face cube-face-top">
-            <article className="auth-card cube-face-panel">
-              <h2>{tr.logout}</h2>
-              <p className="hero-copy">
-                {tr.logoutPrompt}
-              </p>
-              <button
-                className="auth-btn"
-                type="button"
-                onClick={handleLogout}
-              >
-                {tr.logOut}
-              </button>
-              <button
-                className="ghost-btn mt-3"
-                type="button"
-                onClick={goUp}
-              >
-                {tr.cancel}
-              </button>
-            </article>
-          </section>
+          <HomeLogoutFace
+            handleLogout={handleLogout}
+            goUp={goUp}
+            tr={tr}
+          />
         </div>
       </div>
 
