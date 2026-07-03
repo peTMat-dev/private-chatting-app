@@ -1,7 +1,7 @@
 "use client";
 
 import { Dispatch, SetStateAction } from "react";
-import Contact from "../../components/Contact";
+import Contact from "./Contact";
 import { type Translations } from "../../../lib/i18n";
 import { type CubeFace } from "../../../lib/useCubeNavigation";
 import { type ContactSummary, type ContactItem } from "../types";
