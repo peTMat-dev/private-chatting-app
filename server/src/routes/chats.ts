@@ -196,20 +196,15 @@ router.get("/:id/messages", async (req: Request, res: Response) => {
       sender_display_name: string;
       sender_user_id: number;
     };
-    const messages = await query<MessageRow>(
-      `SELECT m.message_id, m.message_text, DATE_FORMAT(CONVERT_TZ(m.sent_at, @@session.time_zone, '+00:00'), '%Y-%m-%dT%H:%i:%sZ') AS sent_at,
-              umd.display_name AS sender_display_name, umd.user_id AS sender_user_id
-       FROM messages m
-       JOIN user_main_details umd ON umd.user_id = m.sender_user_id
-       WHERE m.conversation_id = ?
-       ORDER BY m.sent_at ASC
-       LIMIT 100`,
+    const messagesResult = await query<MessageRow>(
+      `CALL messages_2read_by_conversation(?)`,
       [conversationId]
     );
+    const messages = (messagesResult as any)[0] || [];
 
-    const data = messages.map((m) => ({
+    const data = messages.map((m: MessageRow) => ({
       messageId: m.message_id,
-      text: decryptText(m.message_text),
+      text: m.message_text ? decryptText(m.message_text) : "",
       sentAt: m.sent_at,
       senderDisplayName: m.sender_display_name,
       senderUserId: m.sender_user_id,
