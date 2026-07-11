@@ -1,0 +1,50 @@
+# SQL Notes and Learnings
+
+## Stored Procedures
+
+### Delimiter Rules
+
+- In .sql files (like create_stored_procedures.sql): NO delimiter needed Example: CREATE PROCEDURE test() BEGIN SELECT 1; END
+
+- In MySQL client/console: NEED delimiter Example: DELIMITER $$ CREATE PROCEDURE test() BEGIN SELECT 1; END$$ DELIMITER ;
+
+### Comments in Stored Procedures
+
+- Inline comments (using --) INSIDE BEGIN/END block: PRESERVED in database
+- Comments OUTSIDE BEGIN/END block: REMOVED from database
+
+### Calling Stored Procedures from TypeScript
+
+- Stored procedures return results wrapped in an array: [[...results...]]
+- Need to access first element: (rows[0] || [])
+- Use type assertion to avoid TypeScript errors: (rows as any)[0]
+
+## Query Optimization
+
+### Original Approach (3 subqueries per conversation)
+
+SELECT (SELECT message_text FROM messages WHERE ... LIMIT 1) AS last_message_text, (SELECT sent_at FROM messages WHERE ... LIMIT 1) AS last_message_at, (SELECT GROUP_CONCAT(...) FROM ...) AS participants FROM conversations
+
+### Optimized Approach (1 subquery + JOINs)
+
+SELECT lm.message_text AS last_message_text, DATE_FORMAT(...) AS last_message_at, (SELECT GROUP_CONCAT(...)) AS participants FROM conversations c LEFT JOIN messages lm ON lm.conversation_id = c.conversation_id LEFT JOIN ( SELECT conversation_id, MAX(sent_at) AS max_sent_at FROM messages GROUP BY conversation_id ) latest ON latest.conversation_id = c.conversation_id AND lm.sent_at = latest.max_sent_at WHERE cp.user_id = p_user_id
+
+Benefits:
+
+- Reduces from 3 subqueries per conversation to 1
+- Uses derived table to find latest message efficiently
+- Better performance with many conversations
+
+## Common Patterns
+
+### Get Latest Message per Conversation
+
+LEFT JOIN ( SELECT conversation_id, MAX(sent_at) AS max_sent_at FROM messages GROUP BY conversation_id ) latest ON latest.conversation_id = c.conversation_id AND lm.sent_at = latest.max_sent_at
+
+### Get Participants List (excluding current user)
+
+SELECT GROUP_CONCAT(DISTINCT umd.display_name SEPARATOR ', ') FROM conversations_participants cp2 JOIN user_main_details umd ON umd.user_id = cp2.user_id WHERE cp2.conversation_id = c.conversation_id AND cp2.user_id <> p_user_id
+
+### Timezone Conversion
+
+DATE_FORMAT(CONVERT_TZ(sent_at, @@session.time_zone, '+00:00'), '%Y-%m-%dT%H:%i:%sZ')
