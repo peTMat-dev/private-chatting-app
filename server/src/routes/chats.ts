@@ -18,38 +18,12 @@ router.get("/", async (req: Request, res: Response) => {
   const { userId } = req.user;
   try {
 
-    const rows = await query<ChatRow>(
-      `SELECT c.conversation_id,
-              c.title,
-              c.is_group,
-              (
-                SELECT m.message_text
-                FROM messages m
-                WHERE m.conversation_id = c.conversation_id
-                ORDER BY m.sent_at DESC
-                LIMIT 1
-              ) AS last_message_text,
-              (
-                SELECT DATE_FORMAT(CONVERT_TZ(m.sent_at, @@session.time_zone, '+00:00'), '%Y-%m-%dT%H:%i:%sZ')
-                FROM messages m
-                WHERE m.conversation_id = c.conversation_id
-                ORDER BY m.sent_at DESC
-                LIMIT 1
-              ) AS last_message_at,
-              (
-                SELECT GROUP_CONCAT(umd.display_name SEPARATOR ', ')
-                FROM conversations_participants cp2
-                JOIN user_main_details umd ON umd.user_id = cp2.user_id
-                WHERE cp2.conversation_id = c.conversation_id AND cp2.user_id <> ?
-              ) AS participants
-       FROM conversations c
-       JOIN conversations_participants cp ON cp.conversation_id = c.conversation_id
-       WHERE cp.user_id = ?
-       ORDER BY c.conversation_id DESC`,
-      [userId, userId]
-    );
+  const rows = await query<ChatRow>(
+    `CALL conversations_2read_by_user(?)`,
+    [userId]
+  );
 
-    const data = rows.map((r) => ({
+    const data = ((rows as any)[0] || []).map((r: ChatRow) => ({
       id: r.conversation_id,
       name: r.title && r.title.trim() ? r.title : r.participants || "Untitled",
       lastMessage: r.last_message_text ? decryptText(r.last_message_text) : "",
