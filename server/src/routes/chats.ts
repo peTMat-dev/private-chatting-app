@@ -58,12 +58,11 @@ router.post("/", async (req: Request, res: Response) => {
 
   try {
     // Resolve caller settings
-    const userRows = await query<{ default_max_chat_participants: number }>(
-      `SELECT usd.default_max_chat_participants
-       FROM user_system_details usd
-       WHERE usd.user_id = ? LIMIT 1`,
+    const result = await query<{ default_max_chat_participants: number }>(
+      `CALL messages_2get_max_chat_participants(?)`,
       [userId]
     );
+    const userRows = (result as any)[0] || [];
     if (userRows.length === 0) {
       return res.status(404).json({ success: false, error: "user not found" });
     }
