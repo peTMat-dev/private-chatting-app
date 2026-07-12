@@ -23,7 +23,9 @@ router.get("/", async (req: Request, res: Response) => {
     [userId]
   );
 
-    const data = ((rows as any)[0] || []).map((r: ChatRow) => ({
+    interface ChatItem { id: number; name: string; lastMessage: string; lastAt: string | null; isGroup: boolean }
+    const chatRows: ChatRow[] = (rows as any)[0] || [];
+    const allChats: ChatItem[] = chatRows.map((r: ChatRow) => ({
       id: r.conversation_id,
       name: r.title && r.title.trim() ? r.title : r.participants || "Untitled",
       lastMessage: r.last_message_text ? decryptText(r.last_message_text) : "",
@@ -31,7 +33,10 @@ router.get("/", async (req: Request, res: Response) => {
       isGroup: Boolean(r.is_group),
     }));
 
-    res.json({ success: true, count: data.length, data });
+    const personal = allChats.filter(chat => !chat.isGroup) as ChatItem[];
+    const groups = allChats.filter(chat => chat.isGroup) as ChatItem[];
+
+    res.json({ success: true, personal, groups, count: allChats.length });
   } catch (error) {
     res.status(500).json({ success: false, error: (error as Error).message });
   }

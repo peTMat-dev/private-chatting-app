@@ -16,7 +16,8 @@ export type ContactItem = {
 export type ApiChatsResponse = {
   success: boolean;
   count?: number;
-  data?: Array<{ id: number; name: string; lastMessage: string; isGroup: boolean }>;
+  personal?: Array<{ id: number; name: string; lastMessage: string; isGroup: boolean }>;
+  groups?: Array<{ id: number; name: string; lastMessage: string; isGroup: boolean }>;
   error?: string;
 };
 

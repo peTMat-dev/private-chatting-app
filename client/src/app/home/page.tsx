@@ -160,7 +160,9 @@ export default function HomeCube() {
         setError(data.error || "Unable to load chats");
         return;
       }
-      const list: ContactSummary[] = (data.data || []).map((d) => ({
+      const personal = data.personal || [];
+      const groups = data.groups || [];
+      const list: ContactSummary[] = [...personal, ...groups].map((d) => ({
         id: d.id,
         name: d.name,
         lastMessage: d.lastMessage || "",
