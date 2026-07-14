@@ -33,17 +33,14 @@ router.get("/", async (req: Request, res: Response) => {
 
   try {
 
-    // Get user's contacts
-    const contacts = await query<Contact>(
-      `SELECT c.contact_user_id, umd.display_name, c.status_st, c.added_at,
-              usd.\`public_st\` AS is_public
-       FROM contacts c
-       JOIN user_main_details umd ON umd.user_id = c.contact_user_id
-       LEFT JOIN user_system_details usd ON usd.user_id = c.contact_user_id
-       WHERE c.owner_user_id = ?
-       ORDER BY umd.display_name ASC`,
+    // Call stored procedure to get user's contacts
+    const contactsResult = await query<Contact>(
+      "CALL contact_2read_c_list(?)",
       [userId]
     );
+
+    // MySQL stored procedures return results in nested array
+    const contacts = Array.isArray(contactsResult[0]) ? contactsResult[0] : contactsResult;
 
     const data = contacts.map((c) => ({
       id: c.contact_user_id,
