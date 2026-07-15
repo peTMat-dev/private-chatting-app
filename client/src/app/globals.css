@@ -289,6 +289,33 @@ a:hover {
   flex-direction: column;
   flex: 1;
   min-height: 0; /* allow inner form to scroll */
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar for Contacts face content */
+.cube-face-left .cube-face-content::-webkit-scrollbar {
+  width: 12px;
+}
+
+.cube-face-left .cube-face-content::-webkit-scrollbar-track {
+  background: rgba(3, 160, 98, 0.05);
+  border-radius: 6px;
+}
+
+.cube-face-left .cube-face-content::-webkit-scrollbar-thumb {
+  background: rgba(3, 160, 98, 0.3);
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.cube-face-left .cube-face-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(3, 160, 98, 0.5);
+}
+
+.cube-face-left .cube-face-content {
+  scrollbar-width: auto;
+  scrollbar-color: rgba(3, 160, 98, 0.3) rgba(3, 160, 98, 0.05);
 }
 
 .cube-face-content .row {
