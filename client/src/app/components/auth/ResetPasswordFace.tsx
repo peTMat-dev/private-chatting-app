@@ -19,12 +19,14 @@ type Props = {
 	handleTokenReset: (event: FormEvent<HTMLFormElement>) => void;
 	setFace: (face: CubeFace) => void;
 	tr: Translations;
+	resetSuccess: boolean;
+	resetError: string | null;
 };
 
 export default function ResetPasswordFace({
 	resetToken, resetPassword, setResetPassword, resetConfirmPassword, setResetConfirmPassword,
 	forgotEmail, setForgotEmail, loadingForgot, resetDisabled, forgotDisabled,
-	handleForgot, handleTokenReset, setFace, tr,
+	handleForgot, handleTokenReset, setFace, tr, resetSuccess, resetError,
 }: Props) {
 	return (
 		<section className="cube-face cube-face-left">
@@ -43,6 +45,18 @@ export default function ResetPasswordFace({
 								{resetToken ? (
 									<>
 										<p className="hero-copy">{tr.enterNewPassword}</p>
+										{resetSuccess && (
+											<div className="auth-success" role="alert" aria-live="polite">
+												<strong>{tr.passwordUpdated}</strong>
+												<p>{tr.signInNewPassword}</p>
+											</div>
+										)}
+										{resetError && !resetSuccess && (
+											<div className="auth-error" role="alert" aria-live="polite">
+												<strong>{tr.resetFailed}</strong>
+												<p>{resetError}</p>
+											</div>
+										)}
 										<form onSubmit={handleTokenReset} className="d-flex flex-column gap-3 mt-2">
 										<div>
 											<label htmlFor="reset-pass" className="auth-label">
