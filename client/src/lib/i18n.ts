@@ -140,6 +140,7 @@ export type Translations = {
   tryAgain: string;
   resetSent: string;
   checkInbox: string;
+  resetInstructionsSent: string;
   tokenMissing: string;
   unableToReset: string;
   passwordUpdated: string;
@@ -276,6 +277,7 @@ const translations: Record<LangCode, Translations> = {
     tryAgain: "Try again",
     resetSent: "Reset sent",
     checkInbox: "Check your inbox",
+    resetInstructionsSent: "If the email exists, reset instructions have been sent.",
     tokenMissing: "Token is missing",
     unableToReset: "Unable to reset password",
     passwordUpdated: "Password updated",
@@ -408,6 +410,7 @@ const translations: Record<LangCode, Translations> = {
     tryAgain: "Inténtalo de nuevo",
     resetSent: "Enlace enviado",
     checkInbox: "Revisa tu bandeja de entrada",
+    resetInstructionsSent: "Si el correo existe, se han enviado las instrucciones de restablecimiento.",
     tokenMissing: "El token no está disponible",
     unableToReset: "No se pudo restablecer la contraseña",
     passwordUpdated: "Contraseña actualizada",
@@ -538,6 +541,7 @@ const translations: Record<LangCode, Translations> = {
     tryAgain: "Réessayer",
     resetSent: "Lien envoyé",
     checkInbox: "Vérifiez votre boîte de réception",
+    resetInstructionsSent: "Si l'e-mail existe, les instructions de réinitialisation ont été envoyées.",
     tokenMissing: "Le jeton est manquant",
     unableToReset: "Impossible de réinitialiser le mot de passe",
     passwordUpdated: "Mot de passe mis à jour",
@@ -670,6 +674,7 @@ const translations: Record<LangCode, Translations> = {
     tryAgain: "Erneut versuchen",
     resetSent: "Link gesendet",
     checkInbox: "Überprüfen Sie Ihren Posteingang",
+    resetInstructionsSent: "Wenn die E-Mail existiert, wurden Wiederherstellungsanweisungen gesendet.",
     tokenMissing: "Token fehlt",
     unableToReset: "Passwort konnte nicht zurückgesetzt werden",
     passwordUpdated: "Passwort aktualisiert",
@@ -802,6 +807,7 @@ const translations: Record<LangCode, Translations> = {
     tryAgain: "Skúste znova",
     resetSent: "Odkaz odoslaný",
     checkInbox: "Skontrolujte svoju doručenú poštu",
+    resetInstructionsSent: "Ak e-mail existuje, boli odoslané pokyny na obnovenie.",
     tokenMissing: "Token chýba",
     unableToReset: "Heslo sa nepodarilo obnoviť",
     passwordUpdated: "Heslo aktualizované",
@@ -934,6 +940,7 @@ const translations: Record<LangCode, Translations> = {
     tryAgain: "Zkuste znovu",
     resetSent: "Odkaz odeslán",
     checkInbox: "Zkontrolujte svou doručenou poštu",
+    resetInstructionsSent: "Pokud e-mail existuje, byly odeslány pokyny pro obnovení.",
     tokenMissing: "Token chybí",
     unableToReset: "Heslo se nepodařilo obnovit",
     passwordUpdated: "Heslo aktualizováno",

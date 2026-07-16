@@ -59,7 +59,7 @@ export function useResetPasswordFace(
 				showToast({ title: tr.resetFailed, body: data.error ?? tr.tryAgain });
 				return;
 			}
-			showToast({ title: tr.resetSent, body: data.message ?? tr.checkInbox });
+			showToast({ title: tr.resetSent, body: tr.resetInstructionsSent });
 			setForgotEmail("");
 		} catch (error) {
 			showToast({ title: tr.resetFailed, body: (error as Error).message });

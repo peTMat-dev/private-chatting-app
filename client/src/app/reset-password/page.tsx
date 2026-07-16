@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { FormEvent } from "react";
 import { postJson } from "../../lib/api";
+import { t, getLang, type LangCode } from "../../lib/i18n";
 
 type ApiResponse = {
   success: boolean;
@@ -22,10 +23,16 @@ export default function ResetPasswordPage() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
 
+  const [lang, setLang] = useState<LangCode>("en");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
+
+  // Initialize language from cookies/localStorage
+  useEffect(() => {
+    setLang(getLang());
+  }, []);
 
   useEffect(() => {
     if (!toast) return;
@@ -45,12 +52,13 @@ export default function ResetPasswordPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const tr = t(lang);
     if (!token) {
-      showToast({ title: "Reset failed", body: "Token is missing" });
+      showToast({ title: tr.resetFailed, body: tr.tokenMissing });
       return;
     }
     if (password !== confirmPassword) {
-      showToast({ title: "Reset failed", body: "Passwords must match" });
+      showToast({ title: tr.resetFailed, body: tr.passwordsMustMatch });
       return;
     }
 
@@ -61,30 +69,32 @@ export default function ResetPasswordPage() {
         password,
       });
       if (!ok || !data.success) {
-        const detail = data.errors?.[0] ?? data.error ?? "Unable to reset password";
-        showToast({ title: "Reset failed", body: detail });
+        const detail = data.errors?.[0] ?? data.error ?? tr.unableToReset;
+        showToast({ title: tr.resetFailed, body: detail });
         return;
       }
-      showToast({ title: "Password updated", body: data.message ?? "Sign in with your new password" });
+      showToast({ title: tr.passwordUpdated, body: data.message ?? tr.signInNewPassword });
       setTimeout(() => router.push("/"), 1200);
     } catch (error) {
-      showToast({ title: "Reset failed", body: (error as Error).message });
+      showToast({ title: tr.resetFailed, body: (error as Error).message });
     } finally {
       setLoading(false);
     }
   };
 
+  const tr = t(lang);
+
   return (
     <div className="mobile-auth-screen">
       <section className="auth-card">
-        <h2>Reset Password</h2>
+        <h2>{tr.resetPassword}</h2>
         {!token && (
-          <p className="hero-copy">This link is missing a token. Request a new password reset email and try again.</p>
+          <p className="hero-copy">{tr.tokenMissing}. {tr.sendResetLinkPrompt}</p>
         )}
         <form onSubmit={handleSubmit} className="d-flex flex-column gap-3 mt-3">
           <div>
             <label htmlFor="reset-pass" className="auth-label">
-              New password
+              {tr.newPassword}
             </label>
             <input
               id="reset-pass"
@@ -97,7 +107,7 @@ export default function ResetPasswordPage() {
           </div>
           <div>
             <label htmlFor="reset-confirm" className="auth-label">
-              Confirm password
+              {tr.confirmPassword}
             </label>
             <input
               id="reset-confirm"

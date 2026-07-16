@@ -120,7 +120,6 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
       if (env.app.exposeResetUrl) {
         res.json({
           success: true,
-          message: "If the email exists, reset instructions have been queued.",
           resetUrl,
         });
         return;
@@ -128,7 +127,6 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
     }
     res.json({
       success: true,
-      message: "If the email exists, reset instructions have been queued.",
     });
   } catch (error) {
     res.status(500).json({ success: false, error: (error as Error).message });
