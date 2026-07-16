@@ -2,16 +2,9 @@ import { useState, useMemo, useCallback } from "react";
 import { postJson } from "../lib/api";
 import { t, type LangCode } from "../lib/i18n";
 import { useLanguage } from "../lib/LanguageContext";
+import { type RegisterFormData } from "../lib/formTypes";
 
-export interface RegisterFormData {
-	firstName: string;
-	lastName: string;
-	displayName: string;
-	username: string;
-	email: string;
-	password: string;
-	confirmPassword: string;
-}
+export type { RegisterFormData };
 
 export interface UseRegisterFaceReturn {
 	// Form state

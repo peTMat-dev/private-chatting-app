@@ -3,20 +3,11 @@
 import { FormEvent, Dispatch, SetStateAction } from "react";
 import { type Translations } from "../../../lib/i18n";
 import { type CubeFace } from "../../../lib/useCubeNavigation";
-
-type RegisterForm = {
-	firstName: string;
-	lastName: string;
-	displayName: string;
-	username: string;
-	email: string;
-	password: string;
-	confirmPassword: string;
-};
+import { type RegisterFormData } from "../../../lib/formTypes";
 
 type Props = {
-	registerForm: RegisterForm;
-	setRegisterForm: Dispatch<SetStateAction<RegisterForm>>;
+	registerForm: RegisterFormData;
+	setRegisterForm: Dispatch<SetStateAction<RegisterFormData>>;
 	registerDisabled: boolean;
 	loadingRegister: boolean;
 	registerErrors: string[] | null;

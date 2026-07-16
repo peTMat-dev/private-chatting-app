@@ -4,7 +4,8 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { FormEvent } from "react";
 import { postJson } from "../../lib/api";
-import { t, getLang, type LangCode } from "../../lib/i18n";
+import { t } from "../../lib/i18n";
+import { useLanguage } from "../../lib/LanguageContext";
 
 type ApiResponse = {
   success: boolean;
@@ -22,17 +23,12 @@ export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
+  const { lang } = useLanguage();
 
-  const [lang, setLang] = useState<LangCode>("en");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
-
-  // Initialize language from cookies/localStorage
-  useEffect(() => {
-    setLang(getLang());
-  }, []);
 
   useEffect(() => {
     if (!toast) return;
@@ -119,10 +115,10 @@ export default function ResetPasswordPage() {
             />
           </div>
           <button type="submit" className="auth-btn" disabled={formDisabled}>
-            {loading ? "Updating" : "Reset password"}
+            {loading ? tr.updating : tr.resetPassword}
           </button>
           <button type="button" className="ghost-btn" onClick={() => router.push("/")}>
-            Back to sign in
+            {tr.backToLogin}
           </button>
         </form>
       </section>

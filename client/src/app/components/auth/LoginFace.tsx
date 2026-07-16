@@ -3,12 +3,11 @@
 import { FormEvent, Dispatch, SetStateAction } from "react";
 import { type Translations } from "../../../lib/i18n";
 import { type CubeFace } from "../../../lib/useCubeNavigation";
-
-type LoginForm = { username: string; password: string };
+import { type LoginFormData } from "../../../lib/formTypes";
 
 type Props = {
-	loginForm: LoginForm;
-	setLoginForm: Dispatch<SetStateAction<LoginForm>>;
+	loginForm: LoginFormData;
+	setLoginForm: Dispatch<SetStateAction<LoginFormData>>;
 	loginDisabled: boolean;
 	loadingLogin: boolean;
 	loginSuccess: boolean;

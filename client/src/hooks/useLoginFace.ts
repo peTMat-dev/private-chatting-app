@@ -1,13 +1,10 @@
 import { useState, useMemo, useCallback, type FormEvent } from "react";
 import { postJson } from "../lib/api";
 import { useRouter } from "next/navigation";
-import { LANGUAGES, type LangCode } from "../lib/i18n";
 import { useLanguage } from "../lib/LanguageContext";
+import { type LoginFormData } from "../lib/formTypes";
 
-export interface LoginFormData {
-	username: string;
-	password: string;
-}
+export type { LoginFormData };
 
 export interface UseLoginFaceReturn {
 	// Form state

@@ -3,6 +3,7 @@ import type { KeyboardEvent, TouchEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { t, type LangCode } from "../lib/i18n";
 import { useLanguage } from "../lib/LanguageContext";
+import { type LoginFormData, type RegisterFormData } from "../lib/formTypes";
 import { useCubeNavigation, type CubeFace } from "../lib/useCubeNavigation";
 import { useLoginFace } from "./useLoginFace";
 import { useRegisterFace } from "./useRegisterFace";
@@ -33,8 +34,8 @@ export interface UseAuthCubeReturn {
 	transitionEnabled: boolean;
 	
 	// Login
-	loginForm: { username: string; password: string };
-	setLoginForm: (form: { username: string; password: string }) => void;
+	loginForm: LoginFormData;
+	setLoginForm: (form: LoginFormData) => void;
 	loginError: string | null;
 	loadingLogin: boolean;
 	loginSuccess: boolean;
@@ -42,8 +43,8 @@ export interface UseAuthCubeReturn {
 	handleLogin: (event: FormEvent<HTMLFormElement>) => Promise<void>;
 	
 	// Register
-	registerForm: { firstName: string; lastName: string; displayName: string; username: string; email: string; password: string; confirmPassword: string };
-	setRegisterForm: (form: { firstName: string; lastName: string; displayName: string; username: string; email: string; password: string; confirmPassword: string }) => void;
+	registerForm: RegisterFormData;
+	setRegisterForm: (form: RegisterFormData) => void;
 	registerErrors: string[] | null;
 	registrationSuccess: boolean;
 	loadingRegister: boolean;
