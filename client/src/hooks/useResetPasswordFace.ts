@@ -74,15 +74,11 @@ export function useResetPasswordFace(
 		setResetSuccess(false);
 		
 		if (!resetToken) {
-			const errorMsg = tr.tokenMissing;
-			setResetError(errorMsg);
-			showToast({ title: tr.resetFailed, body: errorMsg });
+			setResetError(tr.tokenMissing);
 			return;
 		}
 		if (resetPassword !== resetConfirmPassword) {
-			const errorMsg = tr.passwordsMustMatch;
-			setResetError(errorMsg);
-			showToast({ title: tr.resetFailed, body: errorMsg });
+			setResetError(tr.passwordsMustMatch);
 			return;
 		}
 
@@ -95,7 +91,6 @@ export function useResetPasswordFace(
 			if (!ok || !data.success) {
 				const detail = data.errors?.[0] ?? data.error ?? tr.unableToReset;
 				setResetError(detail);
-				showToast({ title: tr.resetFailed, body: detail });
 				return;
 			}
 			setResetSuccess(true);
@@ -108,13 +103,11 @@ export function useResetPasswordFace(
 				}, 1200);
 			}
 		} catch (error) {
-			const errorMsg = (error as Error).message;
-			setResetError(errorMsg);
-			showToast({ title: tr.resetFailed, body: errorMsg });
+			setResetError((error as Error).message);
 		} finally {
 			setLoadingForgot(false);
 		}
-	}, [resetToken, resetPassword, resetConfirmPassword, showToast, tr, onSuccess]);
+	}, [resetToken, resetPassword, resetConfirmPassword, tr, onSuccess]);
 
 	return {
 		forgotEmail,
