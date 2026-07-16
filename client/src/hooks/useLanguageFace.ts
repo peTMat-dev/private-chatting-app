@@ -1,5 +1,6 @@
-import { useState, useCallback, useEffect } from "react";
-import { LANGUAGES, getLang, setLang, type LangCode } from "../lib/i18n";
+import { useState, useCallback } from "react";
+import { LANGUAGES, type LangCode } from "../lib/i18n";
+import { useLanguage } from "../lib/LanguageContext";
 
 export interface UseLanguageFaceReturn {
 	lang: LangCode;
@@ -9,18 +10,13 @@ export interface UseLanguageFaceReturn {
 }
 
 export function useLanguageFace(): UseLanguageFaceReturn {
-	const [lang, setLangState] = useState<LangCode>("en");
+	const { lang, setLang } = useLanguage();
 	const [showLangSelect, setShowLangSelect] = useState(false);
-
-	useEffect(() => {
-		setLangState(getLang());
-	}, []);
 
 	const handleLangChange = useCallback((code: LangCode) => {
 		setLang(code);
-		setLangState(code);
 		setShowLangSelect(false);
-	}, []);
+	}, [setLang]);
 
 	return {
 		lang,

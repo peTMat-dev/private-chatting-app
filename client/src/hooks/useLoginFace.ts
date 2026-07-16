@@ -1,7 +1,8 @@
 import { useState, useMemo, useCallback, type FormEvent } from "react";
 import { postJson } from "../lib/api";
 import { useRouter } from "next/navigation";
-import { LANGUAGES, setLang, type LangCode } from "../lib/i18n";
+import { LANGUAGES, type LangCode } from "../lib/i18n";
+import { useLanguage } from "../lib/LanguageContext";
 
 export interface LoginFormData {
 	username: string;
@@ -27,6 +28,7 @@ export interface UseLoginFaceReturn {
 
 export function useLoginFace(): UseLoginFaceReturn {
 	const router = useRouter();
+	const { lang } = useLanguage();
 	const [loginForm, setLoginForm] = useState<LoginFormData>({ username: "", password: "" });
 	const [loginError, setLoginError] = useState<string | null>(null);
 	const [loadingLogin, setLoadingLogin] = useState(false);
@@ -50,15 +52,6 @@ export function useLoginFace(): UseLoginFaceReturn {
 				setTimeout(() => setLoginError(null), 2000);
 				return;
 			}
-			try {
-				// sync language preference from server (covers cross-browser/device logins)
-				if (data.user?.user_language) {
-					const serverLang = data.user.user_language as LangCode;
-					if (LANGUAGES.some(l => l.code === serverLang)) {
-						setLang(serverLang);
-					}
-				}
-			} catch {}
 			// Stop loading first to stabilize the UI
 			setLoadingLogin(false);
 			// Small delay to ensure render completes

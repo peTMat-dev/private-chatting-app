@@ -1,5 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { LANGUAGES, type LangCode } from "../lib/i18n";
+import { useLanguage } from "../lib/LanguageContext";
 import { useAuthCube } from "../hooks/useAuthCube";
 import LoginFace from "./components/auth/LoginFace";
 import RegisterFace from "./components/auth/RegisterFace";
@@ -8,7 +12,7 @@ import LanguageFace from "./components/auth/LanguageFace";
 import AuthLogoutFace from "./components/auth/LogoutFace";
 import AuthInfoFace from "./components/auth/InfoFace";
 
-export default function AuthScreen() {
+function AuthScreenContent() {
 	const auth = useAuthCube();
 
 	return (
@@ -112,4 +116,19 @@ export default function AuthScreen() {
 			)}
 		</div>
 	);
+}
+
+export default function AuthScreen() {
+	const searchParams = useSearchParams();
+	const { setLang } = useLanguage();
+
+	// Sync language from URL params on mount
+	useEffect(() => {
+		const urlLang = searchParams.get("lang") as LangCode | null;
+		if (urlLang && LANGUAGES.some(l => l.code === urlLang)) {
+			setLang(urlLang);
+		}
+	}, [searchParams, setLang]);
+
+	return <AuthScreenContent />;
 }

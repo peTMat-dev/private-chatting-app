@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { postJson } from "../lib/api";
 import { t, type LangCode } from "../lib/i18n";
+import { useLanguage } from "../lib/LanguageContext";
 
 export interface RegisterFormData {
 	firstName: string;
@@ -39,7 +40,8 @@ const buildEmptyRegisterForm = (): RegisterFormData => ({
 	confirmPassword: "",
 });
 
-export function useRegisterFace(lang: LangCode = "en"): UseRegisterFaceReturn {
+export function useRegisterFace(): UseRegisterFaceReturn {
+	const { lang } = useLanguage();
 	const tr = t(lang);
 	const [registerForm, setRegisterForm] = useState<RegisterFormData>(buildEmptyRegisterForm);
 	const [registerErrors, setRegisterErrors] = useState<string[] | null>(null);

@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { buildApiUrl } from "../lib/api";
-import { t, type LangCode } from "../lib/i18n";
+import { t } from "../lib/i18n";
+import { useLanguage } from "../lib/LanguageContext";
 import type { InfoItem, ReportedBug, InfoTab } from "../app/components/auth/InfoFace";
 
 export interface UseInfoFaceReturn {
@@ -32,9 +33,9 @@ export interface UseInfoFaceReturn {
 }
 
 export function useInfoFace(
-	activeFace: string,
-	lang: LangCode = "en"
+	activeFace: string
 ): UseInfoFaceReturn {
+	const { lang } = useLanguage();
 	const tr = t(lang);
 	const [activeInfoTab, setActiveInfoTab] = useState<InfoTab>("update");
 	const [infoItems, setInfoItems] = useState<InfoItem[]>([]);

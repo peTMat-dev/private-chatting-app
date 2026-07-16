@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { postJson } from "../lib/api";
-import { t, type LangCode } from "../lib/i18n";
+import { t } from "../lib/i18n";
+import { useLanguage } from "../lib/LanguageContext";
 
 export interface UseResetPasswordFaceReturn {
 	// Forgot password state
@@ -25,10 +26,10 @@ export interface UseResetPasswordFaceReturn {
 
 export function useResetPasswordFace(
 	resetToken: string,
-	lang: LangCode = "en",
 	showToast: (message: { title: string; body: string }) => void = () => {},
 	onSuccess?: () => void
 ): UseResetPasswordFaceReturn {
+	const { lang } = useLanguage();
 	const tr = t(lang);
 	const [forgotEmail, setForgotEmail] = useState("");
 	const [loadingForgot, setLoadingForgot] = useState(false);

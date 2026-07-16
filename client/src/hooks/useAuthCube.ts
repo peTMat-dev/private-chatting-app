@@ -1,7 +1,8 @@
 import { useState, useMemo, useCallback, useEffect, useRef, type FormEvent } from "react";
 import type { KeyboardEvent, TouchEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { LANGUAGES, getLang, setLang, t, type LangCode } from "../lib/i18n";
+import { t, type LangCode } from "../lib/i18n";
+import { useLanguage } from "../lib/LanguageContext";
 import { useCubeNavigation, type CubeFace } from "../lib/useCubeNavigation";
 import { useLoginFace } from "./useLoginFace";
 import { useRegisterFace } from "./useRegisterFace";
@@ -112,25 +113,14 @@ export function useAuthCube(): UseAuthCubeReturn {
 	const searchParams = useSearchParams();
 	const resetToken = searchParams.get("token") ?? "";
 	const [toast, setToast] = useState<ToastMessage | null>(null);
-	const [lang, setLangState] = useState<LangCode>("en");
 	const [fadeOut, setFadeOut] = useState(false);
+	const { lang } = useLanguage();
 	
 	// Spin animation state
 	const [pendingRedirect, setPendingRedirect] = useState(false);
 	const spinIntervalRef = useRef<number | null>(null);
 	const spinTicksRef = useRef(0);
 	const requiredSpinTicks = 12;
-	
-	// Initialize language from URL or storage
-	useEffect(() => {
-		const urlLang = searchParams.get("lang") as LangCode | null;
-		if (urlLang && LANGUAGES.some(l => l.code === urlLang)) {
-			setLang(urlLang);
-			setLangState(urlLang);
-		} else {
-			setLangState(getLang());
-		}
-	}, [searchParams]);
 
 	const tr = useMemo(() => t(lang), [lang]);
 
@@ -156,11 +146,11 @@ export function useAuthCube(): UseAuthCubeReturn {
 
 	// Initialize face hooks
 	const loginFace = useLoginFace();
-	const registerFace = useRegisterFace(lang);
-	const resetPasswordFace = useResetPasswordFace(resetToken, lang, handleShowToast, handlePasswordResetSuccess);
+	const registerFace = useRegisterFace();
+	const resetPasswordFace = useResetPasswordFace(resetToken, handleShowToast, handlePasswordResetSuccess);
 	const languageFace = useLanguageFace();
 	const logoutFace = useLogoutFace(cubeNav.goUp, cubeNav.goLeft);
-	const infoFace = useInfoFace(cubeNav.activeFace, lang);
+	const infoFace = useInfoFace(cubeNav.activeFace);
 
 	// Continuous spin while logging in
 	useEffect(() => {
@@ -220,8 +210,6 @@ export function useAuthCube(): UseAuthCubeReturn {
 
 	// Handle language change
 	const handleLangChange = useCallback((code: LangCode) => {
-		setLang(code);
-		setLangState(code);
 		languageFace.handleLangChange(code);
 	}, [languageFace]);
 
