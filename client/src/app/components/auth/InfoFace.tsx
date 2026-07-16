@@ -1,7 +1,10 @@
 "use client";
 
-import { Dispatch, SetStateAction } from "react";
-import { type LangCode, type Translations } from "../../../lib/i18n";
+import { useMemo } from "react";
+import { useInfoFace } from "../../../hooks/useInfoFace";
+import { useCubeNav } from "../../../lib/CubeNavigationContext";
+import { useLanguage } from "../../../lib/LanguageContext";
+import { t } from "../../../lib/i18n";
 
 export type InfoItem = {
 	heading_cube: string;
@@ -21,25 +24,14 @@ export type ReportedBug = {
 
 export type InfoTab = "update" | "manual" | "announcement" | "reported_bugs";
 
-type Props = {
-	activeInfoTab: InfoTab;
-	setActiveInfoTab: Dispatch<SetStateAction<InfoTab>>;
-	infoItems: InfoItem[];
-	loadingInfoItems: boolean;
-	selectedInfo: InfoItem | null;
-	setSelectedInfo: Dispatch<SetStateAction<InfoItem | null>>;
-	reportedBugs: ReportedBug[];
-	loadingBugs: boolean;
-	lang: LangCode;
-	goDown: () => void;
-	tr: Translations;
-};
-
-export default function AuthInfoFace({
-	activeInfoTab, setActiveInfoTab, infoItems, loadingInfoItems,
-	selectedInfo, setSelectedInfo, reportedBugs, loadingBugs,
-	lang, goDown, tr,
-}: Props) {
+export default function AuthInfoFace() {
+	const { goDown } = useCubeNav();
+	const { lang } = useLanguage();
+	const tr = useMemo(() => t(lang), [lang]);
+	const {
+		activeInfoTab, setActiveInfoTab, infoItems, loadingInfoItems,
+		selectedInfo, setSelectedInfo, reportedBugs, loadingBugs,
+	} = useInfoFace();
 	return (
 		<section className="cube-face cube-face-bottom">
 						<article className="auth-card cube-face-panel">

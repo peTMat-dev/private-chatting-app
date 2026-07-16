@@ -1,13 +1,12 @@
 import { useCallback } from "react";
+import { useCubeNav } from "../lib/CubeNavigationContext";
 
 export interface UseLogoutFaceReturn {
 	handleLogout: () => void;
 }
 
-export function useLogoutFace(
-	goUp: () => void,
-	goLeft: () => void
-): UseLogoutFaceReturn {
+export function useLogoutFace(): UseLogoutFaceReturn {
+	const { goUp, goLeft } = useCubeNav();
 	const handleLogout = useCallback(() => {
 		// Step 1: Move down from TOP face to previous face
 		goUp();

@@ -1,25 +1,20 @@
 "use client";
 
-import { FormEvent, Dispatch, SetStateAction } from "react";
-import { type Translations } from "../../../lib/i18n";
-import { type CubeFace } from "../../../lib/useCubeNavigation";
-import { type LoginFormData } from "../../../lib/formTypes";
+import { useMemo } from "react";
+import { useLoginFace } from "../../../hooks/useLoginFace";
+import { useCubeNav } from "../../../lib/CubeNavigationContext";
+import { useLanguage } from "../../../lib/LanguageContext";
+import { t } from "../../../lib/i18n";
 
 type Props = {
-	loginForm: LoginFormData;
-	setLoginForm: Dispatch<SetStateAction<LoginFormData>>;
-	loginDisabled: boolean;
-	loadingLogin: boolean;
-	loginSuccess: boolean;
-	loginError: string | null;
-	handleLogin: (event: FormEvent<HTMLFormElement>) => void;
-	setFace: (face: CubeFace) => void;
-	tr: Translations;
+	onLoginSuccess: () => void;
 };
 
-export default function LoginFace({
-	loginForm, setLoginForm, loginDisabled, loadingLogin, loginSuccess, loginError, handleLogin, setFace, tr,
-}: Props) {
+export default function LoginFace({ onLoginSuccess }: Props) {
+	const { setFace } = useCubeNav();
+	const { lang } = useLanguage();
+	const tr = useMemo(() => t(lang), [lang]);
+	const { loginForm, setLoginForm, loginDisabled, loadingLogin, loginSuccess, loginError, handleLogin } = useLoginFace({ onSuccess: onLoginSuccess });
 	return (
 		<section className="cube-face cube-face-front">
 						<section className="auth-stack">

@@ -1,6 +1,5 @@
 import { useState, useMemo, useCallback, type FormEvent } from "react";
 import { postJson } from "../lib/api";
-import { useRouter } from "next/navigation";
 import { useLanguage } from "../lib/LanguageContext";
 import { type LoginFormData } from "../lib/formTypes";
 
@@ -23,8 +22,7 @@ export interface UseLoginFaceReturn {
 	handleLogin: (event: FormEvent<HTMLFormElement>) => Promise<void>;
 }
 
-export function useLoginFace(): UseLoginFaceReturn {
-	const router = useRouter();
+export function useLoginFace(options?: { onSuccess?: () => void }): UseLoginFaceReturn {
 	const { lang } = useLanguage();
 	const [loginForm, setLoginForm] = useState<LoginFormData>({ username: "", password: "" });
 	const [loginError, setLoginError] = useState<string | null>(null);
@@ -54,11 +52,9 @@ export function useLoginFace(): UseLoginFaceReturn {
 			// Small delay to ensure render completes
 			await new Promise(resolve => setTimeout(resolve, 50));
 			setLoginSuccess(true);
-			// Wait 1.2 seconds for message to be visible before starting rotation
+			// Notify parent after message is visible — parent handles spin + redirect
 			setTimeout(() => {
-				// Defer redirect until after minimum spins complete
-				// Note: The parent component will handle the spin animation
-				router.push("/home");
+				options?.onSuccess?.();
 			}, 1200);
 		} catch (error) {
 			setLoadingLogin(false);
@@ -66,7 +62,7 @@ export function useLoginFace(): UseLoginFaceReturn {
 			setLoginError(errorMsg);
 			setTimeout(() => setLoginError(null), 2000);
 		}
-	}, [loginForm, router]);
+	}, [loginForm, options]);
 
 	return {
 		loginForm,

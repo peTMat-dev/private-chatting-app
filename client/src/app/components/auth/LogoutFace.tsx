@@ -1,15 +1,16 @@
 "use client";
 
-import { type Translations } from "../../../lib/i18n";
-import { type CubeFace } from "../../../lib/useCubeNavigation";
+import { useMemo } from "react";
+import { useLogoutFace } from "../../../hooks/useLogoutFace";
+import { useCubeNav } from "../../../lib/CubeNavigationContext";
+import { useLanguage } from "../../../lib/LanguageContext";
+import { t } from "../../../lib/i18n";
 
-type Props = {
-	handleLogout: () => void;
-	setFace: (face: CubeFace) => void;
-	tr: Translations;
-};
-
-export default function AuthLogoutFace({ handleLogout, setFace, tr }: Props) {
+export default function AuthLogoutFace() {
+	const { setFace } = useCubeNav();
+	const { lang } = useLanguage();
+	const tr = useMemo(() => t(lang), [lang]);
+	const { handleLogout } = useLogoutFace();
 	return (
 		<section className="cube-face cube-face-top">
 						<article className="auth-card cube-face-panel">

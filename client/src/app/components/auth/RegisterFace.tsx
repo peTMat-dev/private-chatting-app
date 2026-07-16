@@ -1,25 +1,16 @@
 "use client";
 
-import { FormEvent, Dispatch, SetStateAction } from "react";
-import { type Translations } from "../../../lib/i18n";
-import { type CubeFace } from "../../../lib/useCubeNavigation";
-import { type RegisterFormData } from "../../../lib/formTypes";
+import { useMemo } from "react";
+import { useRegisterFace } from "../../../hooks/useRegisterFace";
+import { useCubeNav } from "../../../lib/CubeNavigationContext";
+import { useLanguage } from "../../../lib/LanguageContext";
+import { t } from "../../../lib/i18n";
 
-type Props = {
-	registerForm: RegisterFormData;
-	setRegisterForm: Dispatch<SetStateAction<RegisterFormData>>;
-	registerDisabled: boolean;
-	loadingRegister: boolean;
-	registerErrors: string[] | null;
-	registrationSuccess: boolean;
-	handleRegister: (event: FormEvent<HTMLFormElement>) => void;
-	setFace: (face: CubeFace) => void;
-	tr: Translations;
-};
-
-export default function RegisterFace({
-	registerForm, setRegisterForm, registerDisabled, loadingRegister, registerErrors, registrationSuccess, handleRegister, setFace, tr,
-}: Props) {
+export default function RegisterFace() {
+	const { setFace } = useCubeNav();
+	const { lang } = useLanguage();
+	const tr = useMemo(() => t(lang), [lang]);
+	const { registerForm, setRegisterForm, registerDisabled, loadingRegister, registerErrors, registrationSuccess, handleRegister } = useRegisterFace();
 	return (
 		<section className="cube-face cube-face-right">
 						<article className="register-card cube-face-panel" id="register-card">

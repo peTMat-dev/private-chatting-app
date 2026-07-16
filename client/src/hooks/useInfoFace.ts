@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { buildApiUrl } from "../lib/api";
 import { t } from "../lib/i18n";
 import { useLanguage } from "../lib/LanguageContext";
+import { useCubeNav } from "../lib/CubeNavigationContext";
 import type { InfoItem, ReportedBug, InfoTab } from "../app/components/auth/InfoFace";
 
 export interface UseInfoFaceReturn {
@@ -32,9 +33,8 @@ export interface UseInfoFaceReturn {
 	fetchInfos: () => Promise<void>;
 }
 
-export function useInfoFace(
-	activeFace: string
-): UseInfoFaceReturn {
+export function useInfoFace(): UseInfoFaceReturn {
+	const { activeFace } = useCubeNav();
 	const { lang } = useLanguage();
 	const tr = t(lang);
 	const [activeInfoTab, setActiveInfoTab] = useState<InfoTab>("update");

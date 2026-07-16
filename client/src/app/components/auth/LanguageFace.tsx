@@ -1,21 +1,16 @@
 "use client";
 
-import { Dispatch, SetStateAction } from "react";
-import { LANGUAGES, type LangCode, type Translations } from "../../../lib/i18n";
-import { type CubeFace } from "../../../lib/useCubeNavigation";
+import { useLanguageFace } from "../../../hooks/useLanguageFace";
+import { useCubeNav } from "../../../lib/CubeNavigationContext";
+import { useLanguage } from "../../../lib/LanguageContext";
+import { useMemo } from "react";
+import { LANGUAGES, t } from "../../../lib/i18n";
 
-type Props = {
-	lang: LangCode;
-	showLangSelect: boolean;
-	setShowLangSelect: Dispatch<SetStateAction<boolean>>;
-	handleLangChange: (code: LangCode) => void;
-	setFace: (face: CubeFace) => void;
-	tr: Translations;
-};
-
-export default function LanguageFace({
-	lang, showLangSelect, setShowLangSelect, handleLangChange, setFace, tr,
-}: Props) {
+export default function LanguageFace() {
+	const { setFace } = useCubeNav();
+	const { lang } = useLanguage();
+	const tr = useMemo(() => t(lang), [lang]);
+	const { showLangSelect, setShowLangSelect, handleLangChange } = useLanguageFace();
 	return (
 		<section className="cube-face cube-face-back">
 						<article className="auth-card cube-face-panel">

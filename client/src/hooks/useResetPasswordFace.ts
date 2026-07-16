@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import { postJson } from "../lib/api";
 import { t } from "../lib/i18n";
 import { useLanguage } from "../lib/LanguageContext";
+import { useCubeNav } from "../lib/CubeNavigationContext";
 
 export interface UseResetPasswordFaceReturn {
 	// Forgot password state
@@ -26,10 +27,10 @@ export interface UseResetPasswordFaceReturn {
 
 export function useResetPasswordFace(
 	resetToken: string,
-	showToast: (message: { title: string; body: string }) => void = () => {},
-	onSuccess?: () => void
+	showToast: (message: { title: string; body: string }) => void = () => {}
 ): UseResetPasswordFaceReturn {
 	const { lang } = useLanguage();
+	const { setFace } = useCubeNav();
 	const tr = t(lang);
 	const [forgotEmail, setForgotEmail] = useState("");
 	const [loadingForgot, setLoadingForgot] = useState(false);
@@ -97,18 +98,16 @@ export function useResetPasswordFace(
 			setResetSuccess(true);
 			setResetPassword("");
 			setResetConfirmPassword("");
-			// Navigate after showing success message
-			if (onSuccess) {
-				setTimeout(() => {
-					onSuccess();
-				}, 1200);
-			}
+			// Navigate back to login after showing success message
+			setTimeout(() => {
+				setFace("front");
+			}, 1200);
 		} catch (error) {
 			setResetError((error as Error).message);
 		} finally {
 			setLoadingForgot(false);
 		}
-	}, [resetToken, resetPassword, resetConfirmPassword, tr, onSuccess]);
+	}, [resetToken, resetPassword, resetConfirmPassword, tr, setFace]);
 
 	return {
 		forgotEmail,

@@ -1,33 +1,25 @@
 "use client";
 
-import { FormEvent, Dispatch, SetStateAction } from "react";
-import { type Translations } from "../../../lib/i18n";
-import { type CubeFace } from "../../../lib/useCubeNavigation";
+import { useMemo } from "react";
+import { useResetPasswordFace } from "../../../hooks/useResetPasswordFace";
+import { useCubeNav } from "../../../lib/CubeNavigationContext";
+import { useLanguage } from "../../../lib/LanguageContext";
+import { t } from "../../../lib/i18n";
 
 type Props = {
 	resetToken: string;
-	resetPassword: string;
-	setResetPassword: Dispatch<SetStateAction<string>>;
-	resetConfirmPassword: string;
-	setResetConfirmPassword: Dispatch<SetStateAction<string>>;
-	forgotEmail: string;
-	setForgotEmail: Dispatch<SetStateAction<string>>;
-	loadingForgot: boolean;
-	resetDisabled: boolean;
-	forgotDisabled: boolean;
-	handleForgot: (event: FormEvent<HTMLFormElement>) => void;
-	handleTokenReset: (event: FormEvent<HTMLFormElement>) => void;
-	setFace: (face: CubeFace) => void;
-	tr: Translations;
-	resetSuccess: boolean;
-	resetError: string | null;
+	showToast: (message: { title: string; body: string }) => void;
 };
 
-export default function ResetPasswordFace({
-	resetToken, resetPassword, setResetPassword, resetConfirmPassword, setResetConfirmPassword,
-	forgotEmail, setForgotEmail, loadingForgot, resetDisabled, forgotDisabled,
-	handleForgot, handleTokenReset, setFace, tr, resetSuccess, resetError,
-}: Props) {
+export default function ResetPasswordFace({ resetToken, showToast }: Props) {
+	const { setFace } = useCubeNav();
+	const { lang } = useLanguage();
+	const tr = useMemo(() => t(lang), [lang]);
+	const {
+		resetPassword, setResetPassword, resetConfirmPassword, setResetConfirmPassword,
+		forgotEmail, setForgotEmail, loadingForgot, resetDisabled, forgotDisabled,
+		handleForgot, handleTokenReset, resetSuccess, resetError,
+	} = useResetPasswordFace(resetToken, showToast);
 	return (
 		<section className="cube-face cube-face-left">
 						<article className="auth-card cube-face-panel">
