@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, type FormEvent } from "react";
-import { postJson } from "../lib/api";
 import { useLanguage } from "../lib/LanguageContext";
+import { login } from "../services/auth.service";
 import { type LoginFormData } from "../lib/formTypes";
 
 export type { LoginFormData };
@@ -39,8 +39,8 @@ export function useLoginFace(options?: { onSuccess?: () => void }): UseLoginFace
 		setLoginError(null);
 		setLoadingLogin(true);
 		try {
-			const { ok, data } = await postJson("/auth/login", loginForm);
-			if (!ok || !data.success) {
+			const { ok, data } = await login(loginForm);
+			if (data.success === false) {
 				setLoadingLogin(false);
 				const errorMsg = data.error ?? "Check your credentials";
 				setLoginError(errorMsg);

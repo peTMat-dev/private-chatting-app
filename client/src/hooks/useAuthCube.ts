@@ -47,7 +47,7 @@ export function useAuthCube(): UseAuthCubeReturn {
 	const [pendingRedirect, setPendingRedirect] = useState(false);
 	const spinIntervalRef = useRef<number | null>(null);
 	const spinTicksRef = useRef(0);
-	const requiredSpinTicks = 12;
+	const requiredSpinTicks = 4;
 
 	const tr = t(lang);
 
@@ -61,14 +61,15 @@ export function useAuthCube(): UseAuthCubeReturn {
 	}, [toast]);
 
 	// Spin animation on login success → redirect
+	const { setYTicks, setActiveFace } = cubeNav;
 	useEffect(() => {
 		const facesByTicks: CubeFace[] = ["front", "left", "back", "right"];
 		if (pendingRedirect && spinIntervalRef.current == null) {
 			spinTicksRef.current = 0;
 			const step = () => {
-				cubeNav.setYTicks((t) => {
+				setYTicks((t) => {
 					const next = t + 1;
-					cubeNav.setActiveFace(facesByTicks[((next % 4) + 4) % 4]);
+					setActiveFace(facesByTicks[((next % 4) + 4) % 4]);
 					return next;
 				});
 				spinTicksRef.current += 1;
@@ -93,7 +94,10 @@ export function useAuthCube(): UseAuthCubeReturn {
 				spinIntervalRef.current = null;
 			}
 		};
-	}, [pendingRedirect, router, cubeNav]);
+		// setYTicks/setActiveFace are stable React state setters; cubeNav is excluded
+		// because it is a new object every render and would restart the spin loop.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [pendingRedirect, router, setYTicks, setActiveFace]);
 
 	const handleLoginSuccess = useCallback(() => {
 		spinTicksRef.current = 0;

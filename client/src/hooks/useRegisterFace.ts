@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
-import { postJson } from "../lib/api";
 import { t, type LangCode } from "../lib/i18n";
 import { useLanguage } from "../lib/LanguageContext";
+import { register } from "../services/auth.service";
 import { type RegisterFormData } from "../lib/formTypes";
 
 export type { RegisterFormData };
@@ -68,8 +68,8 @@ export function useRegisterFace(): UseRegisterFaceReturn {
 			password: registerForm.password,
 		};
 		try {
-			const { ok, data } = await postJson("/auth/register", payload);
-			if (!ok || !data.success) {
+			const { ok, data } = await register(registerForm);
+			if (data.success === false) {
 				const errs = data.errors ?? (data.error ? [data.error] : [tr.registrationFailed]);
 				setRegisterErrors(errs);
 				return;

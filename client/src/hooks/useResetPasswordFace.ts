@@ -1,8 +1,8 @@
 import { useState, useMemo, useCallback } from "react";
-import { postJson } from "../lib/api";
 import { t } from "../lib/i18n";
 import { useLanguage } from "../lib/LanguageContext";
 import { useCubeNav } from "../lib/CubeNavigationContext";
+import { forgotPassword, resetPassword as requestPasswordReset } from "../services/auth.service";
 
 export interface UseResetPasswordFaceReturn {
 	// Forgot password state
@@ -56,8 +56,8 @@ export function useResetPasswordFace(
 		event.preventDefault();
 		setLoadingForgot(true);
 		try {
-			const { ok, data } = await postJson("/auth/forgot-password", { email: forgotEmail });
-			if (!ok || !data.success) {
+			const { ok, data } = await forgotPassword(forgotEmail);
+			if (data.success === false) {
 				showToast({ title: tr.resetFailed, body: data.error ?? tr.tryAgain });
 				return;
 			}
@@ -86,11 +86,8 @@ export function useResetPasswordFace(
 
 		setLoadingForgot(true);
 		try {
-			const { ok, data } = await postJson("/auth/reset-password", {
-				token: resetToken,
-				password: resetPassword,
-			});
-			if (!ok || !data.success) {
+			const { ok, data } = await requestPasswordReset(resetToken, resetPassword);
+			if (data.success === false) {
 				const detail = data.errors?.[0] ?? data.error ?? tr.unableToReset;
 				setResetError(detail);
 				return;

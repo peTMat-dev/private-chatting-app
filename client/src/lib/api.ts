@@ -12,8 +12,7 @@ export const buildApiUrl = (path: string): string => {
   return base ? `${base}${normalizedPath}` : normalizedPath;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const postJson = async (path: string, payload: unknown): Promise<{ ok: boolean; data: any }> => {
+export const postJson = async <T = unknown>(path: string, payload: unknown): Promise<{ ok: boolean; data: T }> => {
   const response = await fetch(buildApiUrl(path), {
     method: "POST",
     credentials: "include",
@@ -21,5 +20,5 @@ export const postJson = async (path: string, payload: unknown): Promise<{ ok: bo
     body: JSON.stringify(payload),
   });
   const data = await response.json();
-  return { ok: response.ok, data };
+  return { ok: response.ok, data: data as T };
 };

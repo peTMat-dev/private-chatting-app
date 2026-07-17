@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { useCubeNav } from "../lib/CubeNavigationContext";
+import { logout } from "../services/auth.service";
 
 export interface UseLogoutFaceReturn {
 	handleLogout: () => void;
@@ -14,12 +15,14 @@ export function useLogoutFace(): UseLogoutFaceReturn {
 		setTimeout(() => {
 			goLeft();
 			setTimeout(() => {
-				// Clear session and redirect
+				// Clear client-side username
 				try {
 					localStorage.removeItem("cubcha_username");
 				} catch (e) {
 					// Ignore storage errors
 				}
+				// Clear server session cookie
+				void logout();
 				window.location.href = "/";
 			}, 500); // Wait for rotation to complete
 		}, 500); // Wait for down movement to complete
