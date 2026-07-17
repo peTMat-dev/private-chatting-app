@@ -11,8 +11,9 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children, initialLang = "en" }: { children: ReactNode; initialLang?: LangCode }) {
-	// initialLang is provided by the server (read from cookie in layout.tsx)
-	// so server and client always agree on the initial value — no hydration mismatch
+	// initialLang is read from the cubcha_lang cookie in layout.tsx and passed here
+	// so the server-rendered and client-rendered initial language always match (no hydration mismatch).
+	// It is intentionally used as the useState initializer below.
 	const [lang, setLangState] = useState<LangCode>(initialLang);
 
 	const setLang = (newLang: LangCode) => {
