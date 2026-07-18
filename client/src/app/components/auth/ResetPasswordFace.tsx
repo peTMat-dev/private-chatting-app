@@ -2,24 +2,24 @@
 
 import { useMemo } from "react";
 import { useResetPasswordFace } from "../../../hooks/useResetPasswordFace";
-import { useCubeNav } from "../../../lib/CubeNavigationContext";
 import { useLanguage } from "../../../lib/LanguageContext";
 import { t } from "../../../lib/i18n";
+import { type CubeFace } from "../../../lib/useCubeNavigation";
 
 type Props = {
 	resetToken: string;
 	showToast: (message: { title: string; body: string }) => void;
+	onNavigate: (face: CubeFace) => void;
 };
 
-export default function ResetPasswordFace({ resetToken, showToast }: Props) {
-	const { setFace } = useCubeNav();
+export default function ResetPasswordFace({ resetToken, showToast, onNavigate }: Props) {
 	const { lang } = useLanguage();
 	const tr = useMemo(() => t(lang), [lang]);
 	const {
 		resetPassword, setResetPassword, resetConfirmPassword, setResetConfirmPassword,
 		forgotEmail, setForgotEmail, loadingForgot, resetDisabled, forgotDisabled,
 		handleForgot, handleTokenReset, resetSuccess, resetError,
-	} = useResetPasswordFace(resetToken, showToast, () => setFace("front"));
+	} = useResetPasswordFace(resetToken, showToast, () => onNavigate("front"));
 	return (
 		<section className="cube-face cube-face-left">
 						<article className="auth-card cube-face-panel">
@@ -29,7 +29,7 @@ export default function ResetPasswordFace({ resetToken, showToast }: Props) {
 									<button
 										className="ghost-btn"
 										type="button"
-													onClick={() => setFace("front")}
+													onClick={() => onNavigate("front")}
 									>
 										{tr.backToLogin}
 									</button>

@@ -2,9 +2,9 @@
 
 import { useMemo } from "react";
 import { useInfoFace } from "../../../hooks/useInfoFace";
-import { useCubeNav } from "../../../lib/CubeNavigationContext";
 import { useLanguage } from "../../../lib/LanguageContext";
 import { t } from "../../../lib/i18n";
+import { type CubeFace } from "../../../lib/useCubeNavigation";
 
 export type InfoItem = {
 	heading_cube: string;
@@ -24,8 +24,12 @@ export type ReportedBug = {
 
 export type InfoTab = "update" | "manual" | "announcement" | "reported_bugs";
 
-export default function AuthInfoFace() {
-	const { goDown, activeFace } = useCubeNav();
+type Props = {
+	activeFace: string;
+	onNavigate: (face: CubeFace) => void;
+};
+
+export default function AuthInfoFace({ activeFace, onNavigate }: Props) {
 	const { lang } = useLanguage();
 	const tr = useMemo(() => t(lang), [lang]);
 	const {
@@ -193,14 +197,14 @@ export default function AuthInfoFace() {
 									)}
 								</div>
 
-								<button
-									className="ghost-btn"
-									type="button"
-									onClick={goDown}
-									style={{ margin: "0.5rem 1.25rem", fontSize: "0.8rem", padding: "0.35rem 0.6rem" }}
-								>
-									{tr.back}
-								</button>
+							<button
+								className="ghost-btn"
+								type="button"
+								onClick={() => onNavigate("front")}
+								style={{ margin: "0.5rem 1.25rem", fontSize: "0.8rem", padding: "0.35rem 0.6rem" }}
+							>
+								{tr.back}
+							</button>
 							</div>
 						</article>
 					</section>

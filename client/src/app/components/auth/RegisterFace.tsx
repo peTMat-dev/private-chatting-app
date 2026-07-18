@@ -2,12 +2,15 @@
 
 import { useMemo } from "react";
 import { useRegisterFace } from "../../../hooks/useRegisterFace";
-import { useCubeNav } from "../../../lib/CubeNavigationContext";
 import { useLanguage } from "../../../lib/LanguageContext";
 import { t } from "../../../lib/i18n";
+import { type CubeFace } from "../../../lib/useCubeNavigation";
 
-export default function RegisterFace() {
-	const { setFace } = useCubeNav();
+type Props = {
+	onNavigate: (face: CubeFace) => void;
+};
+
+export default function RegisterFace({ onNavigate }: Props) {
 	const { lang } = useLanguage();
 	const tr = useMemo(() => t(lang), [lang]);
 	const { registerForm, setRegisterForm, registerDisabled, loadingRegister, registerErrors, registrationSuccess, handleRegister } = useRegisterFace();
@@ -20,7 +23,7 @@ export default function RegisterFace() {
 									<button
 										className="ghost-btn"
 										type="button"
-													onClick={() => setFace("front")}
+													onClick={() => onNavigate("front")}
 									>
 										{tr.backToLogin}
 									</button>

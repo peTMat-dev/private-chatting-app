@@ -195,6 +195,32 @@ The auth cube has been successfully refactored into 7 reusable hooks. The implem
 Portability verification passed:
 - `npx tsc --noEmit` → 0 errors in `hooks/` + `components/auth/`
 - 0 web-only imports in the 6 face hooks (only `useAuthCube.ts` uses `useCubeNavigation`/`window`, as intended for the web-only orchestrator)
+
+---
+
+## UPDATE: Auth Face Components Decoupled (Point 1 of Android plan)
+
+The 6 auth face **components** previously reached into `useCubeNav()` directly and
+`LogoutFace` used `localStorage`/`window.location.href`. They have now been refactored
+to receive navigation via injected props, making the entire auth UI layer portable.
+
+### Changes
+- `LoginFace.tsx` — removed `useCubeNav`; added `onNavigate` prop (replaces `setFace`).
+- `RegisterFace.tsx` — removed `useCubeNav`; added `onNavigate` prop.
+- `ResetPasswordFace.tsx` — removed `useCubeNav`; added `onNavigate` prop; forwards to hook's `onResetComplete`.
+- `LanguageFace.tsx` — removed `useCubeNav`; added `onNavigate` prop.
+- `InfoFace.tsx` — removed `useCubeNav`; added `activeFace` + `onNavigate` props (was reading `goDown`/`activeFace` from cube nav).
+- `LogoutFace.tsx` — removed `useCubeNav`, `localStorage`, `window.location.href`; added `onLogoutNavigate`, `onLoggedOut`, `onNavigate` props. The web-only session cleanup + redirect now lives in `page.tsx` (`handleLoggedOut`).
+- `page.tsx` — wires `cubeNav.setFace`/`goUp` and the new `handleLoggedOut` (web-only) into the portable components.
+
+### Verification gate (re-run)
+- `grep -rE "useCubeNav|localStorage|window\.|next/navigation|document\." src/app/components/auth/` → only `import { type CubeFace }` (type-only, erased at compile, portable). **0 runtime web-only imports.**
+- `npx tsc --noEmit` → **0 errors** in `components/auth/`, `hooks/`, `app/page.tsx`. All 30 remaining errors are in the un-refactored `home/page.tsx` monolith (Home cube, not yet started).
+
+### Result
+The **entire auth layer (hooks + components)** is now Android-portable. Only `useAuthCube.ts`
++ `page.tsx` remain web-only (correct per plan). Remaining blocker for full Android readiness:
+the Home cube (Phase 2) — `useHomeCube.ts` missing, `home/page.tsx` still 1145-line monolith.
 </parameter>
 <task_progress>
 - [x] Read all 3 plan files

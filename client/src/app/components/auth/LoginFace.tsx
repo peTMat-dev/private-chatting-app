@@ -2,16 +2,16 @@
 
 import { useMemo } from "react";
 import { useLoginFace } from "../../../hooks/useLoginFace";
-import { useCubeNav } from "../../../lib/CubeNavigationContext";
 import { useLanguage } from "../../../lib/LanguageContext";
 import { t } from "../../../lib/i18n";
+import { type CubeFace } from "../../../lib/useCubeNavigation";
 
 type Props = {
 	onLoginSuccess: () => void;
+	onNavigate: (face: CubeFace) => void;
 };
 
-export default function LoginFace({ onLoginSuccess }: Props) {
-	const { setFace } = useCubeNav();
+export default function LoginFace({ onLoginSuccess, onNavigate }: Props) {
 	const { lang } = useLanguage();
 	const tr = useMemo(() => t(lang), [lang]);
 	const { loginForm, setLoginForm, loginDisabled, loadingLogin, loginSuccess, loginError, handleLogin } = useLoginFace({ onSuccess: onLoginSuccess });
@@ -62,14 +62,14 @@ export default function LoginFace({ onLoginSuccess }: Props) {
 										{loadingLogin ? tr.authenticating : tr.signIn}
 									</button>
 									</form>
-									<div className="auth-links">
-									<button type="button" onClick={() => setFace("left")}>
-									{tr.forgotPassword}
+								<div className="auth-links">
+								<button type="button" onClick={() => onNavigate("left")}>
+								{tr.forgotPassword}
+							</button>
+							<button type="button" onClick={() => onNavigate("right")}>
+								{tr.signUp}
 								</button>
-								<button type="button" onClick={() => setFace("right")}>
-									{tr.signUp}
-									</button>
-								</div>
+							</div>
 								</div>
 							{loginSuccess && (
 								<div className="auth-success" role="alert" aria-live="polite">

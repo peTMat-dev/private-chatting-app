@@ -1,13 +1,16 @@
 "use client";
 
 import { useLanguageFace } from "../../../hooks/useLanguageFace";
-import { useCubeNav } from "../../../lib/CubeNavigationContext";
 import { useLanguage } from "../../../lib/LanguageContext";
 import { useMemo } from "react";
 import { LANGUAGES, t } from "../../../lib/i18n";
+import { type CubeFace } from "../../../lib/useCubeNavigation";
 
-export default function LanguageFace() {
-	const { setFace } = useCubeNav();
+type Props = {
+	onNavigate: (face: CubeFace) => void;
+};
+
+export default function LanguageFace({ onNavigate }: Props) {
 	const { lang } = useLanguage();
 	const tr = useMemo(() => t(lang), [lang]);
 	const { showLangSelect, setShowLangSelect, handleLangChange } = useLanguageFace();
@@ -20,7 +23,7 @@ export default function LanguageFace() {
 									<button
 										className="ghost-btn"
 										type="button"
-												onClick={() => setFace("front")}
+												onClick={() => onNavigate("front")}
 									>
 										{tr.backToLogin}
 									</button>

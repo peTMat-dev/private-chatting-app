@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { LANGUAGES, type LangCode } from "../lib/i18n";
 import { useLanguage } from "../lib/LanguageContext";
 import { CubeNavigationProvider } from "../lib/CubeNavigationContext";
 import { useAuthCube } from "../hooks/useAuthCube";
+import { logout } from "../services/auth.service";
 import LoginFace from "./components/auth/LoginFace";
 import RegisterFace from "./components/auth/RegisterFace";
 import ResetPasswordFace from "./components/auth/ResetPasswordFace";
@@ -15,6 +16,18 @@ import AuthInfoFace from "./components/auth/InfoFace";
 
 function AuthScreenContent() {
 	const auth = useAuthCube();
+	const router = useRouter();
+
+	// Web-only session cleanup + redirect (injected into the portable LogoutFace)
+	const handleLoggedOut = useCallback(() => {
+		try {
+			localStorage.removeItem("cubcha_username");
+		} catch {
+			// Ignore storage errors
+		}
+		void logout();
+		router.push("/");
+	}, [router]);
 
 	return (
 		<CubeNavigationProvider value={{
@@ -40,13 +53,17 @@ function AuthScreenContent() {
 							transition: auth.transitionEnabled ? undefined : "none",
 						}}
 					>
-						<LoginFace onLoginSuccess={auth.handleLoginSuccess} />
-						<RegisterFace />
-						<ResetPasswordFace resetToken={auth.resetToken} showToast={auth.showToast} />
-						<LanguageFace />
-						<AuthLogoutFace />
+						<LoginFace onLoginSuccess={auth.handleLoginSuccess} onNavigate={auth.cubeNav.setFace} />
+						<RegisterFace onNavigate={auth.cubeNav.setFace} />
+						<ResetPasswordFace resetToken={auth.resetToken} showToast={auth.showToast} onNavigate={auth.cubeNav.setFace} />
+						<LanguageFace onNavigate={auth.cubeNav.setFace} />
+						<AuthLogoutFace
+							onLogoutNavigate={auth.cubeNav.goUp}
+							onLoggedOut={handleLoggedOut}
+							onNavigate={auth.cubeNav.setFace}
+						/>
 						{/* Bottom: Infos (visible before login for potential new users) */}
-						<AuthInfoFace />
+						<AuthInfoFace activeFace={auth.cubeNav.activeFace} onNavigate={auth.cubeNav.setFace} />
 					</div>
 				</div>
 

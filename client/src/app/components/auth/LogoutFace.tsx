@@ -2,27 +2,23 @@
 
 import { useMemo } from "react";
 import { useLogoutFace } from "../../../hooks/useLogoutFace";
-import { useCubeNav } from "../../../lib/CubeNavigationContext";
 import { useLanguage } from "../../../lib/LanguageContext";
 import { t } from "../../../lib/i18n";
-import { logout } from "../../../services/auth.service";
+import { type CubeFace } from "../../../lib/useCubeNavigation";
 
-export default function AuthLogoutFace() {
-	const { setFace, goUp, goLeft } = useCubeNav();
+type Props = {
+	onLogoutNavigate: () => void;
+	onLoggedOut: () => void;
+	onNavigate: (face: CubeFace) => void;
+};
+
+export default function AuthLogoutFace({ onLogoutNavigate, onLoggedOut, onNavigate }: Props) {
 	const { lang } = useLanguage();
 	const tr = useMemo(() => t(lang), [lang]);
 	const { handleLogout } = useLogoutFace({
-		goUp,
-		goLeft,
-		onLoggedOut: () => {
-			try {
-				localStorage.removeItem("cubcha_username");
-			} catch (e) {
-				// Ignore storage errors
-			}
-			void logout();
-			window.location.href = "/";
-		},
+		goUp: onLogoutNavigate,
+		goLeft: onLogoutNavigate,
+		onLoggedOut,
 	});
 	return (
 		<section className="cube-face cube-face-top">
@@ -41,7 +37,7 @@ export default function AuthLogoutFace() {
 							<button
 								className="ghost-btn mt-3"
 								type="button"
-												onClick={() => setFace("front")}
+												onClick={() => onNavigate("front")}
 							>
 								{tr.cancel}
 							</button>
