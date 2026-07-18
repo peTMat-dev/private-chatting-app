@@ -2,7 +2,6 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { buildApiUrl } from "../lib/api";
 import { t } from "../lib/i18n";
 import { useLanguage } from "../lib/LanguageContext";
-import { useCubeNav } from "../lib/CubeNavigationContext";
 import type { InfoItem, ReportedBug, InfoTab } from "../app/components/auth/InfoFace";
 
 export interface UseInfoFaceReturn {
@@ -13,7 +12,7 @@ export interface UseInfoFaceReturn {
 	loadingInfoItems: boolean;
 	selectedInfo: InfoItem | null;
 	setSelectedInfo: (item: InfoItem | null) => void;
-	
+
 	// Bugs state
 	reportedBugs: ReportedBug[];
 	loadingBugs: boolean;
@@ -27,14 +26,13 @@ export interface UseInfoFaceReturn {
 	bugReported: boolean;
 	bugSubView: "list" | "report";
 	setBugSubView: (view: "list" | "report") => void;
-	
+
 	// Actions
 	handleSubmitBug: () => Promise<void>;
 	fetchInfos: () => Promise<void>;
 }
 
-export function useInfoFace(): UseInfoFaceReturn {
-	const { activeFace } = useCubeNav();
+export function useInfoFace(activeFace: string): UseInfoFaceReturn {
 	const { lang } = useLanguage();
 	const tr = t(lang);
 	const [activeInfoTab, setActiveInfoTab] = useState<InfoTab>("update");

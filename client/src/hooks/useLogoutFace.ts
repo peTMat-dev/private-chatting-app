@@ -1,13 +1,18 @@
 import { useCallback } from "react";
-import { useCubeNav } from "../lib/CubeNavigationContext";
 import { logout } from "../services/auth.service";
+
+export interface UseLogoutFaceOptions {
+	goUp: () => void;
+	goLeft: () => void;
+	onLoggedOut: () => void;
+}
 
 export interface UseLogoutFaceReturn {
 	handleLogout: () => void;
 }
 
-export function useLogoutFace(): UseLogoutFaceReturn {
-	const { goUp, goLeft } = useCubeNav();
+export function useLogoutFace(options: UseLogoutFaceOptions): UseLogoutFaceReturn {
+	const { goUp, goLeft, onLoggedOut } = options;
 	const handleLogout = useCallback(() => {
 		// Step 1: Move down from TOP face to previous face
 		goUp();
@@ -15,18 +20,11 @@ export function useLogoutFace(): UseLogoutFaceReturn {
 		setTimeout(() => {
 			goLeft();
 			setTimeout(() => {
-				// Clear client-side username
-				try {
-					localStorage.removeItem("cubcha_username");
-				} catch (e) {
-					// Ignore storage errors
-				}
-				// Clear server session cookie
-				void logout();
-				window.location.href = "/";
+				// Clear server session cookie + redirect (web-specific, injected by caller)
+				onLoggedOut();
 			}, 500); // Wait for rotation to complete
 		}, 500); // Wait for down movement to complete
-	}, [goUp, goLeft]);
+	}, [goUp, goLeft, onLoggedOut]);
 
 	return {
 		handleLogout,

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, type FormEvent } from "react";
+import { useState, useMemo, useCallback, type FormEvent, type Dispatch, type SetStateAction } from "react";
 import { useLanguage } from "../lib/LanguageContext";
 import { login } from "../services/auth.service";
 import { type LoginFormData } from "../lib/formTypes";
@@ -8,7 +8,7 @@ export type { LoginFormData };
 export interface UseLoginFaceReturn {
 	// Form state
 	loginForm: LoginFormData;
-	setLoginForm: (form: LoginFormData) => void;
+	setLoginForm: Dispatch<SetStateAction<LoginFormData>>;
 	
 	// UI state
 	loginError: string | null;

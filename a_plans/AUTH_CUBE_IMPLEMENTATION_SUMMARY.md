@@ -10,39 +10,42 @@ Successfully refactored the auth page (`client/src/app/page.tsx`) from a monolit
 
 All hooks are platform-agnostic and reusable for Android conversion:
 
-1. **`useLoginFace.ts`** (67 lines)
-   - Login form state management
+1. **`useLoginFace.ts`** (76 lines)
+   - Login form state management (typed `Dispatch<SetStateAction<LoginFormData>>` setter)
    - Form validation
    - Login submission with error handling
    - Success/error states
 
-2. **`useRegisterFace.ts`** (88 lines)
+2. **`useRegisterFace.ts`** (101 lines)
    - Registration form state (7 fields)
    - Client-side validation
    - Registration submission
    - Success/error handling
+   - Typed `Dispatch<SetStateAction<RegisterFormData>>` setter
 
-3. **`useResetPasswordFace.ts`** (103 lines)
+3. **`useResetPasswordFace.ts`** (126 lines)
    - Forgot password flow
    - Token-based password reset
    - Form validation
    - Loading states
+   - **Decoupled from `useCubeNav`**: navigation injected via `onResetComplete` prop
 
-4. **`useLanguageFace.ts`** (24 lines)
+4. **`useLanguageFace.ts`** (27 lines)
    - Language selection state
-   - Language persistence (cookie + localStorage)
+   - Language persistence (cookie + localStorage via LanguageContext)
    - Change handler
 
-5. **`useLogoutFace.ts`** (26 lines)
-   - Logout animation sequence
-   - Session cleanup
-   - Redirect logic
+5. **`useLogoutFace.ts`** (34 lines)
+   - Logout animation sequence (web-only `goUp`/`goLeft` injected via props)
+   - Session cleanup + redirect injected via `onLoggedOut` prop
+   - **No `localStorage`/`window` in hook** — web-only logic lives in the component
 
-6. **`useInfoFace.ts`** (139 lines)
+6. **`useInfoFace.ts`** (146 lines)
    - Info/bugs fetching
    - Tab management
    - Bug reporting
    - Loading states
+   - **Decoupled from `useCubeNav`**: `activeFace` injected via prop
 
 ### Phase 2: Created `useAuthCube.ts` Orchestrator ✅
 
@@ -120,12 +123,12 @@ client/src/
 
 ## TypeScript Status
 
-✅ **All TypeScript compilation errors resolved**
-- Fixed path aliases (`@/` → relative paths)
-- Fixed missing imports in reset-password page
-- Fixed type definitions for InfoItem/ReportedBug
-- Added missing rotation/transitionEnabled properties
-- All files compile successfully
+✅ **Auth hook TypeScript errors resolved** (9 errors in `LoginFace.tsx`/`RegisterFace.tsx` from setter typing)
+- Typed `setLoginForm`/`setRegisterForm` as `Dispatch<SetStateAction<T>>`
+- Decoupled 3 hooks (`useResetPasswordFace`, `useLogoutFace`, `useInfoFace`) from `useCubeNav`
+- `npx tsc --noEmit` → 0 errors in `client/src/hooks/` and `client/src/app/components/auth/`
+
+⚠️ **Known pre-existing errors OUT OF SCOPE**: `client/src/app/home/page.tsx` (monolithic 1145-line version, not yet refactored) has ~40 `TS2339` errors from untyped `postJson` calls. These are unrelated to the auth refactor and will be addressed in the Home Cube phase.
 
 ## Next Steps
 
@@ -187,7 +190,11 @@ rm -rf client/src/hooks/
 
 The auth cube has been successfully refactored into 7 reusable hooks. The implementation follows the **File 3 strategy** from the Android Conversion Plan, enabling 90% code reuse for future Android conversion. All TypeScript compilation errors are resolved, and the code is ready for testing.
 
-**Status**: ✅ **COMPLETE** - Ready for manual testing
+**Status**: ✅ **COMPLETE (portability-verified)** - Ready for manual testing
+
+Portability verification passed:
+- `npx tsc --noEmit` → 0 errors in `hooks/` + `components/auth/`
+- 0 web-only imports in the 6 face hooks (only `useAuthCube.ts` uses `useCubeNavigation`/`window`, as intended for the web-only orchestrator)
 </parameter>
 <task_progress>
 - [x] Read all 3 plan files

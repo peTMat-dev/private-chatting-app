@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, type Dispatch, type SetStateAction } from "react";
 import { t, type LangCode } from "../lib/i18n";
 import { useLanguage } from "../lib/LanguageContext";
 import { register } from "../services/auth.service";
@@ -9,7 +9,7 @@ export type { RegisterFormData };
 export interface UseRegisterFaceReturn {
 	// Form state
 	registerForm: RegisterFormData;
-	setRegisterForm: (form: RegisterFormData) => void;
+	setRegisterForm: Dispatch<SetStateAction<RegisterFormData>>;
 	
 	// UI state
 	registerErrors: string[] | null;

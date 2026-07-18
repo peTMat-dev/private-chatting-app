@@ -19,7 +19,7 @@ export default function ResetPasswordFace({ resetToken, showToast }: Props) {
 		resetPassword, setResetPassword, resetConfirmPassword, setResetConfirmPassword,
 		forgotEmail, setForgotEmail, loadingForgot, resetDisabled, forgotDisabled,
 		handleForgot, handleTokenReset, resetSuccess, resetError,
-	} = useResetPasswordFace(resetToken, showToast);
+	} = useResetPasswordFace(resetToken, showToast, () => setFace("front"));
 	return (
 		<section className="cube-face cube-face-left">
 						<article className="auth-card cube-face-panel">

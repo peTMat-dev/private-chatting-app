@@ -25,13 +25,13 @@ export type ReportedBug = {
 export type InfoTab = "update" | "manual" | "announcement" | "reported_bugs";
 
 export default function AuthInfoFace() {
-	const { goDown } = useCubeNav();
+	const { goDown, activeFace } = useCubeNav();
 	const { lang } = useLanguage();
 	const tr = useMemo(() => t(lang), [lang]);
 	const {
 		activeInfoTab, setActiveInfoTab, infoItems, loadingInfoItems,
 		selectedInfo, setSelectedInfo, reportedBugs, loadingBugs,
-	} = useInfoFace();
+	} = useInfoFace(activeFace);
 	return (
 		<section className="cube-face cube-face-bottom">
 						<article className="auth-card cube-face-panel">

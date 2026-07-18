@@ -32,6 +32,29 @@ __Face hooks = portable logic__ (copy to Android)\
 __Face components = portable UI__ (adapt styles only)\
 __Cube hooks = web-only__ (replace with React Navigation)
 
+### Portability Rules (ENFORCEABLE — must hold before a hook is "portable")
+
+A face hook is ONLY portable if ALL of the following are true:
+
+1. **No web-only imports.** A face hook MUST NOT import or use any of:
+   - `window`, `document`, `localStorage`, `sessionStorage`
+   - `next/navigation` (`useRouter`, `useSearchParams`, etc.)
+   - `useCubeNav` / `CubeNavigationContext` (cube navigation is web-only)
+   - Any DOM type (`HTMLElement`, `KeyboardEvent<HTMLDivElement>`, etc.)
+2. **Inject web-only behavior via props.** Anything platform-specific (navigation, storage, redirect) is passed in by the web orchestrator. Example: `useLogoutFace({ goUp, goLeft, onLoggedOut })` — the hook calls `onLoggedOut()`, the web component supplies the `localStorage`/`window.location` logic.
+3. **Typed API responses.** Every `postJson<T>` call MUST supply an explicit response type `T`. No `unknown` defaults in portable code. Service-layer wrappers (`auth.service.ts`) must return typed results (`AuthResponse`), never raw `unknown`.
+4. **Typed setters.** Form-state setters exposed by a hook must accept `Dispatch<SetStateAction<T>>` (both value and updater form), so components can call `setForm(prev => ({...prev}))`.
+
+### Verification Gate (Definition of Done — run BEFORE declaring a hook portable)
+
+Before marking any face hook "complete", run and confirm:
+
+- `npx tsc --noEmit` → 0 errors in `client/src/hooks/` and `client/src/app/components/auth/`
+- `grep -rE "useCubeNav|localStorage|window\.|next/navigation" client/src/hooks/use{Login,Register,ResetPassword,Logout,Info,Language}Face.ts` → **0 matches** (only `useAuthCube.ts` / `useHomeCube.ts` may match)
+- Each hook's props explicitly declare every injected web dependency
+
+If any check fails, the hook is NOT portable and must be fixed before proceeding.
+
 ### Result:
 
 - Web: Clean, testable, maintainable code
