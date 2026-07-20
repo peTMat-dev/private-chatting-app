@@ -42,6 +42,174 @@ router.get("/", async (req: Request, res: Response) => {
   }
 });
 
+// POST /chats/open-with-contact - Open or create a 1-on-1 chat with a contact
+router.post("/open-with-contact", async (req: Request, res: Response) => {
+  const { contactUserId } = req.body as { contactUserId: number };
+  const { userId } = req.user;
+
+  if (!contactUserId || typeof contactUserId !== "number") {
+    return res.status(400).json({ success: false, error: "contactUserId is required and must be a number" });
+  }
+
+  // Prevent chatting with yourself
+  if (userId === contactUserId) {
+    return res.status(400).json({ success: false, error: "Cannot open chat with yourself" });
+  }
+
+  try {
+    // Verify the contact is in user's contacts
+    const contactCheck = await query<{ contact_user_id: number }>(
+      "SELECT contact_user_id FROM contacts WHERE owner_user_id = ? AND contact_user_id = ? LIMIT 1",
+      [userId, contactUserId]
+    );
+    if (contactCheck.length === 0) {
+      return res.status(403).json({ success: false, error: "User is not in your contacts" });
+    }
+
+    // Check for existing 1-on-1 conversation
+    const existing = await query<{ conversation_id: number; title: string | null; participants: string | null }>(
+      `SELECT c.conversation_id, c.title,
+              (SELECT GROUP_CONCAT(umd.display_name SEPARATOR ', ')
+               FROM conversations_participants cp2
+               JOIN user_main_details umd ON umd.user_id = cp2.user_id
+               WHERE cp2.conversation_id = c.conversation_id AND cp2.user_id <> ?) AS participants
+       FROM conversations c
+       JOIN conversations_participants cp1 ON cp1.conversation_id = c.conversation_id AND cp1.user_id = ?
+       JOIN conversations_participants cp2 ON cp2.conversation_id = c.conversation_id AND cp2.user_id = ?
+       WHERE c.is_group = FALSE
+         AND (SELECT COUNT(*) FROM conversations_participants cp3 WHERE cp3.conversation_id = c.conversation_id) = 2
+       LIMIT 1`,
+      [userId, userId, contactUserId]
+    );
+
+    let conversationId: number;
+
+    if (existing.length > 0) {
+      // Reuse existing conversation
+      conversationId = existing[0].conversation_id;
+    } else {
+      // Create new 1-on-1 conversation
+      const result = await query<{ insertId: number }>(
+        "INSERT INTO conversations (creator_user_id, is_group, max_participants) VALUES (?, FALSE, 2)",
+        [userId]
+      );
+      conversationId = (result as any).insertId;
+      await query(
+        "INSERT INTO conversations_participants (conversation_id, user_id) VALUES (?, ?), (?, ?)",
+        [conversationId, userId, conversationId, contactUserId]
+      );
+    }
+
+    res.json({ success: true, data: { conversationId } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
+// POST /chats/create - Create a new chat (1-on-1 or group)
+router.post("/create", async (req: Request, res: Response) => {
+  const { participantIds, groupName } = req.body as {
+    participantIds: number[];
+    groupName?: string;
+  };
+  const { userId } = req.user;
+
+  if (!Array.isArray(participantIds) || participantIds.length === 0) {
+    return res.status(400).json({ success: false, error: "participantIds must be a non-empty array" });
+  }
+
+  const isGroup = participantIds.length > 1;
+  if (isGroup && (!groupName || !groupName.trim())) {
+    return res.status(400).json({ success: false, error: "groupName is required for group chats" });
+  }
+  if (isGroup && groupName && groupName.trim().length > 32) {
+    return res.status(400).json({ success: false, error: "groupName exceeds 32 characters" });
+  }
+
+  try {
+    // Verify all participants are in user's contacts
+    const placeholders = participantIds.map(() => "?").join(", ");
+    const contactRows = await query<{ contact_user_id: number }>(
+      `SELECT contact_user_id FROM contacts WHERE owner_user_id = ? AND contact_user_id IN (${placeholders})`,
+      [userId, ...participantIds]
+    );
+    if (contactRows.length !== participantIds.length) {
+      return res.status(403).json({ success: false, error: "All participants must be in your contacts" });
+    }
+
+    let conversationId: number;
+    let name: string;
+
+    if (!isGroup) {
+      // 1-on-1: check for existing conversation
+      const otherId = participantIds[0];
+      const existing = await query<{ conversation_id: number; title: string | null; participants: string | null }>(
+        `SELECT c.conversation_id, c.title,
+                (SELECT GROUP_CONCAT(umd.display_name SEPARATOR ', ')
+                 FROM conversations_participants cp2
+                 JOIN user_main_details umd ON umd.user_id = cp2.user_id
+                 WHERE cp2.conversation_id = c.conversation_id AND cp2.user_id <> ?) AS participants
+         FROM conversations c
+         JOIN conversations_participants cp1 ON cp1.conversation_id = c.conversation_id AND cp1.user_id = ?
+         JOIN conversations_participants cp2 ON cp2.conversation_id = c.conversation_id AND cp2.user_id = ?
+         WHERE c.is_group = FALSE
+           AND (SELECT COUNT(*) FROM conversations_participants cp3 WHERE cp3.conversation_id = c.conversation_id) = 2
+         LIMIT 1`,
+        [userId, userId, otherId]
+      );
+
+      if (existing.length > 0) {
+        conversationId = existing[0].conversation_id;
+        name = existing[0].title?.trim() || existing[0].participants || "Chat";
+        return res.json({ success: true, data: { conversationId, name, isGroup: false } });
+      }
+
+      // Create new 1-on-1
+      const result = await query<{ insertId: number }>(
+        "INSERT INTO conversations (creator_user_id, is_group, max_participants) VALUES (?, FALSE, 2)",
+        [userId]
+      );
+      conversationId = (result as any).insertId;
+      await query(
+        "INSERT INTO conversations_participants (conversation_id, user_id) VALUES (?, ?), (?, ?)",
+        [conversationId, userId, conversationId, otherId]
+      );
+      // Resolve name from other user's display_name
+      const nameRow = await query<{ display_name: string }>(
+        "SELECT display_name FROM user_main_details WHERE user_id = ? LIMIT 1",
+        [otherId]
+      );
+      name = nameRow[0]?.display_name || "Chat";
+    } else {
+      // Group: get max participants setting
+      const settingsResult = await query<{ default_max_chat_participants: number }>(
+        "CALL messages_2get_max_chat_participants(?)",
+        [userId]
+      );
+      const settingsRows = (settingsResult as any)[0] || [];
+      const maxParticipants = settingsRows[0]?.default_max_chat_participants || 50;
+
+      const result = await query<{ insertId: number }>(
+        "INSERT INTO conversations (creator_user_id, is_group, title, max_participants) VALUES (?, TRUE, ?, ?)",
+        [userId, groupName!.trim(), maxParticipants]
+      );
+      conversationId = (result as any).insertId;
+      const allParticipants = [userId, ...participantIds];
+      const participantValues = allParticipants.map(() => "(?, ?)").join(", ");
+      const participantParams = allParticipants.flatMap((id) => [conversationId, id]);
+      await query(
+        `INSERT INTO conversations_participants (conversation_id, user_id) VALUES ${participantValues}`,
+        participantParams
+      );
+      name = groupName!.trim();
+    }
+
+    res.json({ success: true, data: { conversationId, name, isGroup } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
 // POST /chats - Create or retrieve a conversation
 router.post("/", async (req: Request, res: Response) => {
   const { participantUserIds, title } = req.body as {

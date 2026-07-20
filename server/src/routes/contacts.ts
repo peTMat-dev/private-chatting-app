@@ -410,4 +410,107 @@ router.post("/groups/:id/members", async (req: Request, res: Response) => {
   }
 });
 
+// POST /contacts/groups/:id/chat - Open or create a conversation for a contact group
+router.post("/groups/:id/chat", async (req: Request, res: Response) => {
+  const groupId = parseInt(req.params.id as string, 10);
+  const { chatName } = req.body as { chatName?: string };
+  const { userId } = req.user;
+
+  if (!groupId || isNaN(groupId)) {
+    return res.status(400).json({ success: false, error: "Valid groupId is required" });
+  }
+
+  try {
+    // Verify the group exists and is owned by the user
+    const groupRows = await query<{ group_ug_id: number; group_name: string; member_user_id: number }>(
+      "CALL contact_2read_c_list_groups(?)",
+      [userId]
+    );
+    const resultRows = Array.isArray(groupRows[0]) ? groupRows[0] : groupRows;
+    
+    // Find the specific group and collect its member IDs
+    const memberIds: number[] = [];
+    let groupName = "";
+    let groupFound = false;
+    
+    for (const row of resultRows as { group_ug_id: number; group_name: string; member_user_id: number }[]) {
+      if (row.group_ug_id === groupId) {
+        groupFound = true;
+        groupName = row.group_name;
+        if (row.member_user_id) {
+          memberIds.push(row.member_user_id);
+        }
+      }
+    }
+
+    if (!groupFound) {
+      return res.status(404).json({ success: false, error: "Group not found or not owned by user" });
+    }
+
+    if (memberIds.length === 0) {
+      return res.status(400).json({ success: false, error: "Group has no members" });
+    }
+
+    // Use provided chat name or fall back to group name
+    const title = (chatName && chatName.trim()) || groupName;
+
+    // Check if a conversation already exists for this exact group of participants
+    // Build a query to find conversations with exactly these participants
+    const allParticipants = [userId, ...memberIds];
+    const participantCount = allParticipants.length;
+    
+    // Find conversations where all participants are members
+    const placeholders = allParticipants.map(() => "?").join(", ");
+    const existingConversations = await query<{ conversation_id: number }>(
+      `SELECT DISTINCT cp1.conversation_id 
+       FROM conversations_participants cp1
+       JOIN conversations c ON c.conversation_id = cp1.conversation_id AND c.is_group = TRUE
+       WHERE cp1.conversation_id IN (
+         SELECT conversation_id 
+         FROM conversations_participants 
+         WHERE user_id IN (${placeholders})
+         GROUP BY conversation_id
+         HAVING COUNT(DISTINCT user_id) = ?
+       )
+       AND (SELECT COUNT(*) FROM conversations_participants WHERE conversation_id = cp1.conversation_id) = ?
+       LIMIT 1`,
+      [...allParticipants, participantCount, participantCount]
+    );
+
+    let conversationId: number;
+
+    if (existingConversations.length > 0) {
+      // Reuse existing conversation
+      conversationId = existingConversations[0].conversation_id;
+    } else {
+      // Create new group conversation
+      // Get max participants setting
+      const settingsResult = await query<{ default_max_chat_participants: number }>(
+        "CALL messages_2get_max_chat_participants(?)",
+        [userId]
+      );
+      const settingsRows = (settingsResult as any)[0] || [];
+      const maxParticipants = settingsRows[0]?.default_max_chat_participants || 50;
+
+      const result = await query<{ insertId: number }>(
+        "INSERT INTO conversations (creator_user_id, is_group, title, max_participants) VALUES (?, TRUE, ?, ?)",
+        [userId, title.slice(0, 32), maxParticipants]
+      );
+      conversationId = (result as any).insertId;
+      
+      // Add all participants
+      const participantValues = allParticipants.map(() => "(?, ?)").join(", ");
+      const participantParams = allParticipants.flatMap((id) => [conversationId, id]);
+      await query(
+        `INSERT INTO conversations_participants (conversation_id, user_id) VALUES ${participantValues}`,
+        participantParams
+      );
+    }
+
+    res.json({ success: true, data: { conversationId } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
 export default router;
