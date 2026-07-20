@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, Dispatch, SetStateAction } from "react";
-import { buildApiUrl, postJson } from "../lib/api";
+import { getApi, postApi, fetchApiCustom } from "../services/api.service";
 import type {
   ContactItem,
   PublicUser,
@@ -199,13 +199,7 @@ export function useContactsFace({
   const fetchUserContacts = useCallback(async () => {
     if (!username) return;
     try {
-      const url = buildApiUrl("/contacts");
-      const res = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } });
-      const data = (await res.json()) as ApiContactsResponse;
-      if (!res.ok || !data.success) {
-        setContactsError(data.error || "Unable to load contacts");
-        return;
-      }
+      const data = await getApi<ApiContactsResponse>("/contacts");
       setUserContacts(data.data || []);
       setContactsError(null);
     } catch (err) {
@@ -226,13 +220,7 @@ export function useContactsFace({
     }
     setLoadingPublicUsers(true);
     try {
-      const url = buildApiUrl("/contacts/public-users");
-      const res = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } });
-      const data = (await res.json()) as ApiPublicUsersResponse;
-      if (!res.ok || !data.success) {
-        showAlert(data.error || "Unable to load public users", "Error");
-        return;
-      }
+      const data = await getApi<ApiPublicUsersResponse>("/contacts/public-users");
       setPublicUsers((data.data as PublicUser[]) || []);
     } catch (err) {
       showAlert((err as Error).message, "Error");
@@ -252,7 +240,7 @@ export function useContactsFace({
   const handleRemoveContact = useCallback(async (contactId: number) => {
     setRemovingContactId(contactId);
     try {
-      const { ok, data } = await postJson<{ success: boolean; error?: string }>("/contacts/remove", {
+      const { ok, data } = await postApi<{ success: boolean; error?: string }>("/contacts/remove", {
         contactUserId: contactId,
       });
       if (!ok || !data.success) {
@@ -276,10 +264,14 @@ export function useContactsFace({
     if (!contact) return;
 
     try {
-      const { ok, data } = await postJson<{ success: boolean; data?: { conversationId: number; name: string; isGroup: boolean }; error?: string }>(
-        "/chats",
-        { participantIds: [contactId] }
-      );
+      interface ChatResponse {
+        success: boolean;
+        data?: { conversationId: number; name: string; isGroup: boolean };
+        error?: string;
+      }
+      const { ok, data } = await postApi<ChatResponse>("/chats", {
+        participantIds: [contactId],
+      });
       if (!ok || !data.success || !data.data) {
         showAlert(data.error || "Failed to open chat", "Error");
         return;
@@ -295,7 +287,7 @@ export function useContactsFace({
   const handleRemovePublicUser = useCallback(async (userId: number) => {
     setRemovingPublicUserId(userId);
     try {
-      const { ok, data } = await postJson<{ success: boolean; error?: string }>("/contacts/remove", {
+      const { ok, data } = await postApi<{ success: boolean; error?: string }>("/contacts/remove", {
         contactUserId: userId,
       });
       if (!ok || !data.success) {
@@ -318,7 +310,7 @@ export function useContactsFace({
     if (!userId || !displayName) return;
     setAddingPublicUserId(userId);
     try {
-      const { ok, data } = await postJson<{ success: boolean; error?: string }>("/contacts/add-public", {
+      const { ok, data } = await postApi<{ success: boolean; error?: string }>("/contacts/add-public", {
         contactUserId: userId,
       });
       if (!ok || !data.success) {
@@ -342,13 +334,7 @@ export function useContactsFace({
     setLoadingContactGroups(true);
     setContactGroupsError(null);
     try {
-      const url = buildApiUrl("/contacts/groups");
-      const res = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } });
-      const data = (await res.json()) as ApiContactGroupsResponse;
-      if (!res.ok || !data.success) {
-        setContactGroupsError(data.error || "Unable to load groups");
-        return;
-      }
+      const data = await getApi<ApiContactGroupsResponse>("/contacts/groups");
       setContactGroups(data.data || []);
     } catch (err) {
       setContactGroupsError((err as Error).message);
@@ -361,10 +347,14 @@ export function useContactsFace({
   const handleChatWithGroup = useCallback(async (g: ContactGroup, title: string) => {
     setGroupChatCreating(true);
     try {
-      const { ok, data } = await postJson<{ success: boolean; data?: { conversationId: number }; error?: string }>(
-        `/contacts/groups/${g.id}/chat`,
-        { chatName: title }
-      );
+      interface GroupChatResponse {
+        success: boolean;
+        data?: { conversationId: number };
+        error?: string;
+      }
+      const { ok, data } = await postApi<GroupChatResponse>(`/contacts/groups/${g.id}/chat`, {
+        chatName: title,
+      });
       if (!ok || !data.success || !data.data) {
         showAlert(data.error || "Failed to open group chat", "Error");
         return;
@@ -388,32 +378,31 @@ export function useContactsFace({
     setCreateGroupError(null);
     try {
       // Phase 1: create group
-      const initRes = await fetch(buildApiUrl("/contacts/groups/init"), {
+      interface InitGroupResponse {
+        success: boolean;
+        data?: { groupId: number };
+        error?: string;
+      }
+      const initData = await fetchApiCustom<InitGroupResponse>("/contacts/groups/init", {
         method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({ groupName: createGroupName.trim().slice(0, 32) }),
       });
-      const initData = (await initRes.json()) as { success: boolean; data?: { groupId: number }; error?: string };
-      if (!initRes.ok || !initData.success || !initData.data?.groupId) {
-        setCreateGroupError(initData.error || "Failed to create group");
+      if (!initData.data?.groupId) {
+        setCreateGroupError("Failed to create group");
         return;
       }
       const groupId = initData.data.groupId;
 
       // Phase 2: add selected members (if any)
       if (createGroupSelectedIds.length > 0) {
-        const membersRes = await fetch(buildApiUrl(`/contacts/groups/${groupId}/members`), {
+        interface AddMembersResponse {
+          success: boolean;
+          error?: string;
+        }
+        await fetchApiCustom<AddMembersResponse>(`/contacts/groups/${groupId}/members`, {
           method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
           body: JSON.stringify({ memberIds: createGroupSelectedIds }),
         });
-        const membersData = (await membersRes.json()) as { success: boolean; error?: string };
-        if (!membersRes.ok || !membersData.success) {
-          setCreateGroupError(membersData.error || "Failed to add members");
-          return;
-        }
       }
 
       // Reset form and refresh groups list
@@ -436,13 +425,7 @@ export function useContactsFace({
     if (!username) return;
     setLoadingWhoseContactAmI(true);
     try {
-      const url = buildApiUrl("/contacts/whose-contact-am-i");
-      const res = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } });
-      const data = (await res.json()) as ApiWhoseContactAmIResponse;
-      if (!res.ok || !data.success) {
-        showAlert(data.error || "Unable to load", "Error");
-        return;
-      }
+      const data = await getApi<ApiWhoseContactAmIResponse>("/contacts/whose-contact-am-i");
       setWhoseContactAmI(data.data || []);
     } catch (err) {
       showAlert((err as Error).message, "Error");
@@ -456,13 +439,14 @@ export function useContactsFace({
     if (!username) return;
     setLoadingRequests(true);
     try {
-      const [incomingRes, outgoingRes] = await Promise.all([
-        fetch(buildApiUrl("/contacts/requests/incoming"), { credentials: "include", headers: { Accept: "application/json" } }),
-        fetch(buildApiUrl("/contacts/requests/outgoing"), { credentials: "include", headers: { Accept: "application/json" } }),
-      ]);
+      interface RequestsResponse {
+        success: boolean;
+        data?: ContactRequest[];
+        error?: string;
+      }
       const [incomingData, outgoingData] = await Promise.all([
-        incomingRes.json() as Promise<{ success: boolean; data?: ContactRequest[]; error?: string }>,
-        outgoingRes.json() as Promise<{ success: boolean; data?: ContactRequest[]; error?: string }>,
+        getApi<RequestsResponse>("/contacts/requests/incoming"),
+        getApi<RequestsResponse>("/contacts/requests/outgoing"),
       ]);
       if (incomingData.success) setIncomingRequests(incomingData.data || []);
       if (outgoingData.success) setOutgoingRequests(outgoingData.data || []);
@@ -477,7 +461,7 @@ export function useContactsFace({
   const handleApproveRequest = useCallback(async (requestId: number) => {
     setApprovingRequestId(requestId);
     try {
-      const { ok, data } = await postJson<{ success: boolean; error?: string }>("/contacts/requests/approve", { requestId });
+      const { ok, data } = await postApi<{ success: boolean; error?: string }>("/contacts/requests/approve", { requestId });
       if (!ok || !data.success) {
         showAlert(data.error || "Failed to approve request", "Error");
         return;
@@ -495,7 +479,7 @@ export function useContactsFace({
   const handleRejectRequest = useCallback(async (requestId: number) => {
     setRejectingRequestId(requestId);
     try {
-      const { ok, data } = await postJson<{ success: boolean; error?: string }>("/contacts/requests/reject", { requestId });
+      const { ok, data } = await postApi<{ success: boolean; error?: string }>("/contacts/requests/reject", { requestId });
       if (!ok || !data.success) {
         showAlert(data.error || "Failed to reject request", "Error");
         return;
@@ -512,7 +496,7 @@ export function useContactsFace({
   const handleCancelRequest = useCallback(async (requestId: number, targetId: number) => {
     setCancellingRequestId(requestId);
     try {
-      const { ok, data } = await postJson<{ success: boolean; error?: string }>("/contacts/requests/cancel", { requestId });
+      const { ok, data } = await postApi<{ success: boolean; error?: string }>("/contacts/requests/cancel", { requestId });
       if (!ok || !data.success) {
         showAlert(data.error || "Failed to cancel request", "Error");
         return;
@@ -530,7 +514,7 @@ export function useContactsFace({
   const handleSendRequest = useCallback(async () => {
     if (!requestDisplayName.trim()) return;
     try {
-      await postJson("/contacts/request", {
+      await postApi<{ success: boolean; error?: string }>("/contacts/request", {
         displayName: requestDisplayName.trim(),
       });
       if (showRequests) fetchRequests();

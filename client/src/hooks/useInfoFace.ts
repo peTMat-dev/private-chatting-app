@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { buildApiUrl } from "../lib/api";
+import { getApi, fetchApiCustom } from "../services/api.service";
 import { t } from "../lib/i18n";
 import { useLanguage } from "../lib/LanguageContext";
 import type { InfoItem, ReportedBug, InfoTab } from "../lib/formTypes";
@@ -59,10 +59,11 @@ export function useInfoFace(activeFace: string): UseInfoFaceReturn {
 			if (reportedBugs.length > 0) return;
 			setLoadingBugs(true);
 			try {
-				const res = await fetch(buildApiUrl("/infos/reported-bugs"), { 
-					headers: { Accept: "application/json" } 
-				});
-				const d = (await res.json()) as { success: boolean; data?: ReportedBug[] };
+				interface BugsResponse {
+					success: boolean;
+					data?: ReportedBug[];
+				}
+				const d = await getApi<BugsResponse>("/infos/reported-bugs");
 				if (d.success) setReportedBugs(d.data || []);
 			} catch {
 				// Ignore errors
@@ -76,10 +77,11 @@ export function useInfoFace(activeFace: string): UseInfoFaceReturn {
 		setSelectedInfo(null);
 		setLoadingInfoItems(true);
 		try {
-			const res = await fetch(buildApiUrl(`/infos?category=${activeInfoTab}&language_code=${lang}`), { 
-				headers: { Accept: "application/json" } 
-			});
-			const d = (await res.json()) as { success: boolean; data?: InfoItem[] };
+			interface InfoResponse {
+				success: boolean;
+				data?: InfoItem[];
+			}
+			const d = await getApi<InfoResponse>(`/infos?category=${activeInfoTab}&language_code=${lang}`);
 			if (d.success) setInfoItems(d.data || []);
 		} catch {
 			// Ignore errors
@@ -92,26 +94,24 @@ export function useInfoFace(activeFace: string): UseInfoFaceReturn {
 		if (!bugTitleInput.trim() || !bugInput.trim() || !bugCategoryInput || submittingBug) return;
 		setSubmittingBug(true);
 		try {
-			const res = await fetch(buildApiUrl("/infos/report-bug"), {
+			interface ReportBugResponse {
+				success: boolean;
+				error?: string;
+			}
+			await fetchApiCustom<ReportBugResponse>("/infos/report-bug", {
 				method: "POST",
-				headers: { "Content-Type": "application/json", Accept: "application/json" },
 				body: JSON.stringify({ 
 					title: bugTitleInput.trim(), 
 					description: bugInput.trim(), 
 					category: bugCategoryInput 
 				}),
 			});
-			const data = await res.json();
-			if (res.ok && data.success) {
-				setBugTitleInput("");
-				setBugInput("");
-				setBugCategoryInput("Other");
-				setBugReported(true);
-				setReportedBugs([]); // reset so it reloads on next visit
-				setTimeout(() => setBugReported(false), 4000);
-			} else {
-				// Note: Parent component will show error
-			}
+			setBugTitleInput("");
+			setBugInput("");
+			setBugCategoryInput("Other");
+			setBugReported(true);
+			setReportedBugs([]); // reset so it reloads on next visit
+			setTimeout(() => setBugReported(false), 4000);
 		} catch {
 			// Note: Parent component will show error
 		} finally {

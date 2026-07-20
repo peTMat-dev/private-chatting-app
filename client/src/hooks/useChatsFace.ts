@@ -1,5 +1,5 @@
 import { useCallback, useState, Dispatch, SetStateAction } from "react";
-import { buildApiUrl } from "../lib/api";
+import { getApi, fetchApiCustom } from "../services/api.service";
 import type { ContactSummary, ContactItem, ApiChatsResponse } from "../lib/formTypes";
 
 interface UseChatsFaceOptions {
@@ -45,13 +45,7 @@ export function useChatsFace({
   const fetchChats = useCallback(async () => {
     if (!username) return;
     try {
-      const url = buildApiUrl("/chats");
-      const res = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } });
-      const data = (await res.json()) as ApiChatsResponse;
-      if (!res.ok || !data.success) {
-        setError(data.error || "Unable to load chats");
-        return;
-      }
+      const data = await getApi<ApiChatsResponse>("/chats");
       const personal = data.personal || [];
       const groups = data.groups || [];
       const list: ContactSummary[] = [...personal, ...groups].map((d) => ({
@@ -79,24 +73,22 @@ export function useChatsFace({
         return;
       }
 
-      const url = buildApiUrl("/chats");
-      const res = await fetch(url, {
+      interface CreateChatResponse {
+        success: boolean;
+        data?: { conversationId: number; name: string; isGroup: boolean };
+        error?: string;
+      }
+
+      const data = await fetchApiCustom<CreateChatResponse>("/chats", {
         method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
           participantIds: newChatSelectedIds,
           title,
         }),
       });
-      const data = (await res.json()) as {
-        success: boolean;
-        data?: { conversationId: number; name: string; isGroup: boolean };
-        error?: string;
-      };
 
-      if (!res.ok || !data.success || !data.data) {
-        setNewChatError(data.error || "Failed to create chat");
+      if (!data.data) {
+        setNewChatError("Failed to create chat");
         return;
       }
 

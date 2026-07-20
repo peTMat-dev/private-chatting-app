@@ -479,7 +479,7 @@ export default function ContactsFace({
                                   </span>
                                   <button
                                     className="contact-action-btn contact-action-btn--chat-active"
-                                    onClick={() => handleChatWithGroup(g, g.name)}
+                                    onClick={() => setGroupChatTitleEdit({ groupId: g.id, value: g.name })}
                                     disabled={groupChatCreating}
                                     title="💬"
                                   >

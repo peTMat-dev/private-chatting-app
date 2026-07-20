@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, Dispatch, SetStateAction, RefObject } from "react";
-import { buildApiUrl, postJson } from "../lib/api";
+import { getApi, postApi, fetchApiCustom } from "../services/api.service";
 import type { ChatMessage, ConfirmDialog, ApiMessagesResponse } from "../lib/formTypes";
 
 interface UseMessagesFaceOptions {
@@ -68,13 +68,7 @@ export function useMessagesFace({
     setChatLoading(true);
     setChatError(null);
     try {
-      const url = buildApiUrl(`/chats/${conversationId}/messages`);
-      const res = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } });
-      const data = (await res.json()) as ApiMessagesResponse;
-      if (!res.ok || !data.success) {
-        setChatError(data.error || "Unable to load messages");
-        return;
-      }
+      const data = await getApi<ApiMessagesResponse>(`/chats/${conversationId}/messages`);
       setActiveChatMessages(data.data || []);
     } catch (err) {
       setChatError((err as Error).message);
@@ -117,7 +111,12 @@ export function useMessagesFace({
     setActiveChatMessages((prev) => [...prev, optimisticMessage]);
 
     try {
-      const { ok, data } = await postJson<{ success: boolean; data?: { messageId: number }; error?: string }>(
+      interface SendMessageResponse {
+        success: boolean;
+        data?: { messageId: number };
+        error?: string;
+      }
+      const { ok, data } = await postApi<SendMessageResponse>(
         `/chats/${activeChatId}/messages`,
         { text }
       );
@@ -152,16 +151,14 @@ export function useMessagesFace({
   const handleDeleteMessage = useCallback(async (messageId: number) => {
     if (!activeChatId) return;
     try {
-      const res = await fetch(buildApiUrl(`/chats/${activeChatId}/messages/${messageId}`), {
-        method: "DELETE",
-        credentials: "include",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-      });
-      const data = (await res.json()) as { success: boolean; error?: string };
-      if (!res.ok || !data.success) {
-        showAlert(data.error || "Failed to delete message", "Error");
-        return;
+      interface DeleteMessageResponse {
+        success: boolean;
+        error?: string;
       }
+      await fetchApiCustom<DeleteMessageResponse>(
+        `/chats/${activeChatId}/messages/${messageId}`,
+        { method: "DELETE" }
+      );
       setActiveChatMessages((prev) => prev.filter((m) => m.messageId !== messageId));
     } catch (err) {
       showAlert((err as Error).message, "Error");

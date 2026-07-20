@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, Dispatch, SetStateAction, FormEvent } from "react";
-import { buildApiUrl } from "../lib/api";
+import { getApi, fetchApiCustom } from "../services/api.service";
 import { getLang, setLang, type LangCode } from "../lib/i18n";
 import type { UserSettings, ApiSettingsResponse, ApiTimezonesResponse } from "../lib/formTypes";
 
@@ -56,13 +56,7 @@ export function useSettingsFace({
 
     const fetchSettings = async () => {
       try {
-        const url = buildApiUrl("/settings");
-        const res = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } });
-        const data = (await res.json()) as ApiSettingsResponse;
-        if (!res.ok || !data.success) {
-          if (!aborted) setSettingsError(data.error || "Unable to load settings");
-          return;
-        }
+        const data = await getApi<ApiSettingsResponse>("/settings");
         if (!aborted && data.data) setSettings(data.data);
       } catch (err) {
         if (!aborted) setSettingsError((err as Error).message);
@@ -71,12 +65,8 @@ export function useSettingsFace({
 
     const fetchTimezones = async () => {
       try {
-        const url = buildApiUrl("/settings/timezones");
-        const res = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } });
-        const data = (await res.json()) as ApiTimezonesResponse;
-        if (res.ok && data.success && data.data) {
-          if (!aborted) setTimezones(data.data);
-        }
+        const data = await getApi<ApiTimezonesResponse>("/settings/timezones");
+        if (!aborted && data.data) setTimezones(data.data);
       } catch (err) {
         console.error("Failed to fetch timezones:", err);
       }
@@ -99,24 +89,12 @@ export function useSettingsFace({
     setSettingsSaved(false);
 
     try {
-      const url = buildApiUrl("/settings");
-      const res = await fetch(url, {
+      await fetchApiCustom<ApiSettingsResponse>("/settings", {
         method: "PUT",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
         body: JSON.stringify({
           ...settings,
         }),
       });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setSettingsError(data.error || "Failed to save settings");
-        return;
-      }
 
       setSettingsSaved(true);
       setTimeout(() => setSettingsSaved(false), 3000);

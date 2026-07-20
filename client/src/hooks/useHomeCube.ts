@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { buildApiUrl } from "../lib/api";
+import { getApi } from "../services/api.service";
 import { useCubeNavigation, type CubeFace } from "../lib/useCubeNavigation";
 import { useSocket } from "../lib/useSocket";
 import { useChatsFace } from "./useChatsFace";
@@ -78,10 +79,9 @@ export function useHomeCube(): UseHomeCubeReturn {
   // Fetch own display name once username is available
   useEffect(() => {
     if (!username) return;
-    fetch(buildApiUrl("/settings"), { credentials: "include", headers: { Accept: "application/json" } })
-      .then((r) => r.json())
-      .then((d: ApiSettingsResponse) => { 
-        if (d.success && d.data?.display_name) {
+    getApi<ApiSettingsResponse>("/settings")
+      .then((d) => { 
+        if (d.data?.display_name) {
           setCurrentUserDisplayName(d.data.display_name);
         }
       })
