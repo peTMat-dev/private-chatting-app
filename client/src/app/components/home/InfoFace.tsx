@@ -2,9 +2,7 @@
 
 import { Dispatch, SetStateAction } from "react";
 import { type LangCode, type Translations } from "../../../lib/i18n";
-import { type InfoItem, type ReportedBug } from "../types";
-
-type InfoTab = "update" | "manual" | "announcement" | "reported_bugs";
+import { type InfoItem, type ReportedBug, type InfoTab } from "../../../lib/formTypes";
 
 type Props = {
   activeInfoTab: InfoTab;

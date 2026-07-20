@@ -2,7 +2,7 @@
 
 import { Dispatch, SetStateAction } from "react";
 import { type Translations } from "../../../lib/i18n";
-import { type ContactItem, type PublicUser, type ContactRequest, type MemberGroup, type ContactGroup } from "../types";
+import { type ContactItem, type PublicUser, type ContactRequest, type MemberGroup, type ContactGroup } from "../../../lib/formTypes";
 
 type Props = {
   // navigation

@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { buildApiUrl } from "../lib/api";
 import { t } from "../lib/i18n";
 import { useLanguage } from "../lib/LanguageContext";
-import type { InfoItem, ReportedBug, InfoTab } from "../app/components/auth/InfoFace";
+import type { InfoItem, ReportedBug, InfoTab } from "../lib/formTypes";
 
 export interface UseInfoFaceReturn {
 	// Info state

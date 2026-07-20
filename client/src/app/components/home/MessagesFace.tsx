@@ -3,7 +3,7 @@
 import { Dispatch, SetStateAction, RefObject } from "react";
 import { type Translations } from "../../../lib/i18n";
 import { type CubeFace } from "../../../lib/useCubeNavigation";
-import { type ChatMessage, type UserSettings } from "../types";
+import { type ChatMessage, type UserSettings, type ConfirmDialog } from "../../../lib/formTypes";
 
 type Props = {
   activeChatId: number | null;
@@ -15,8 +15,8 @@ type Props = {
   chatLoading: boolean;
   chatError: string | null;
   sendingMessage: boolean;
-  confirmDialog: { show: boolean; message: string; onConfirm: () => void } | null;
-  setConfirmDialog: Dispatch<SetStateAction<{ show: boolean; message: string; onConfirm: () => void } | null>>;
+  confirmDialog: ConfirmDialog | null;
+  setConfirmDialog: Dispatch<SetStateAction<ConfirmDialog | null>>;
   handleSendMessage: () => void;
   handleDeleteMessage: (messageId: number) => void;
   handleMessageDoubleTap: (messageId: number) => void;

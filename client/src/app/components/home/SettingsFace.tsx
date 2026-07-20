@@ -2,7 +2,7 @@
 
 import { FormEvent, Dispatch, SetStateAction } from "react";
 import { LANGUAGES, type LangCode, type Translations } from "../../../lib/i18n";
-import { type UserSettings } from "../types";
+import { type UserSettings } from "../../../lib/formTypes";
 
 type Props = {
   settings: UserSettings | null;

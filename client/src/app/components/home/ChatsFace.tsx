@@ -4,7 +4,7 @@ import { Dispatch, SetStateAction } from "react";
 import Contact from "./Contact";
 import { type Translations } from "../../../lib/i18n";
 import { type CubeFace } from "../../../lib/useCubeNavigation";
-import { type ContactSummary, type ContactItem } from "../types";
+import { type ContactSummary, type ContactItem } from "../../../lib/formTypes";
 
 type Props = {
   contacts: ContactSummary[];
