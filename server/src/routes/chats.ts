@@ -111,7 +111,7 @@ router.post("/", async (req: Request, res: Response) => {
           "INSERT INTO conversations (creator_user_id, is_group, max_participants) VALUES (?, FALSE, 2)",
           [userId]
         );
-        conversationId = (result as any).insertId;
+        conversationId = Array.isArray(result) ? (result[0] as any).insertId : (result as any).insertId;
         await query(
           "INSERT INTO conversations_participants (conversation_id, user_id) VALUES (?, ?), (?, ?)",
           [conversationId, userId, conversationId, otherId]
@@ -135,7 +135,7 @@ router.post("/", async (req: Request, res: Response) => {
         "INSERT INTO conversations (creator_user_id, is_group, title, max_participants) VALUES (?, TRUE, ?, ?)",
         [userId, title!.trim(), maxParticipants]
       );
-      conversationId = (result as any).insertId;
+      conversationId = Array.isArray(result) ? (result[0] as any).insertId : (result as any).insertId;
       const allParticipants = [userId, ...participantIds];
       const participantValues = allParticipants.map(() => "(?, ?)").join(", ");
       const participantParams = allParticipants.flatMap((id) => [conversationId, id]);
@@ -233,7 +233,7 @@ router.post("/:id/messages", async (req: Request, res: Response) => {
       "INSERT INTO messages (conversation_id, sender_user_id, sender_username, message_text, sent_at) VALUES (?, ?, ?, ?, NOW())",
       [conversationId, userId, username, encryptText(text.trim())]
     );
-    const messageId = (result as any).insertId;
+    const messageId = Array.isArray(result) ? (result[0] as any).insertId : (result as any).insertId;
 
     const sentRow = await query<{ sent_at: string }>(
       "SELECT DATE_FORMAT(CONVERT_TZ(sent_at, @@session.time_zone, '+00:00'), '%Y-%m-%dT%H:%i:%sZ') AS sent_at FROM messages WHERE message_id = ? LIMIT 1",

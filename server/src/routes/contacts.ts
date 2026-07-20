@@ -496,7 +496,7 @@ router.post("/groups/:id/chat", async (req: Request, res: Response) => {
         "INSERT INTO conversations (creator_user_id, is_group, title, max_participants) VALUES (?, TRUE, ?, ?)",
         [userId, title.slice(0, 32), maxParticipants]
       );
-      conversationId = (result as any).insertId;
+      conversationId = Array.isArray(result) ? (result[0] as any).insertId : (result as any).insertId;
       
       // Add all participants
       const participantValues = allParticipants.map(() => "(?, ?)").join(", ");
