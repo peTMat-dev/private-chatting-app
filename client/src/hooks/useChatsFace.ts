@@ -72,22 +72,21 @@ export function useChatsFace({
     setNewChatError(null);
     try {
       const isGroup = newChatSelectedIds.length > 1;
-      const groupName = isGroup ? newChatTitle.trim().slice(0, 32) : undefined;
+      const title = isGroup ? newChatTitle.trim().slice(0, 32) : undefined;
 
-      if (isGroup && !groupName) {
+      if (isGroup && !title) {
         setNewChatError("Group title required");
         return;
       }
 
-      // Create chat via API
-      const url = buildApiUrl("/chats/create");
+      const url = buildApiUrl("/chats");
       const res = await fetch(url, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
           participantIds: newChatSelectedIds,
-          groupName: isGroup ? groupName : undefined,
+          title,
         }),
       });
       const data = (await res.json()) as {
@@ -101,16 +100,13 @@ export function useChatsFace({
         return;
       }
 
-      // Open the newly created chat
       onOpenChat(data.data.conversationId, data.data.name, data.data.isGroup);
 
-      // Reset form
       setShowNewChat(false);
       setNewChatSelectedIds([]);
       setNewChatTitle("");
       setNewChatError(null);
 
-      // Refresh chats list
       fetchChats();
     } catch (err) {
       setNewChatError((err as Error).message);

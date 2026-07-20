@@ -276,15 +276,15 @@ export function useContactsFace({
     if (!contact) return;
 
     try {
-      const { ok, data } = await postJson<{ success: boolean; data?: { conversationId: number }; error?: string }>(
-        "/chats/open-with-contact",
-        { contactUserId: contactId }
+      const { ok, data } = await postJson<{ success: boolean; data?: { conversationId: number; name: string; isGroup: boolean }; error?: string }>(
+        "/chats",
+        { participantIds: [contactId] }
       );
       if (!ok || !data.success || !data.data) {
         showAlert(data.error || "Failed to open chat", "Error");
         return;
       }
-      onOpenChat(data.data.conversationId, contact.displayName, false);
+      onOpenChat(data.data.conversationId, data.data.name || contact.displayName, false);
       fetchChats();
     } catch (err) {
       showAlert((err as Error).message, "Error");
