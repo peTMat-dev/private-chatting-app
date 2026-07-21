@@ -157,7 +157,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_conversations` (
     `conversation_id` INT UNSIGNED PRIMARY KEY,
     `max_participants` SMALLINT UNSIGNED DEFAULT NULL,
     `creator_user_id` SMALLINT UNSIGNED NOT NULL,
-    `created_at` DATETIME DEFAULT NOT NULL,
+    `created_at` DATETIME NOT NULL,
     `is_group` BOOLEAN DEFAULT FALSE,
     `title` VARCHAR(32) DEFAULT NULL,
     `group_id` INT UNSIGNED DEFAULT NULL,
@@ -174,7 +174,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_messages` (
     `sender_avatar_url` VARCHAR(255) DEFAULT NULL, -- denormalized for fast display
     `message_text` TEXT NOT NULL,
     `archived_at` DATETIME DEFAULT CURRENT_TIMESTAMP, -- to keep this column?
-    `sent_at` DATETIME DEFAULT NOT NULL,
+    `sent_at` DATETIME NOT NULL,
     FOREIGN KEY (`conversation_id`) REFERENCES `cubcha_v1`.`archived_conversations`(`conversation_id`),
     FOREIGN KEY (`sender_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)
     ,KEY `idx_archived_messages_conv_sent` (`conversation_id`, `archived_at`)
@@ -184,7 +184,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_messages` (
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_conversations_participants` (
     `conversation_id` INT UNSIGNED NOT NULL,
     `user_id` SMALLINT UNSIGNED NOT NULL,
-    `joined_at` DATETIME DEFAULT NOT NULL,
+    `joined_at` DATETIME NOT NULL,
     PRIMARY KEY (`conversation_id`, `user_id`),
     FOREIGN KEY (`conversation_id`) REFERENCES `cubcha_v1`.`archived_conversations`(`conversation_id`),
     FOREIGN KEY (`user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`)
@@ -196,7 +196,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_user_groups` (
     `group_id` INT UNSIGNED NOT NULL UNIQUE, -- Only one archived record per group_id allowed
     `group_name` VARCHAR(32) NOT NULL,
     `owner_user_id` SMALLINT UNSIGNED NOT NULL,   -- user_id of the group owner
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `created_at` DATETIME NOT NULL,
     `archived_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`owner_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`) -- PK for archived group
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -206,7 +206,7 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`archived_group_members` (
     `group_id` INT UNSIGNED NOT NULL,
     `member_user_id` SMALLINT UNSIGNED NOT NULL,
     `is_admin` BOOLEAN DEFAULT FALSE,
-    `joined_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `joined_at` DATETIME NOT NULL,
     PRIMARY KEY (`archived_group_id`, `member_user_id`),
     FOREIGN KEY (`archived_group_id`) REFERENCES `cubcha_v1`.`archived_user_groups`(`archived_group_id`),
     FOREIGN KEY (`member_user_id`) REFERENCES `cubcha_v1`.`user_main_details`(`user_id`) -- Consistent user reference
