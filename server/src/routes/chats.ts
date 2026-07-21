@@ -98,20 +98,13 @@ router.post("/", async (req: Request, res: Response) => {
         name = existing[0].title?.trim() || existing[0].participants || "Chat";
       } else {
         // Create new 1-on-1
-        const result = await query<{ insertId: number }>(
-          "INSERT INTO conversations (creator_user_id, is_group, max_participants) VALUES (?, FALSE, 2)",
-          [userId]
+        const createResult = await query<{ conversation_id: number; display_name: string }>(
+          "CALL conversations_2create_new(?, ?)",
+          [userId, otherId]
         );
-        conversationId = Array.isArray(result) ? (result[0] as any).insertId : (result as any).insertId;
-        await query(
-          "INSERT INTO conversations_participants (conversation_id, user_id) VALUES (?, ?), (?, ?)",
-          [conversationId, userId, conversationId, otherId]
-        );
-        const nameRow = await query<{ display_name: string }>(
-          "SELECT display_name FROM user_main_details WHERE user_id = ? LIMIT 1",
-          [otherId]
-        );
-        name = nameRow[0]?.display_name || "Chat";
+        const createRow = (createResult as any)[0]?.[0] ?? (createResult as any)[0];
+        conversationId = createRow.conversation_id;
+        name = createRow.display_name || "Chat";
       }
     } else {
       // Group: always create new
