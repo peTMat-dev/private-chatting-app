@@ -454,58 +454,30 @@ router.post("/groups/:id/chat", async (req: Request, res: Response) => {
     // Use provided chat name or fall back to group name
     const title = (chatName && chatName.trim()) || groupName;
 
-    // Check if a conversation already exists for this exact group of participants
-    // Build a query to find conversations with exactly these participants
+    // Always create a new group conversation (same group can have multiple chats)
     const allParticipants = [userId, ...memberIds];
-    const participantCount = allParticipants.length;
-    
-    // Find conversations where all participants are members
-    const placeholders = allParticipants.map(() => "?").join(", ");
-    const existingConversations = await query<{ conversation_id: number }>(
-      `SELECT DISTINCT cp1.conversation_id 
-       FROM conversations_participants cp1
-       JOIN conversations c ON c.conversation_id = cp1.conversation_id AND c.is_group = TRUE
-       WHERE cp1.conversation_id IN (
-         SELECT conversation_id 
-         FROM conversations_participants 
-         WHERE user_id IN (${placeholders})
-         GROUP BY conversation_id
-         HAVING COUNT(DISTINCT user_id) = ?
-       )
-       AND (SELECT COUNT(*) FROM conversations_participants WHERE conversation_id = cp1.conversation_id) = ?
-       LIMIT 1`,
-      [...allParticipants, participantCount, participantCount]
+
+    // Get max participants setting
+    const settingsResult = await query<{ default_max_chat_participants: number }>(
+      "CALL messages_2get_max_chat_participants(?)",
+      [userId]
     );
+    const settingsRows = (settingsResult as any)[0] || [];
+    const maxParticipants = settingsRows[0]?.default_max_chat_participants || 20;
 
-    let conversationId: number;
-
-    if (existingConversations.length > 0) {
-      // Reuse existing conversation
-      conversationId = existingConversations[0].conversation_id;
-    } else {
-      // Create new group conversation
-      // Get max participants setting
-      const settingsResult = await query<{ default_max_chat_participants: number }>(
-        "CALL messages_2get_max_chat_participants(?)",
-        [userId]
-      );
-      const settingsRows = (settingsResult as any)[0] || [];
-      const maxParticipants = settingsRows[0]?.default_max_chat_participants || 20;
-
-      const result = await query<{ insertId: number }>(
-        "INSERT INTO conversations (creator_user_id, is_group, title, max_participants) VALUES (?, TRUE, ?, ?)",
-        [userId, title.slice(0, 32), maxParticipants]
-      );
-      conversationId = Array.isArray(result) ? (result[0] as any).insertId : (result as any).insertId;
-      
-      // Add all participants
-      const participantValues = allParticipants.map(() => "(?, ?)").join(", ");
-      const participantParams = allParticipants.flatMap((id) => [conversationId, id]);
-      await query(
-        `INSERT INTO conversations_participants (conversation_id, user_id) VALUES ${participantValues}`,
-        participantParams
-      );
-    }
+    const result = await query<{ insertId: number }>(
+      "INSERT INTO conversations (creator_user_id, is_group, title, max_participants) VALUES (?, TRUE, ?, ?)",
+      [userId, title.slice(0, 32), maxParticipants]
+    );
+    const conversationId = Array.isArray(result) ? (result[0] as any).insertId : (result as any).insertId;
+    
+    // Add all participants
+    const participantValues = allParticipants.map(() => "(?, ?)").join(", ");
+    const participantParams = allParticipants.flatMap((id) => [conversationId, id]);
+    await query(
+      `INSERT INTO conversations_participants (conversation_id, user_id) VALUES ${participantValues}`,
+      participantParams
+    );
 
     res.json({ success: true, data: { conversationId } });
   } catch (error) {
