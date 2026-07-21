@@ -87,20 +87,11 @@ router.post("/", async (req: Request, res: Response) => {
     if (!isGroup) {
       // 1-on-1: reuse existing conversation if it exists
       const otherId = participantIds[0];
-      const existing = await query<{ conversation_id: number; title: string | null; participants: string | null }>(
-        `SELECT c.conversation_id, c.title,
-                (SELECT GROUP_CONCAT(umd.display_name SEPARATOR ', ')
-                 FROM conversations_participants cp2
-                 JOIN user_main_details umd ON umd.user_id = cp2.user_id
-                 WHERE cp2.conversation_id = c.conversation_id AND cp2.user_id <> ?) AS participants
-         FROM conversations c
-         JOIN conversations_participants cp1 ON cp1.conversation_id = c.conversation_id AND cp1.user_id = ?
-         JOIN conversations_participants cp2 ON cp2.conversation_id = c.conversation_id AND cp2.user_id = ?
-         WHERE c.is_group = FALSE
-           AND (SELECT COUNT(*) FROM conversations_participants cp3 WHERE cp3.conversation_id = c.conversation_id) = 2
-         LIMIT 1`,
-        [userId, userId, otherId]
+      const existingResult = await query<{ conversation_id: number; title: string | null; participants: string | null }>(
+        "CALL conversations_indiv_2reuse(?, ?)",
+        [otherId, userId]
       );
+      const existing = (existingResult as any)[0] || [];
 
       if (existing.length > 0) {
         conversationId = existing[0].conversation_id;
