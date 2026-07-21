@@ -88,7 +88,7 @@ router.post("/", async (req: Request, res: Response) => {
       // 1-on-1: reuse existing conversation if it exists
       const otherId = participantIds[0];
       const existingResult = await query<{ conversation_id: number; title: string | null; participants: string | null }>(
-        "CALL conversations_indiv_2reuse(?, ?)",
+        "CALL conversations_2reuse_indiv(?, ?)",
         [otherId, userId]
       );
       const existing = (existingResult as any)[0] || [];
