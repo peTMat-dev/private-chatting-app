@@ -490,7 +490,7 @@ router.post("/groups/:id/chat", async (req: Request, res: Response) => {
         [userId]
       );
       const settingsRows = (settingsResult as any)[0] || [];
-      const maxParticipants = settingsRows[0]?.default_max_chat_participants || 50;
+      const maxParticipants = settingsRows[0]?.default_max_chat_participants || 20;
 
       const result = await query<{ insertId: number }>(
         "INSERT INTO conversations (creator_user_id, is_group, title, max_participants) VALUES (?, TRUE, ?, ?)",
