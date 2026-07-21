@@ -107,27 +107,15 @@ router.post("/", async (req: Request, res: Response) => {
         name = createRow.display_name || "Chat";
       }
     } else {
-      // Group: always create new
-      const settingsResult = await query<{ default_max_chat_participants: number }>(
-        "CALL messages_2get_max_chat_participants(?)",
-        [userId]
+      // Group: always create new (SP handles max_participants lookup + conversation + participants insert)
+      const participantIdsStr = participantIds.join(",");
+      const createResult = await query<{ conversation_id: number; title: string }>(
+        "CALL conversations_2create_new_group(?, ?, ?)",
+        [userId, title!.trim(), participantIdsStr]
       );
-      const settingsRows = (settingsResult as any)[0] || [];
-      const maxParticipants = settingsRows[0]?.default_max_chat_participants || 20;
-
-      const result = await query<{ insertId: number }>(
-        "INSERT INTO conversations (creator_user_id, is_group, title, max_participants) VALUES (?, TRUE, ?, ?)",
-        [userId, title!.trim(), maxParticipants]
-      );
-      conversationId = Array.isArray(result) ? (result[0] as any).insertId : (result as any).insertId;
-      const allParticipants = [userId, ...participantIds];
-      const participantValues = allParticipants.map(() => "(?, ?)").join(", ");
-      const participantParams = allParticipants.flatMap((id) => [conversationId, id]);
-      await query(
-        `INSERT INTO conversations_participants (conversation_id, user_id) VALUES ${participantValues}`,
-        participantParams
-      );
-      name = title!.trim();
+      const createRow = (createResult as any)[0]?.[0] ?? (createResult as any)[0];
+      conversationId = createRow.conversation_id;
+      name = createRow.title;
     }
 
     res.json({ success: true, data: { conversationId, name, isGroup } });
