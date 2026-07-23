@@ -45,6 +45,8 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`timezones` (
 CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_system_details` (
     `user_id` SMALLINT UNSIGNED PRIMARY KEY NOT NULL COMMENT 'FK to user_main_details.user_id',
     `user_language` ENUM('en', 'sk', 'es', 'fr', 'de', 'cz') NOT NULL COMMENT 'Preferred language for UI',
+    `system_color_background` ENUM('light', 'dark') NOT NULL DEFAULT 'light' COMMENT 'User preferred color theme',
+    `cube_color_theme` ENUM('blue', 'green', 'red', 'purple', 'orange', 'brown') NOT NULL DEFAULT 'blue' COMMENT 'System default color theme',
     `default_max_chat_participants` TINYINT UNSIGNED DEFAULT 10 COMMENT 'Default max chat participants for new conversations',
     `public_st` BOOLEAN DEFAULT TRUE COMMENT 'Indicates if the user profile is public(on) or private (off)',
     `can_be_added_to_contacts` BOOLEAN DEFAULT FALSE COMMENT 'Indicates if the user can be added to contacts',
