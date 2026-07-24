@@ -10,6 +10,7 @@ type UserSystemDetails = {
   user_timezone: string;
   can_be_added_to_contacts: boolean;
   system_color_theme: 'light' | 'dark';
+  cube_color: string;
 };
 
 type TimezoneRow = {
@@ -24,7 +25,7 @@ router.get("/", async (req: Request, res: Response) => {
   try {
     // Get user system details
     const settingsRows = await query<UserSystemDetails & { display_name: string }>(
-      `SELECT usd.user_language, usd.default_max_chat_participants, usd.public_st, usd.user_timezone, usd.can_be_added_to_contacts, usd.system_color_theme, umd.display_name
+      `SELECT usd.user_language, usd.default_max_chat_participants, usd.public_st, usd.user_timezone, usd.can_be_added_to_contacts, usd.system_color_theme, usd.cube_color, umd.display_name
        FROM user_system_details usd
        JOIN user_main_details umd ON umd.user_id = usd.user_id
        WHERE usd.user_id = ? LIMIT 1`,
@@ -42,6 +43,7 @@ router.get("/", async (req: Request, res: Response) => {
       user_timezone: settingsRows[0].user_timezone,
       can_be_added_to_contacts: Boolean(settingsRows[0].can_be_added_to_contacts),
       system_color_theme: settingsRows[0].system_color_theme || 'dark',
+      cube_color: settingsRows[0].cube_color || '#06ec90',
       display_name: settingsRows[0].display_name,
     };
 
@@ -73,7 +75,7 @@ router.get("/timezones", async (_req: Request, res: Response) => {
 
 // PUT /settings
 router.put("/", async (req: Request, res: Response) => {
-  const { user_language, default_max_chat_participants, public_st: isPublic, user_timezone, can_be_added_to_contacts, system_color_theme } = req.body;
+  const { user_language, default_max_chat_participants, public_st: isPublic, user_timezone, can_be_added_to_contacts, system_color_theme, cube_color } = req.body;
   const { userId } = req.user;
 
   try {
@@ -126,6 +128,19 @@ router.put("/", async (req: Request, res: Response) => {
     if (system_color_theme !== undefined && (system_color_theme === 'light' || system_color_theme === 'dark')) {
       updates.push("system_color_theme = ?");
       values.push(system_color_theme);
+    }
+
+    if (cube_color !== undefined && typeof cube_color === 'string') {
+      // Validate hex color format (#RRGGBB)
+      const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
+      if (!hexColorRegex.test(cube_color)) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "cube_color must be a valid hex color (e.g., #06ec90)" 
+        });
+      }
+      updates.push("cube_color = ?");
+      values.push(cube_color);
     }
 
     if (updates.length === 0) {

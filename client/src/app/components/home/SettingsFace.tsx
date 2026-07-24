@@ -1,9 +1,9 @@
 "use client";
 
-import { FormEvent, Dispatch, SetStateAction } from "react";
+import { FormEvent, Dispatch, SetStateAction, useState } from "react";
 import { LANGUAGES, type LangCode, type Translations } from "../../../lib/i18n";
 import { type UserSettings } from "../../../lib/formTypes";
-import { type ColorTheme } from "../../../hooks/useSettingsFace";
+import { type ColorTheme, PRESET_COLORS, DEFAULT_CUBE_COLOR } from "../../../hooks/useSettingsFace";
 
 type Props = {
   settings: UserSettings | null;
@@ -24,6 +24,9 @@ type Props = {
   showThemeSelect: boolean;
   setShowThemeSelect: Dispatch<SetStateAction<boolean>>;
   handleThemeChange: (theme: ColorTheme) => void;
+  showColorPicker: boolean;
+  setShowColorPicker: Dispatch<SetStateAction<boolean>>;
+  handleCubeColorChange: (color: string) => void;
   handleHeaderTripleTap: () => void;
   handleFooterTripleTap: () => void;
   tr: Translations;
@@ -35,8 +38,11 @@ export default function SettingsFace({
   showMaxParticipantsSelect, setShowMaxParticipantsSelect,
   showTimezoneSelect, setShowTimezoneSelect,
   showThemeSelect, setShowThemeSelect, handleThemeChange,
+  showColorPicker, setShowColorPicker, handleCubeColorChange,
   handleHeaderTripleTap, handleFooterTripleTap, tr,
 }: Props) {
+  const [customColorInput, setCustomColorInput] = useState("");
+  const currentColor = settings?.cube_color || DEFAULT_CUBE_COLOR;
   return (
           <section className="cube-face cube-face-back">
             <article className="auth-card cube-face-panel">
@@ -304,6 +310,130 @@ export default function SettingsFace({
                             }}
                           >
                             {tr.lightTheme}{settings.system_color_theme === 'light' ? " ✓" : ""}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Cube Color Picker */}
+                    <div>
+                      <label className="auth-label" style={{ marginBottom: "0.25rem", display: "block" }}>
+                        {tr.cubeColor}
+                      </label>
+                      <button
+                        type="button"
+                        className="auth-input"
+                        onClick={() => setShowColorPicker(!showColorPicker)}
+                        style={{ cursor: "pointer", maxWidth: "180px", textAlign: "left", display: "flex", alignItems: "center", gap: "0.5rem" }}
+                      >
+                        <span 
+                          style={{ 
+                            width: "16px", 
+                            height: "16px", 
+                            borderRadius: "50%", 
+                            backgroundColor: currentColor,
+                            border: "1px solid rgba(255,255,255,0.3)",
+                            flexShrink: 0
+                          }} 
+                        />
+                        {currentColor}
+                      </button>
+                      
+                      {showColorPicker && (
+                        <div
+                          className="auth-input"
+                          style={{ 
+                            maxWidth: "220px", 
+                            marginTop: "0.5rem",
+                            padding: "0.75rem"
+                          }}
+                        >
+                          {/* Preset Colors Grid */}
+                          <div style={{ 
+                            display: "grid", 
+                            gridTemplateColumns: "repeat(4, 1fr)", 
+                            gap: "0.5rem",
+                            marginBottom: "0.75rem"
+                          }}>
+                            {PRESET_COLORS.map((color) => (
+                              <div
+                                key={color.hex}
+                                onClick={() => {
+                                  handleCubeColorChange(color.hex);
+                                  setCustomColorInput("");
+                                }}
+                                title={color.name}
+                                style={{
+                                  width: "32px",
+                                  height: "32px",
+                                  borderRadius: "50%",
+                                  backgroundColor: color.hex,
+                                  cursor: "pointer",
+                                  border: currentColor.toLowerCase() === color.hex.toLowerCase() 
+                                    ? "3px solid white" 
+                                    : "2px solid rgba(255,255,255,0.2)",
+                                  transition: "transform 0.15s ease, border 0.15s ease",
+                                  boxShadow: currentColor.toLowerCase() === color.hex.toLowerCase()
+                                    ? "0 0 8px rgba(255,255,255,0.5)"
+                                    : "none"
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.transform = "scale(1.15)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.transform = "scale(1)";
+                                }}
+                              />
+                            ))}
+                          </div>
+                          
+                          {/* Custom Color Input */}
+                          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                            <input
+                              type="text"
+                              value={customColorInput}
+                              onChange={(e) => setCustomColorInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  let color = customColorInput.trim();
+                                  if (!color.startsWith("#")) color = "#" + color;
+                                  if (/^#[0-9A-Fa-f]{6}$/.test(color)) {
+                                    handleCubeColorChange(color);
+                                    setCustomColorInput("");
+                                  }
+                                }
+                              }}
+                              placeholder={tr.enterHexColor}
+                              className="auth-input"
+                              style={{ 
+                                flex: 1, 
+                                padding: "0.4rem 0.6rem",
+                                fontSize: "0.8rem"
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                let color = customColorInput.trim();
+                                if (!color.startsWith("#")) color = "#" + color;
+                                if (/^#[0-9A-Fa-f]{6}$/.test(color)) {
+                                  handleCubeColorChange(color);
+                                  setCustomColorInput("");
+                                }
+                              }}
+                              style={{
+                                padding: "0.4rem 0.6rem",
+                                fontSize: "0.75rem",
+                                backgroundColor: "transparent",
+                                border: "1px solid var(--color-border)",
+                                borderRadius: "0.5rem",
+                                color: "var(--color-green)",
+                                cursor: "pointer"
+                              }}
+                            >
+                              ✓
+                            </button>
                           </div>
                         </div>
                       )}

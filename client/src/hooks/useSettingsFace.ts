@@ -6,6 +6,21 @@ import type { UserSettings, ApiSettingsResponse, ApiTimezonesResponse } from "..
 // Theme type
 export type ColorTheme = 'light' | 'dark';
 
+// Default cube color
+export const DEFAULT_CUBE_COLOR = '#06ec90';
+
+// Preset colors for the color picker
+export const PRESET_COLORS = [
+  { name: 'Green', hex: '#06ec90' },
+  { name: 'Cyan', hex: '#00FFFF' },
+  { name: 'Blue', hex: '#3B82F6' },
+  { name: 'Purple', hex: '#8B5CF6' },
+  { name: 'Pink', hex: '#EC4899' },
+  { name: 'Orange', hex: '#F97316' },
+  { name: 'Red', hex: '#EF4444' },
+  { name: 'Yellow', hex: '#EAB308' },
+];
+
 // Helper to apply theme to document
 const applyTheme = (theme: ColorTheme) => {
   document.documentElement.setAttribute('data-theme', theme);
@@ -16,6 +31,18 @@ const applyTheme = (theme: ColorTheme) => {
 const getStoredTheme = (): ColorTheme => {
   const stored = localStorage.getItem('cubcha_theme');
   return (stored === 'light' || stored === 'dark') ? stored : 'dark';
+};
+
+// Helper to apply cube color to document
+const applyCubeColor = (color: string) => {
+  document.documentElement.style.setProperty('--color-green', color);
+  localStorage.setItem('cubcha_cube_color', color);
+};
+
+// Helper to get stored cube color
+const getStoredCubeColor = (): string => {
+  const stored = localStorage.getItem('cubcha_cube_color');
+  return stored && /^#[0-9A-Fa-f]{6}$/.test(stored) ? stored : DEFAULT_CUBE_COLOR;
 };
 
 interface UseSettingsFaceOptions {
@@ -41,9 +68,12 @@ interface UseSettingsFaceReturn {
   setShowTimezoneSelect: Dispatch<SetStateAction<boolean>>;
   showThemeSelect: boolean;
   setShowThemeSelect: Dispatch<SetStateAction<boolean>>;
+  showColorPicker: boolean;
+  setShowColorPicker: Dispatch<SetStateAction<boolean>>;
   handleSaveSettings: (event: FormEvent<HTMLFormElement>) => Promise<void>;
   handleLangChange: (code: LangCode) => void;
   handleThemeChange: (theme: ColorTheme) => void;
+  handleCubeColorChange: (color: string) => void;
 }
 
 export function useSettingsFace({
@@ -61,12 +91,15 @@ export function useSettingsFace({
   const [showMaxParticipantsSelect, setShowMaxParticipantsSelect] = useState(false);
   const [showTimezoneSelect, setShowTimezoneSelect] = useState(false);
   const [showThemeSelect, setShowThemeSelect] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
 
-  // Initialize lang and theme from storage
+  // Initialize lang, theme, and cube color from storage
   useEffect(() => {
     setLangState(getLang());
     // Apply stored theme on mount
     applyTheme(getStoredTheme());
+    // Apply stored cube color on mount
+    applyCubeColor(getStoredCubeColor());
   }, []);
 
   // Fetch settings and timezones when navigating to settings face
@@ -83,6 +116,10 @@ export function useSettingsFace({
           // Apply theme from server settings
           if (data.data.system_color_theme) {
             applyTheme(data.data.system_color_theme);
+          }
+          // Apply cube color from server settings
+          if (data.data.cube_color) {
+            applyCubeColor(data.data.cube_color);
           }
         }
       } catch (err) {
@@ -145,6 +182,15 @@ export function useSettingsFace({
     setShowThemeSelect(false);
   }, [settings]);
 
+  const handleCubeColorChange = useCallback((color: string) => {
+    // Validate hex color format
+    const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
+    if (!hexColorRegex.test(color)) return;
+    
+    applyCubeColor(color);
+    if (settings) setSettings({ ...settings, cube_color: color });
+  }, [settings]);
+
   return {
     settings,
     setSettings,
@@ -162,8 +208,11 @@ export function useSettingsFace({
     setShowTimezoneSelect,
     showThemeSelect,
     setShowThemeSelect,
+    showColorPicker,
+    setShowColorPicker,
     handleSaveSettings,
     handleLangChange,
     handleThemeChange,
+    handleCubeColorChange,
   };
 }

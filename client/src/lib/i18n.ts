@@ -118,6 +118,9 @@ export type Translations = {
   colorTheme: string;
   darkTheme: string;
   lightTheme: string;
+  cubeColor: string;
+  customColor: string;
+  enterHexColor: string;
 
   // Post-login: Chat face
   chat: string;
@@ -264,6 +267,9 @@ const translations: Record<LangCode, Translations> = {
     colorTheme: "Color Theme",
     darkTheme: "Dark",
     lightTheme: "Light",
+    cubeColor: "Accent Color",
+    customColor: "Custom",
+    enterHexColor: "Enter hex color (e.g. #FF5733)",
     chat: "Chat",
     openConversation: "Open a conversation from the Chats face.",
     newChat: "New Chat",
@@ -400,6 +406,9 @@ const translations: Record<LangCode, Translations> = {
     colorTheme: "Tema de color",
     darkTheme: "Oscuro",
     lightTheme: "Claro",
+    cubeColor: "Color de acento",
+    customColor: "Personalizado",
+    enterHexColor: "Ingrese color hex (ej. #FF5733)",
     chat: "Chat",
     openConversation: "Abre una conversación desde la cara de Chats.",
     newChat: "Nuevo chat",
@@ -534,6 +543,9 @@ const translations: Record<LangCode, Translations> = {
     colorTheme: "Thème de couleur",
     darkTheme: "Sombre",
     lightTheme: "Clair",
+    cubeColor: "Couleur d'accent",
+    customColor: "Personnalisé",
+    enterHexColor: "Entrez la couleur hex (ex. #FF5733)",
     chat: "Chat",
     openConversation: "Ouvrez une conversation depuis la face Discussions.",
     newChat: "Nouveau chat",
@@ -670,6 +682,9 @@ const translations: Record<LangCode, Translations> = {
     colorTheme: "Farbthema",
     darkTheme: "Dunkel",
     lightTheme: "Hell",
+    cubeColor: "Akzentfarbe",
+    customColor: "Benutzerdefiniert",
+    enterHexColor: "Hex-Farbe eingeben (z.B. #FF5733)",
     chat: "Chat",
     openConversation: "Öffnen Sie ein Gespräch von der Chats-Seite.",
     newChat: "Neuer Chat",
@@ -806,6 +821,9 @@ const translations: Record<LangCode, Translations> = {
     colorTheme: "Farebná téma",
     darkTheme: "Tmavá",
     lightTheme: "Svetlá",
+    cubeColor: "Farba akcentu",
+    customColor: "Vlastná",
+    enterHexColor: "Zadajte hex farbu (napr. #FF5733)",
     chat: "Chat",
     openConversation: "Otvorte konverzáciu zo strany Chaty.",
     newChat: "Nový chat",
@@ -942,6 +960,9 @@ const translations: Record<LangCode, Translations> = {
     colorTheme: "Barevné schéma",
     darkTheme: "Tmavé",
     lightTheme: "Světlé",
+    cubeColor: "Barva akcentu",
+    customColor: "Vlastní",
+    enterHexColor: "Zadejte hex barvu (např. #FF5733)",
     chat: "Chat",
     openConversation: "Otevřete konverzaci ze strany Chaty.",
     newChat: "Nový chat",

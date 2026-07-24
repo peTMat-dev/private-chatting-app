@@ -116,6 +116,7 @@ export type UserSettings = {
 	user_timezone: string;
 	can_be_added_to_contacts: boolean;
 	system_color_theme: 'light' | 'dark';
+	cube_color?: string;
 	display_name?: string;
 };
 

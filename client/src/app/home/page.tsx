@@ -162,6 +162,9 @@ export default function HomeCube() {
             showThemeSelect={settings.showThemeSelect}
             setShowThemeSelect={settings.setShowThemeSelect}
             handleThemeChange={settings.handleThemeChange}
+            showColorPicker={settings.showColorPicker}
+            setShowColorPicker={settings.setShowColorPicker}
+            handleCubeColorChange={settings.handleCubeColorChange}
             handleHeaderTripleTap={cubeNav.handleHeaderTripleTap}
             handleFooterTripleTap={cubeNav.handleFooterTripleTap}
             tr={tr}
