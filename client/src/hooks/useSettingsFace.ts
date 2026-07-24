@@ -3,6 +3,21 @@ import { getApi, fetchApiCustom } from "../services/api.service";
 import { getLang, setLang, type LangCode } from "../lib/i18n";
 import type { UserSettings, ApiSettingsResponse, ApiTimezonesResponse } from "../lib/formTypes";
 
+// Theme type
+export type ColorTheme = 'light' | 'dark';
+
+// Helper to apply theme to document
+const applyTheme = (theme: ColorTheme) => {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('cubcha_theme', theme);
+};
+
+// Helper to get stored theme
+const getStoredTheme = (): ColorTheme => {
+  const stored = localStorage.getItem('cubcha_theme');
+  return (stored === 'light' || stored === 'dark') ? stored : 'dark';
+};
+
 interface UseSettingsFaceOptions {
   username: string;
   activeFace: string;
@@ -24,8 +39,11 @@ interface UseSettingsFaceReturn {
   setShowMaxParticipantsSelect: Dispatch<SetStateAction<boolean>>;
   showTimezoneSelect: boolean;
   setShowTimezoneSelect: Dispatch<SetStateAction<boolean>>;
+  showThemeSelect: boolean;
+  setShowThemeSelect: Dispatch<SetStateAction<boolean>>;
   handleSaveSettings: (event: FormEvent<HTMLFormElement>) => Promise<void>;
   handleLangChange: (code: LangCode) => void;
+  handleThemeChange: (theme: ColorTheme) => void;
 }
 
 export function useSettingsFace({
@@ -42,10 +60,13 @@ export function useSettingsFace({
   const [showLangSelect, setShowLangSelect] = useState(false);
   const [showMaxParticipantsSelect, setShowMaxParticipantsSelect] = useState(false);
   const [showTimezoneSelect, setShowTimezoneSelect] = useState(false);
+  const [showThemeSelect, setShowThemeSelect] = useState(false);
 
-  // Initialize lang from storage
+  // Initialize lang and theme from storage
   useEffect(() => {
     setLangState(getLang());
+    // Apply stored theme on mount
+    applyTheme(getStoredTheme());
   }, []);
 
   // Fetch settings and timezones when navigating to settings face
@@ -57,7 +78,13 @@ export function useSettingsFace({
     const fetchSettings = async () => {
       try {
         const data = await getApi<ApiSettingsResponse>("/settings");
-        if (!aborted && data.data) setSettings(data.data);
+        if (!aborted && data.data) {
+          setSettings(data.data);
+          // Apply theme from server settings
+          if (data.data.system_color_theme) {
+            applyTheme(data.data.system_color_theme);
+          }
+        }
       } catch (err) {
         if (!aborted) setSettingsError((err as Error).message);
       }
@@ -112,6 +139,12 @@ export function useSettingsFace({
     setShowLangSelect(false);
   }, [settings]);
 
+  const handleThemeChange = useCallback((theme: ColorTheme) => {
+    applyTheme(theme);
+    if (settings) setSettings({ ...settings, system_color_theme: theme });
+    setShowThemeSelect(false);
+  }, [settings]);
+
   return {
     settings,
     setSettings,
@@ -127,7 +160,10 @@ export function useSettingsFace({
     setShowMaxParticipantsSelect,
     showTimezoneSelect,
     setShowTimezoneSelect,
+    showThemeSelect,
+    setShowThemeSelect,
     handleSaveSettings,
     handleLangChange,
+    handleThemeChange,
   };
 }

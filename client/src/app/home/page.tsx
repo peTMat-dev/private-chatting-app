@@ -159,6 +159,9 @@ export default function HomeCube() {
             setShowMaxParticipantsSelect={settings.setShowMaxParticipantsSelect}
             showTimezoneSelect={settings.showTimezoneSelect}
             setShowTimezoneSelect={settings.setShowTimezoneSelect}
+            showThemeSelect={settings.showThemeSelect}
+            setShowThemeSelect={settings.setShowThemeSelect}
+            handleThemeChange={settings.handleThemeChange}
             handleHeaderTripleTap={cubeNav.handleHeaderTripleTap}
             handleFooterTripleTap={cubeNav.handleFooterTripleTap}
             tr={tr}

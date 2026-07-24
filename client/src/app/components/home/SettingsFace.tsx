@@ -3,6 +3,7 @@
 import { FormEvent, Dispatch, SetStateAction } from "react";
 import { LANGUAGES, type LangCode, type Translations } from "../../../lib/i18n";
 import { type UserSettings } from "../../../lib/formTypes";
+import { type ColorTheme } from "../../../hooks/useSettingsFace";
 
 type Props = {
   settings: UserSettings | null;
@@ -20,6 +21,9 @@ type Props = {
   setShowMaxParticipantsSelect: Dispatch<SetStateAction<boolean>>;
   showTimezoneSelect: boolean;
   setShowTimezoneSelect: Dispatch<SetStateAction<boolean>>;
+  showThemeSelect: boolean;
+  setShowThemeSelect: Dispatch<SetStateAction<boolean>>;
+  handleThemeChange: (theme: ColorTheme) => void;
   handleHeaderTripleTap: () => void;
   handleFooterTripleTap: () => void;
   tr: Translations;
@@ -30,6 +34,7 @@ export default function SettingsFace({
   timezones, lang, showLangSelect, setShowLangSelect, handleLangChange,
   showMaxParticipantsSelect, setShowMaxParticipantsSelect,
   showTimezoneSelect, setShowTimezoneSelect,
+  showThemeSelect, setShowThemeSelect, handleThemeChange,
   handleHeaderTripleTap, handleFooterTripleTap, tr,
 }: Props) {
   return (
@@ -225,6 +230,81 @@ export default function SettingsFace({
                               {tz.display_name}
                             </div>
                           ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="auth-label" style={{ marginBottom: "0.25rem", display: "block" }}>
+                        {tr.colorTheme}
+                      </label>
+                      <button
+                        type="button"
+                        className="auth-input"
+                        onClick={() => setShowThemeSelect(!showThemeSelect)}
+                        style={{ cursor: "pointer", maxWidth: "180px", textAlign: "left" }}
+                      >
+                        {settings.system_color_theme === 'light' ? tr.lightTheme : tr.darkTheme}
+                      </button>
+                      
+                      {showThemeSelect && (
+                        <div
+                          className="auth-input"
+                          style={{ 
+                            maxWidth: "180px", 
+                            marginTop: "0.5rem",
+                            padding: "0"
+                          }}
+                        >
+                          <div
+                            onClick={() => handleThemeChange('dark')}
+                            style={{
+                              padding: "0.5rem 0.75rem",
+                              cursor: "pointer",
+                              backgroundColor: settings.system_color_theme === 'dark' 
+                                ? "rgba(3, 160, 98, 0.15)" 
+                                : "transparent",
+                              color: "var(--color-green)",
+                              borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                              transition: "background-color 0.2s"
+                            }}
+                            onMouseEnter={(e) => {
+                              if (settings.system_color_theme !== 'dark') {
+                                e.currentTarget.style.backgroundColor = "rgba(3, 160, 98, 0.08)";
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (settings.system_color_theme !== 'dark') {
+                                e.currentTarget.style.backgroundColor = "transparent";
+                              }
+                            }}
+                          >
+                            {tr.darkTheme}{settings.system_color_theme === 'dark' ? " ✓" : ""}
+                          </div>
+                          <div
+                            onClick={() => handleThemeChange('light')}
+                            style={{
+                              padding: "0.5rem 0.75rem",
+                              cursor: "pointer",
+                              backgroundColor: settings.system_color_theme === 'light' 
+                                ? "rgba(3, 160, 98, 0.15)" 
+                                : "transparent",
+                              color: "var(--color-green)",
+                              transition: "background-color 0.2s"
+                            }}
+                            onMouseEnter={(e) => {
+                              if (settings.system_color_theme !== 'light') {
+                                e.currentTarget.style.backgroundColor = "rgba(3, 160, 98, 0.08)";
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (settings.system_color_theme !== 'light') {
+                                e.currentTarget.style.backgroundColor = "transparent";
+                              }
+                            }}
+                          >
+                            {tr.lightTheme}{settings.system_color_theme === 'light' ? " ✓" : ""}
+                          </div>
                         </div>
                       )}
                     </div>

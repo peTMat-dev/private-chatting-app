@@ -115,6 +115,9 @@ export type Translations = {
   saveSettings: string;
   loadingSettings: string;
   couldNotLoadSettings: string;
+  colorTheme: string;
+  darkTheme: string;
+  lightTheme: string;
 
   // Post-login: Chat face
   chat: string;
@@ -258,6 +261,9 @@ const translations: Record<LangCode, Translations> = {
     saveSettings: "Save Settings",
     loadingSettings: "Loading settings...",
     couldNotLoadSettings: "Could not load settings",
+    colorTheme: "Color Theme",
+    darkTheme: "Dark",
+    lightTheme: "Light",
     chat: "Chat",
     openConversation: "Open a conversation from the Chats face.",
     newChat: "New Chat",
@@ -391,6 +397,9 @@ const translations: Record<LangCode, Translations> = {
     saveSettings: "Guardar configuración",
     loadingSettings: "Cargando configuración...",
     couldNotLoadSettings: "No se pudo cargar la configuración",
+    colorTheme: "Tema de color",
+    darkTheme: "Oscuro",
+    lightTheme: "Claro",
     chat: "Chat",
     openConversation: "Abre una conversación desde la cara de Chats.",
     newChat: "Nuevo chat",
@@ -522,6 +531,9 @@ const translations: Record<LangCode, Translations> = {
     saveSettings: "Enregistrer les paramètres",
     loadingSettings: "Chargement des paramètres...",
     couldNotLoadSettings: "Impossible de charger les paramètres",
+    colorTheme: "Thème de couleur",
+    darkTheme: "Sombre",
+    lightTheme: "Clair",
     chat: "Chat",
     openConversation: "Ouvrez une conversation depuis la face Discussions.",
     newChat: "Nouveau chat",
@@ -655,6 +667,9 @@ const translations: Record<LangCode, Translations> = {
     saveSettings: "Einstellungen speichern",
     loadingSettings: "Einstellungen werden geladen...",
     couldNotLoadSettings: "Einstellungen konnten nicht geladen werden",
+    colorTheme: "Farbthema",
+    darkTheme: "Dunkel",
+    lightTheme: "Hell",
     chat: "Chat",
     openConversation: "Öffnen Sie ein Gespräch von der Chats-Seite.",
     newChat: "Neuer Chat",
@@ -788,6 +803,9 @@ const translations: Record<LangCode, Translations> = {
     saveSettings: "Uložiť nastavenia",
     loadingSettings: "Načítanie nastavení...",
     couldNotLoadSettings: "Nastavenia sa nepodarilo načítať",
+    colorTheme: "Farebná téma",
+    darkTheme: "Tmavá",
+    lightTheme: "Svetlá",
     chat: "Chat",
     openConversation: "Otvorte konverzáciu zo strany Chaty.",
     newChat: "Nový chat",
@@ -921,6 +939,9 @@ const translations: Record<LangCode, Translations> = {
     saveSettings: "Uložit nastavení",
     loadingSettings: "Načítání nastavení...",
     couldNotLoadSettings: "Nastavení se nepodařilo načíst",
+    colorTheme: "Barevné schéma",
+    darkTheme: "Tmavé",
+    lightTheme: "Světlé",
     chat: "Chat",
     openConversation: "Otevřete konverzaci ze strany Chaty.",
     newChat: "Nový chat",

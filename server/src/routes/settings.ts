@@ -9,6 +9,7 @@ type UserSystemDetails = {
   public_st: boolean;
   user_timezone: string;
   can_be_added_to_contacts: boolean;
+  system_color_theme: 'light' | 'dark';
 };
 
 type TimezoneRow = {
@@ -23,7 +24,7 @@ router.get("/", async (req: Request, res: Response) => {
   try {
     // Get user system details
     const settingsRows = await query<UserSystemDetails & { display_name: string }>(
-      `SELECT usd.user_language, usd.default_max_chat_participants, usd.public_st, usd.user_timezone, usd.can_be_added_to_contacts, umd.display_name
+      `SELECT usd.user_language, usd.default_max_chat_participants, usd.public_st, usd.user_timezone, usd.can_be_added_to_contacts, usd.system_color_theme, umd.display_name
        FROM user_system_details usd
        JOIN user_main_details umd ON umd.user_id = usd.user_id
        WHERE usd.user_id = ? LIMIT 1`,
@@ -40,6 +41,7 @@ router.get("/", async (req: Request, res: Response) => {
       public_st: Boolean(settingsRows[0].public_st),
       user_timezone: settingsRows[0].user_timezone,
       can_be_added_to_contacts: Boolean(settingsRows[0].can_be_added_to_contacts),
+      system_color_theme: settingsRows[0].system_color_theme || 'dark',
       display_name: settingsRows[0].display_name,
     };
 
@@ -71,7 +73,7 @@ router.get("/timezones", async (_req: Request, res: Response) => {
 
 // PUT /settings
 router.put("/", async (req: Request, res: Response) => {
-  const { user_language, default_max_chat_participants, public_st: isPublic, user_timezone, can_be_added_to_contacts } = req.body;
+  const { user_language, default_max_chat_participants, public_st: isPublic, user_timezone, can_be_added_to_contacts, system_color_theme } = req.body;
   const { userId } = req.user;
 
   try {
@@ -119,6 +121,11 @@ router.put("/", async (req: Request, res: Response) => {
       
       updates.push("user_timezone = ?");
       values.push(user_timezone);
+    }
+
+    if (system_color_theme !== undefined && (system_color_theme === 'light' || system_color_theme === 'dark')) {
+      updates.push("system_color_theme = ?");
+      values.push(system_color_theme);
     }
 
     if (updates.length === 0) {
