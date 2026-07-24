@@ -74,6 +74,7 @@ interface UseSettingsFaceReturn {
   handleLangChange: (code: LangCode) => void;
   handleThemeChange: (theme: ColorTheme) => void;
   handleCubeColorChange: (color: string) => void;
+  handleColorDoubleTap: (color: string) => void;
 }
 
 export function useSettingsFace({
@@ -191,6 +192,16 @@ export function useSettingsFace({
     if (settings) setSettings({ ...settings, cube_color: color });
   }, [settings]);
 
+  const handleColorDoubleTap = useCallback((color: string) => {
+    // Validate hex color format
+    const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
+    if (!hexColorRegex.test(color)) return;
+    
+    applyCubeColor(color);
+    if (settings) setSettings({ ...settings, cube_color: color });
+    setShowColorPicker(false);
+  }, [settings]);
+
   return {
     settings,
     setSettings,
@@ -214,5 +225,6 @@ export function useSettingsFace({
     handleLangChange,
     handleThemeChange,
     handleCubeColorChange,
+    handleColorDoubleTap,
   };
 }

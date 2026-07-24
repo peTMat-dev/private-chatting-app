@@ -27,6 +27,7 @@ type Props = {
   showColorPicker: boolean;
   setShowColorPicker: Dispatch<SetStateAction<boolean>>;
   handleCubeColorChange: (color: string) => void;
+  handleColorDoubleTap: (color: string) => void;
   handleHeaderTripleTap: () => void;
   handleFooterTripleTap: () => void;
   tr: Translations;
@@ -38,7 +39,7 @@ export default function SettingsFace({
   showMaxParticipantsSelect, setShowMaxParticipantsSelect,
   showTimezoneSelect, setShowTimezoneSelect,
   showThemeSelect, setShowThemeSelect, handleThemeChange,
-  showColorPicker, setShowColorPicker, handleCubeColorChange,
+  showColorPicker, setShowColorPicker, handleCubeColorChange, handleColorDoubleTap,
   handleHeaderTripleTap, handleFooterTripleTap, tr,
 }: Props) {
   const [customColorInput, setCustomColorInput] = useState("");
@@ -360,6 +361,10 @@ export default function SettingsFace({
                                 key={color.hex}
                                 onClick={() => {
                                   handleCubeColorChange(color.hex);
+                                  setCustomColorInput("");
+                                }}
+                                onDoubleClick={() => {
+                                  handleColorDoubleTap(color.hex);
                                   setCustomColorInput("");
                                 }}
                                 title={color.name}
