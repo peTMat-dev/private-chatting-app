@@ -193,14 +193,10 @@ export function useSettingsFace({
   }, [settings]);
 
   const handleColorDoubleTap = useCallback((color: string) => {
-    // Validate hex color format
-    const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
-    if (!hexColorRegex.test(color)) return;
-    
-    applyCubeColor(color);
-    if (settings) setSettings({ ...settings, cube_color: color });
+    // Double tap only closes the color picker without selecting the color
+    // The color will only be saved when user clicks "Save Settings"
     setShowColorPicker(false);
-  }, [settings]);
+  }, []);
 
   return {
     settings,
