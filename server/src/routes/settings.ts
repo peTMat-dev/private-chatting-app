@@ -11,6 +11,7 @@ type UserSystemDetails = {
   can_be_added_to_contacts: boolean;
   system_color_theme: 'light' | 'dark';
   cube_color: string;
+  cube_color2: string;
 };
 
 type TimezoneRow = {
@@ -25,7 +26,7 @@ router.get("/", async (req: Request, res: Response) => {
   try {
     // Get user system details
     const settingsRows = await query<UserSystemDetails & { display_name: string }>(
-      `SELECT usd.user_language, usd.default_max_chat_participants, usd.public_st, usd.user_timezone, usd.can_be_added_to_contacts, usd.system_color_theme, usd.cube_color, umd.display_name
+      `SELECT usd.user_language, usd.default_max_chat_participants, usd.public_st, usd.user_timezone, usd.can_be_added_to_contacts, usd.system_color_theme, usd.cube_color, usd.cube_color2, umd.display_name
        FROM user_system_details usd
        JOIN user_main_details umd ON umd.user_id = usd.user_id
        WHERE usd.user_id = ? LIMIT 1`,
@@ -44,6 +45,7 @@ router.get("/", async (req: Request, res: Response) => {
       can_be_added_to_contacts: Boolean(settingsRows[0].can_be_added_to_contacts),
       system_color_theme: settingsRows[0].system_color_theme || 'dark',
       cube_color: settingsRows[0].cube_color || '#06ec90',
+      cube_color2: settingsRows[0].cube_color2 || '#03a062',
       display_name: settingsRows[0].display_name,
     };
 
@@ -75,7 +77,7 @@ router.get("/timezones", async (_req: Request, res: Response) => {
 
 // PUT /settings
 router.put("/", async (req: Request, res: Response) => {
-  const { user_language, default_max_chat_participants, public_st: isPublic, user_timezone, can_be_added_to_contacts, system_color_theme, cube_color } = req.body;
+  const { user_language, default_max_chat_participants, public_st: isPublic, user_timezone, can_be_added_to_contacts, system_color_theme, cube_color, cube_color2 } = req.body;
   const { userId } = req.user;
 
   try {
@@ -141,6 +143,19 @@ router.put("/", async (req: Request, res: Response) => {
       }
       updates.push("cube_color = ?");
       values.push(cube_color);
+    }
+
+    if (cube_color2 !== undefined && typeof cube_color2 === 'string') {
+      // Validate hex color format (#RRGGBB)
+      const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
+      if (!hexColorRegex.test(cube_color2)) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "cube_color2 must be a valid hex color (e.g., #03a062)" 
+        });
+      }
+      updates.push("cube_color2 = ?");
+      values.push(cube_color2);
     }
 
     if (updates.length === 0) {

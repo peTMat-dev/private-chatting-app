@@ -164,8 +164,12 @@ export default function HomeCube() {
             handleThemeChange={settings.handleThemeChange}
             showColorPicker={settings.showColorPicker}
             setShowColorPicker={settings.setShowColorPicker}
+            showCubeColor2Picker={settings.showCubeColor2Picker}
+            setShowCubeColor2Picker={settings.setShowCubeColor2Picker}
             handleCubeColorChange={settings.handleCubeColorChange}
             handleColorDoubleTap={settings.handleColorDoubleTap}
+            handleCubeColor2Change={settings.handleCubeColor2Change}
+            handleCubeColor2DoubleTap={settings.handleCubeColor2DoubleTap}
             handleHeaderTripleTap={cubeNav.handleHeaderTripleTap}
             handleFooterTripleTap={cubeNav.handleFooterTripleTap}
             tr={tr}

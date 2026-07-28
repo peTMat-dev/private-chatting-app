@@ -17,6 +17,9 @@
   --color-panel: #050505;
   --color-panel-muted: #0b0b0b;
   --color-green: #06ec90; /* accent */
+  --color-cube2: #06ec90; /* cube color 2 */
+  --color-cube2-border: rgba(3, 160, 98, 0.4); /* cube color 2 for input borders */
+  --color-cube2-label: #67c6a0; /* cube color 2 for labels */
   --color-green-strong: #06ec90;
   --color-green-soft: #06ec90;
   --color-form-text: #67c6a0; /* headings + labels in forms */
@@ -42,6 +45,9 @@
   --color-border-strong: rgba(5, 150, 105, 0.6);
   --shadow-strong: 0 4px 20px rgba(0, 0, 0, 0.1);
   --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.05);
+  --color-cube2: #059669; /* cube color 2 for light theme */
+  --color-cube2-border: rgba(5, 150, 105, 0.3); /* cube color 2 border for light theme */
+  --color-cube2-label: #374151; /* cube color 2 label for light theme */
 }
 
 /* Smooth theme transition */
@@ -511,7 +517,7 @@ a:hover {
 
 .auth-input {
   background: var(--color-input-bg);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-cube2-border);
   border-radius: 0.9rem;
   color: var(--color-green);
   padding: 0.75rem 1rem;
@@ -531,7 +537,7 @@ a:hover {
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--color-form-text);
+  color: var(--color-cube2-label);
   margin-bottom: 0.35rem;
   display: inline-block;
 }

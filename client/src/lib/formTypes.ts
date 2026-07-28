@@ -117,6 +117,7 @@ export type UserSettings = {
 	can_be_added_to_contacts: boolean;
 	system_color_theme: 'light' | 'dark';
 	cube_color?: string;
+	cube_color2?: string;
 	display_name?: string;
 };
 
