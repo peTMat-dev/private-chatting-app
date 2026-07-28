@@ -6,52 +6,10 @@ import { useSocket } from "../lib/useSocket";
 import { useChatsFace } from "./useChatsFace";
 import { useContactsFace } from "./useContactsFace";
 import { useMessagesFace } from "./useMessagesFace";
-import { useSettingsFace, DEFAULT_CUBE_COLOR, DEFAULT_CUBE_COLOR2 } from "./useSettingsFace";
+import { useSettingsFace } from "./useSettingsFace";
 import { useInfoFace } from "./useInfoFace";
 import { useLogoutFace } from "./useLogoutFace";
 import type { AlertDialog, ApiSettingsResponse, ContactApprovedPayload, NewMessagePayload } from "../lib/formTypes";
-
-// Helper to convert hex color to RGB values
-const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
-  } : null;
-};
-
-// Helper to apply cube color to document
-const applyCubeColor = (color: string) => {
-  document.documentElement.style.setProperty('--color-green', color);
-};
-
-// Helper to apply cube color 2 to document
-const applyCubeColor2 = (color: string) => {
-  document.documentElement.style.setProperty('--color-cube2', color);
-  
-  // Convert hex to RGB for derived variables
-  const rgb = hexToRgb(color);
-  if (rgb) {
-    const borderColor = `rgba(${Math.round(rgb.r * 0.2)}, ${Math.round(rgb.g * 0.63)}, ${Math.round(rgb.b * 0.63)}, 0.4)`;
-    const labelColor = `rgb(${Math.round(rgb.r * 0.4 + 100)}, ${Math.round(rgb.g * 0.78 + 50)}, ${Math.round(rgb.b * 0.63 + 60)})`;
-    
-    document.documentElement.style.setProperty('--color-cube2-border', borderColor);
-    document.documentElement.style.setProperty('--color-cube2-label', labelColor);
-  }
-};
-
-// Helper to get stored cube color
-const getStoredCubeColor = (): string => {
-  const stored = localStorage.getItem('cubcha_cube_color');
-  return stored && /^#[0-9A-Fa-f]{6}$/.test(stored) ? stored : DEFAULT_CUBE_COLOR;
-};
-
-// Helper to get stored cube color 2
-const getStoredCubeColor2 = (): string => {
-  const stored = localStorage.getItem('cubcha_cube_color2');
-  return stored && /^#[0-9A-Fa-f]{6}$/.test(stored) ? stored : DEFAULT_CUBE_COLOR2;
-};
 
 export interface UseHomeCubeReturn {
   // Cube navigation
@@ -113,12 +71,6 @@ export function useHomeCube(): UseHomeCubeReturn {
       .catch(() => {
         window.location.href = "/";
       });
-  }, []);
-  
-  // Apply stored cube colors on mount
-  useEffect(() => {
-    applyCubeColor(getStoredCubeColor());
-    applyCubeColor2(getStoredCubeColor2());
   }, []);
   
   // Socket connection (web-only)

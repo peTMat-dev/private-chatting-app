@@ -47,7 +47,6 @@ CREATE TABLE IF NOT EXISTS `cubcha_v1`.`user_system_details` (
     `user_language` ENUM('en', 'sk', 'es', 'fr', 'de', 'cz') NOT NULL COMMENT 'Preferred language for UI',
     `system_color_theme` ENUM('light', 'dark') NOT NULL DEFAULT 'dark' COMMENT 'User preferred color theme',
     `cube_color` VARCHAR(7) DEFAULT '#06ec90' COMMENT 'User cube accent color (hex code or preset name)',
-    `cube_color2` VARCHAR(7) DEFAULT '#06ec90' COMMENT 'User cube color (hex code or preset name)',
     `default_max_chat_participants` TINYINT UNSIGNED DEFAULT 10 COMMENT 'Default max chat participants for new conversations',
     `public_st` BOOLEAN DEFAULT TRUE COMMENT 'Indicates if the user profile is public(on) or private (off)',
     `can_be_added_to_contacts` BOOLEAN DEFAULT FALSE COMMENT 'Indicates if the user can be added to contacts',

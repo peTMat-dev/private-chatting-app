@@ -6,26 +6,11 @@ import type { UserSettings, ApiSettingsResponse, ApiTimezonesResponse } from "..
 // Theme type
 export type ColorTheme = 'light' | 'dark';
 
-// Default cube color (accent color)
+// Default cube color
 export const DEFAULT_CUBE_COLOR = '#06ec90';
-
-// Default cube color 2 (same as accent color)
-export const DEFAULT_CUBE_COLOR2 = '#06ec90';
 
 // Preset colors for the color picker
 export const PRESET_COLORS = [
-  { name: 'Green', hex: '#06ec90' },
-  { name: 'Cyan', hex: '#00FFFF' },
-  { name: 'Blue', hex: '#3B82F6' },
-  { name: 'Purple', hex: '#8B5CF6' },
-  { name: 'Pink', hex: '#EC4899' },
-  { name: 'Orange', hex: '#F97316' },
-  { name: 'Red', hex: '#EF4444' },
-  { name: 'Yellow', hex: '#EAB308' },
-];
-
-// Preset colors for the cube color 2 picker (same as accent color presets)
-export const CUBE_COLOR2_PRESET_COLORS = [
   { name: 'Green', hex: '#06ec90' },
   { name: 'Cyan', hex: '#00FFFF' },
   { name: 'Blue', hex: '#3B82F6' },
@@ -60,41 +45,6 @@ const getStoredCubeColor = (): string => {
   return stored && /^#[0-9A-Fa-f]{6}$/.test(stored) ? stored : DEFAULT_CUBE_COLOR;
 };
 
-// Helper to convert hex color to RGB values
-const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
-  } : null;
-};
-
-// Helper to apply cube color 2 to document
-const applyCubeColor2 = (color: string) => {
-  document.documentElement.style.setProperty('--color-cube2', color);
-  
-  // Convert hex to RGB for derived variables
-  const rgb = hexToRgb(color);
-  if (rgb) {
-    // Create border color with 0.4 opacity (darker version)
-    const borderColor = `rgba(${Math.round(rgb.r * 0.2)}, ${Math.round(rgb.g * 0.63)}, ${Math.round(rgb.b * 0.63)}, 0.4)`;
-    // Create label color (softer/muted version)
-    const labelColor = `rgb(${Math.round(rgb.r * 0.4 + 100)}, ${Math.round(rgb.g * 0.78 + 50)}, ${Math.round(rgb.b * 0.63 + 60)})`;
-    
-    document.documentElement.style.setProperty('--color-cube2-border', borderColor);
-    document.documentElement.style.setProperty('--color-cube2-label', labelColor);
-  }
-  
-  localStorage.setItem('cubcha_cube_color2', color);
-};
-
-// Helper to get stored cube color 2
-const getStoredCubeColor2 = (): string => {
-  const stored = localStorage.getItem('cubcha_cube_color2');
-  return stored && /^#[0-9A-Fa-f]{6}$/.test(stored) ? stored : DEFAULT_CUBE_COLOR2;
-};
-
 interface UseSettingsFaceOptions {
   username: string;
   activeFace: string;
@@ -120,15 +70,11 @@ interface UseSettingsFaceReturn {
   setShowThemeSelect: Dispatch<SetStateAction<boolean>>;
   showColorPicker: boolean;
   setShowColorPicker: Dispatch<SetStateAction<boolean>>;
-  showCubeColor2Picker: boolean;
-  setShowCubeColor2Picker: Dispatch<SetStateAction<boolean>>;
   handleSaveSettings: (event: FormEvent<HTMLFormElement>) => Promise<void>;
   handleLangChange: (code: LangCode) => void;
   handleThemeChange: (theme: ColorTheme) => void;
   handleCubeColorChange: (color: string) => void;
   handleColorDoubleTap: (color: string) => void;
-  handleCubeColor2Change: (color: string) => void;
-  handleCubeColor2DoubleTap: (color: string) => void;
 }
 
 export function useSettingsFace({
@@ -147,17 +93,14 @@ export function useSettingsFace({
   const [showTimezoneSelect, setShowTimezoneSelect] = useState(false);
   const [showThemeSelect, setShowThemeSelect] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const [showCubeColor2Picker, setShowCubeColor2Picker] = useState(false);
 
-  // Initialize lang, theme, cube color, and cube color 2 from storage
+  // Initialize lang, theme, and cube color from storage
   useEffect(() => {
     setLangState(getLang());
     // Apply stored theme on mount
     applyTheme(getStoredTheme());
     // Apply stored cube color on mount
     applyCubeColor(getStoredCubeColor());
-    // Apply stored cube color 2 on mount
-    applyCubeColor2(getStoredCubeColor2());
   }, []);
 
   // Fetch settings and timezones when navigating to settings face
@@ -178,10 +121,6 @@ export function useSettingsFace({
           // Apply cube color from server settings
           if (data.data.cube_color) {
             applyCubeColor(data.data.cube_color);
-          }
-          // Apply cube color 2 from server settings
-          if (data.data.cube_color2) {
-            applyCubeColor2(data.data.cube_color2);
           }
         }
       } catch (err) {
@@ -231,29 +170,6 @@ export function useSettingsFace({
     }
   }, [settings, username]);
 
-  // Helper to save settings immediately (for double-click)
-  const saveSettingsImmediately = useCallback(async (updatedSettings: UserSettings) => {
-    if (!username) return;
-
-    setSavingSettings(true);
-    setSettingsError(null);
-    setSettingsSaved(false);
-
-    try {
-      await fetchApiCustom<ApiSettingsResponse>("/settings", {
-        method: "PUT",
-        body: JSON.stringify(updatedSettings),
-      });
-
-      setSettingsSaved(true);
-      setTimeout(() => setSettingsSaved(false), 3000);
-    } catch (err) {
-      setSettingsError((err as Error).message);
-    } finally {
-      setSavingSettings(false);
-    }
-  }, [username]);
-
   const handleLangChange = useCallback((code: LangCode) => {
     setLang(code);
     setLangState(code);
@@ -277,43 +193,10 @@ export function useSettingsFace({
   }, [settings]);
 
   const handleColorDoubleTap = useCallback((color: string) => {
-    // Validate hex color format
-    const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
-    if (!hexColorRegex.test(color)) return;
-    
-    // Double tap applies the color, saves immediately, and closes the picker
-    applyCubeColor(color);
-    if (settings) {
-      const updatedSettings = { ...settings, cube_color: color };
-      setSettings(updatedSettings);
-      saveSettingsImmediately(updatedSettings);
-    }
+    // Double tap only closes the color picker without selecting the color
+    // The color will only be saved when user clicks "Save Settings"
     setShowColorPicker(false);
-  }, [settings, saveSettingsImmediately]);
-
-  const handleCubeColor2Change = useCallback((color: string) => {
-    // Validate hex color format
-    const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
-    if (!hexColorRegex.test(color)) return;
-    
-    applyCubeColor2(color);
-    if (settings) setSettings({ ...settings, cube_color2: color });
-  }, [settings]);
-
-  const handleCubeColor2DoubleTap = useCallback((color: string) => {
-    // Validate hex color format
-    const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
-    if (!hexColorRegex.test(color)) return;
-    
-    // Double tap applies the color, saves immediately, and closes the picker
-    applyCubeColor2(color);
-    if (settings) {
-      const updatedSettings = { ...settings, cube_color2: color };
-      setSettings(updatedSettings);
-      saveSettingsImmediately(updatedSettings);
-    }
-    setShowCubeColor2Picker(false);
-  }, [settings, saveSettingsImmediately]);
+  }, []);
 
   return {
     settings,
@@ -334,14 +217,10 @@ export function useSettingsFace({
     setShowThemeSelect,
     showColorPicker,
     setShowColorPicker,
-    showCubeColor2Picker,
-    setShowCubeColor2Picker,
     handleSaveSettings,
     handleLangChange,
     handleThemeChange,
     handleCubeColorChange,
     handleColorDoubleTap,
-    handleCubeColor2Change,
-    handleCubeColor2DoubleTap,
   };
 }

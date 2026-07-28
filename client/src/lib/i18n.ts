@@ -119,7 +119,6 @@ export type Translations = {
   darkTheme: string;
   lightTheme: string;
   cubeColor: string;
-  cubeColor2: string;
   customColor: string;
   enterHexColor: string;
 
@@ -269,7 +268,6 @@ const translations: Record<LangCode, Translations> = {
     darkTheme: "Dark",
     lightTheme: "Light",
     cubeColor: "Accent Color",
-    cubeColor2: "Cube Color",
     customColor: "Custom",
     enterHexColor: "Enter hex color (e.g. #FF5733)",
     chat: "Chat",
@@ -409,7 +407,6 @@ const translations: Record<LangCode, Translations> = {
     darkTheme: "Oscuro",
     lightTheme: "Claro",
     cubeColor: "Color de acento",
-    cubeColor2: "Color del cubo",
     customColor: "Personalizado",
     enterHexColor: "Ingrese color hex (ej. #FF5733)",
     chat: "Chat",
@@ -547,7 +544,6 @@ const translations: Record<LangCode, Translations> = {
     darkTheme: "Sombre",
     lightTheme: "Clair",
     cubeColor: "Couleur d'accent",
-    cubeColor2: "Couleur du cube",
     customColor: "Personnalisé",
     enterHexColor: "Entrez la couleur hex (ex. #FF5733)",
     chat: "Chat",
@@ -687,7 +683,6 @@ const translations: Record<LangCode, Translations> = {
     darkTheme: "Dunkel",
     lightTheme: "Hell",
     cubeColor: "Akzentfarbe",
-    cubeColor2: "Würfelfarbe",
     customColor: "Benutzerdefiniert",
     enterHexColor: "Hex-Farbe eingeben (z.B. #FF5733)",
     chat: "Chat",
@@ -827,7 +822,6 @@ const translations: Record<LangCode, Translations> = {
     darkTheme: "Tmavá",
     lightTheme: "Svetlá",
     cubeColor: "Farba akcentu",
-    cubeColor2: "Farba kocky",
     customColor: "Vlastná",
     enterHexColor: "Zadajte hex farbu (napr. #FF5733)",
     chat: "Chat",
@@ -967,7 +961,6 @@ const translations: Record<LangCode, Translations> = {
     darkTheme: "Tmavé",
     lightTheme: "Světlé",
     cubeColor: "Barva akcentu",
-    cubeColor2: "Barva kostky",
     customColor: "Vlastní",
     enterHexColor: "Zadejte hex barvu (např. #FF5733)",
     chat: "Chat",
