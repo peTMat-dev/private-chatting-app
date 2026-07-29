@@ -1,11 +1,12 @@
 {
   "expo": {
-    "name": "client_rn",
-    "slug": "client_rn",
+    "name": "CubCha",
+    "slug": "cubcha",
+    "scheme": "cubcha",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true
     },
@@ -24,7 +25,8 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      "expo-splash-screen"
+      "expo-splash-screen",
+      "react-native-reanimated"
     ]
   }
 }
