@@ -13,19 +13,60 @@
 }
 
 :root {
+  /* Background colors */
   --color-black: #020202;
   --color-panel: #050505;
   --color-panel-muted: #0b0b0b;
-  --color-green: #06ec90; /* accent */
+  
+  /* Accent colors */
+  --color-green: #06ec90;
   --color-green-strong: #06ec90;
   --color-green-soft: #06ec90;
-  --color-form-text: #67c6a0; /* headings + labels in forms */
+  --color-form-text: #67c6a0;
+  
+  /* Input colors */
   --color-input-bg: #010101;
+  
+  /* Border colors */
   --color-border: rgba(3, 160, 98, 0.4);
   --color-border-strong: rgba(3, 160, 98, 0.7);
+  
+  /* Shadows */
   --shadow-strong: 0 0 40px rgba(6, 236, 144, 0.4);
   --shadow-soft: 0 0 20px rgba(6, 236, 144, 0.2);
+  
+  /* Font */
   --font-sans: var(--font-geist-sans, "Geist", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  
+  /* Green opacity variants - managed by ThemeContext */
+  --color-green-02: rgba(3, 160, 98, 0.02);
+  --color-green-05: rgba(3, 160, 98, 0.05);
+  --color-green-08: rgba(3, 160, 98, 0.08);
+  --color-green-10: rgba(3, 160, 98, 0.1);
+  --color-green-15: rgba(3, 160, 98, 0.15);
+  --color-green-20: rgba(3, 160, 98, 0.2);
+  --color-green-25: rgba(3, 160, 98, 0.25);
+  --color-green-30: rgba(3, 160, 98, 0.3);
+  --color-green-35: rgba(3, 160, 98, 0.35);
+  --color-green-40: rgba(3, 160, 98, 0.4);
+  --color-green-55: rgba(3, 160, 98, 0.55);
+  --color-green-50: rgba(3, 160, 98, 0.5);
+  --color-green-70: rgba(3, 160, 98, 0.7);
+  --color-green-85: rgba(3, 160, 98, 0.85);
+  
+  /* Status colors */
+  --color-error: #ff6b6b;
+  --color-error-bg: rgba(255, 80, 80, 0.12);
+  --color-error-border: rgba(255, 80, 80, 0.55);
+  --color-success: #06ec90;
+  --color-success-bg: rgba(6, 236, 144, 0.95);
+  --color-warning: #f0a830;
+  --color-warning-bg: rgba(240, 168, 48, 0.12);
+  
+  /* Cube-specific colors */
+  --color-cube-border: rgba(3, 160, 98, 0.4);
+  --color-cube-glow: rgba(6, 236, 144, 0.4);
+  --color-cube-shadow: rgba(6, 236, 144, 0.2);
 }
 
 /* Light theme overrides */
@@ -42,6 +83,36 @@
   --color-border-strong: rgba(5, 150, 105, 0.6);
   --shadow-strong: 0 4px 20px rgba(0, 0, 0, 0.1);
   --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.05);
+  
+  /* Green opacity variants for light theme */
+  --color-green-02: rgba(5, 150, 105, 0.02);
+  --color-green-05: rgba(5, 150, 105, 0.05);
+  --color-green-08: rgba(5, 150, 105, 0.08);
+  --color-green-10: rgba(5, 150, 105, 0.1);
+  --color-green-15: rgba(5, 150, 105, 0.15);
+  --color-green-20: rgba(5, 150, 105, 0.2);
+  --color-green-25: rgba(5, 150, 105, 0.25);
+  --color-green-30: rgba(5, 150, 105, 0.3);
+  --color-green-35: rgba(5, 150, 105, 0.35);
+  --color-green-40: rgba(5, 150, 105, 0.4);
+  --color-green-50: rgba(5, 150, 105, 0.5);
+  --color-green-55: rgba(5, 150, 105, 0.55);
+  --color-green-70: rgba(5, 150, 105, 0.7);
+  --color-green-85: rgba(5, 150, 105, 0.85);
+  
+  /* Cube-specific colors for light theme */
+  --color-cube-border: rgba(5, 150, 105, 0.3);
+  --color-cube-glow: rgba(5, 150, 105, 0.2);
+  --color-cube-shadow: rgba(0, 0, 0, 0.1);
+  
+  /* Status colors for light theme */
+  --color-error: #dc2626;
+  --color-error-bg: rgba(220, 38, 38, 0.1);
+  --color-error-border: rgba(220, 38, 38, 0.4);
+  --color-success: #059669;
+  --color-success-bg: rgba(5, 150, 105, 0.95);
+  --color-warning: #d97706;
+  --color-warning-bg: rgba(217, 119, 6, 0.1);
 }
 
 /* Smooth theme transition */
@@ -93,17 +164,17 @@ a:hover {
   flex-direction: column;
   gap: 1.5rem;
   padding: 2rem 1.25rem 3rem;
-  background: radial-gradient(circle at top, rgba(3, 160, 98, 0.12), transparent 55%),
+  background: radial-gradient(circle at top, var(--color-green-10), transparent 55%),
     var(--color-black);
 }
 
 .hero-panel {
-  background: linear-gradient(135deg, rgba(3, 160, 98, 0.12), rgba(3, 160, 98, 0.02)),
+  background: linear-gradient(135deg, var(--color-green-10), var(--color-green-02)),
     var(--color-panel);
-  border: 1px solid rgba(3, 160, 98, 0.4);
+  border: 1px solid var(--color-green-40);
   border-radius: 0;
   padding: 2rem;
-  box-shadow: 0 35px 90px rgba(3, 160, 98, 0.25);
+  box-shadow: 0 35px 90px var(--color-green-25);
   position: relative;
   overflow: hidden;
   margin-bottom: 1.25rem; /* match .auth-stack gap for uniform spacing */
@@ -113,7 +184,7 @@ a:hover {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 30% 20%, rgba(3, 160, 98, 0.35), transparent 55%);
+  background: radial-gradient(circle at 30% 20%, var(--color-green-35), transparent 55%);
   filter: blur(40px);
   opacity: 0.7;
   pointer-events: none;
@@ -139,7 +210,7 @@ a:hover {
 
 .cubcha-subtext {
   font-size: 1rem;
-  color: rgba(3, 160, 98, 0.7);
+  color: var(--color-green-70);
   margin-bottom: 1.5rem;
 }
 
@@ -151,7 +222,7 @@ a:hover {
 
 .cubcha-subtext {
   font-size: 1rem;
-  color: rgba(3, 160, 98, 0.7);
+  color: var(--color-green-70);
   margin-bottom: 0.5rem;
 }
 
@@ -303,7 +374,7 @@ a:hover {
   justify-content: center;
   margin-top: 0.75rem;
   padding-top: 0.4rem;
-  border-top: 1px solid rgba(3, 160, 98, 0.1);
+  border-top: 1px solid var(--color-green-10);
   cursor: default;
   user-select: none;
   opacity: 0.3;
@@ -330,23 +401,23 @@ a:hover {
 }
 
 .cube-face-left .cube-face-content::-webkit-scrollbar-track {
-  background: rgba(3, 160, 98, 0.05);
+  background: var(--color-green-05);
   border-radius: 6px;
 }
 
 .cube-face-left .cube-face-content::-webkit-scrollbar-thumb {
-  background: rgba(3, 160, 98, 0.3);
+  background: var(--color-green-30);
   border-radius: 6px;
   transition: background 0.2s ease;
 }
 
 .cube-face-left .cube-face-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(3, 160, 98, 0.5);
+  background: var(--color-green-50);
 }
 
 .cube-face-left .cube-face-content {
   scrollbar-width: auto;
-  scrollbar-color: rgba(3, 160, 98, 0.3) rgba(3, 160, 98, 0.05);
+  scrollbar-color: var(--color-green-30) var(--color-green-05);
 }
 
 .cube-face-content .row {
@@ -383,7 +454,7 @@ a:hover {
 .drawer-panel {
   position: relative;
   background: linear-gradient(145deg, var(--color-panel), var(--color-panel-muted));
-  border: 1px solid rgba(3, 160, 98, 0.4);
+  border: 1px solid var(--color-green-40);
   border-radius: 0;
   padding: 1.5rem;
   box-shadow: var(--shadow-soft);
@@ -523,7 +594,7 @@ a:hover {
 .auth-input:focus {
   outline: none;
   border-color: var(--color-green-strong);
-  box-shadow: 0 0 0 0.2rem rgba(3, 160, 98, 0.25);
+  box-shadow: 0 0 0 0.2rem var(--color-green-25);
   color: var(--color-green);
 }
 
@@ -539,7 +610,7 @@ a:hover {
 .auth-btn {
   border-radius: 999px;
   background: transparent;
-  border: 1px solid rgba(3, 160, 98, 0.7);
+  border: 1px solid var(--color-green-70);
   color: var(--color-green);
   width: 100%;
   padding: 0.85rem;
@@ -555,11 +626,11 @@ a:hover {
   background: var(--color-green);
   color: var(--color-black);
   border-color: var(--color-green);
-  box-shadow: 0 15px 45px rgba(3, 160, 98, 0.35);
+  box-shadow: 0 15px 45px var(--color-green-35);
 }
 
 .ghost-btn {
-  border: 1px solid rgba(3, 160, 98, 0.4);
+  border: 1px solid var(--color-green-40);
   border-radius: 999px;
   padding: 0.2rem 0.9rem;
   background: transparent;
@@ -601,7 +672,7 @@ a:hover {
 
 .ghost-btn {
   background: transparent;
-  border: 1px solid rgba(3, 160, 98, 0.35);
+  border: 1px solid var(--color-green-35);
   color: var(--color-green);
   border-radius: 999px;
   padding: 0.35rem 1rem;
@@ -612,16 +683,16 @@ a:hover {
 
 .ghost-btn:hover {
   color: var(--color-green-strong);
-  border-color: rgba(3, 160, 98, 0.7);
+  border-color: var(--color-green-70);
 }
 
 .register-divider {
-  border-top: 1px solid rgba(3, 160, 98, 0.2);
+  border-top: 1px solid var(--color-green-20);
   margin: 1rem 0;
 }
 
 .radio-chip {
-  border: 1px solid rgba(3, 160, 98, 0.35);
+  border: 1px solid var(--color-green-35);
   border-radius: 999px;
   padding: 0.4rem 1rem;
   display: inline-flex;
@@ -673,7 +744,7 @@ a:hover {
   transform: translateX(100%);
   transition: transform 0.35s ease;
   border-radius: 0;
-  border-left: 1px solid rgba(3, 160, 98, 0.4);
+  border-left: 1px solid var(--color-green-40);
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -716,8 +787,8 @@ a:hover {
   text-transform: uppercase;
   font-size: 0.7rem;
   letter-spacing: 0.08em;
-  background: rgba(3, 160, 98, 0.1);
-  border: 1px solid rgba(3, 160, 98, 0.35);
+  background: var(--color-green-10);
+  border: 1px solid var(--color-green-35);
   border-radius: 999px;
   padding: 0.2rem 0.75rem;
 }
@@ -743,14 +814,14 @@ a:hover {
   flex-direction: column;
   gap: 1rem;
   padding: 1.25rem 1rem 2rem;
-  background: radial-gradient(circle at top, rgba(3, 160, 98, 0.08), transparent 55%),
+  background: radial-gradient(circle at top, var(--color-green-08), transparent 55%),
     var(--color-black);
 }
 
 .chats-header {
-  background: linear-gradient(135deg, rgba(3, 160, 98, 0.1), rgba(3, 160, 98, 0.02)),
+  background: linear-gradient(135deg, var(--color-green-10), var(--color-green-02)),
     var(--color-panel);
-  border: 1px solid rgba(3, 160, 98, 0.4);
+  border: 1px solid var(--color-green-40);
   border-radius: 1rem;
   padding: 1rem 1.25rem;
   box-shadow: var(--shadow-soft);
@@ -769,7 +840,7 @@ a:hover {
   display: flex;
   flex-direction: column;
   background: linear-gradient(145deg, var(--color-panel), var(--color-panel-muted));
-  border: 1px solid rgba(3, 160, 98, 0.35);
+  border: 1px solid var(--color-green-35);
   border-radius: 1rem;
   box-shadow: var(--shadow-soft);
   overflow: hidden;
@@ -777,7 +848,7 @@ a:hover {
 
 .chats-card-titlebar {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid rgba(3, 160, 98, 0.2);
+  border-bottom: 1px solid var(--color-green-20);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -787,7 +858,7 @@ a:hover {
   font-size: 0.95rem;
   font-weight: 600;
   letter-spacing: 0.03em;
-  color: rgba(3, 160, 98, 0.7);
+  color: var(--color-green-70);
 }
 
 .add-contact-buttons {
@@ -796,8 +867,8 @@ a:hover {
 }
 
 .add-contact-btn {
-  background: linear-gradient(135deg, rgba(3, 160, 98, 0.2), rgba(3, 160, 98, 0.1));
-  border: 1px solid rgba(3, 160, 98, 0.4);
+  background: linear-gradient(135deg, var(--color-green-20), var(--color-green-10));
+  border: 1px solid var(--color-green-40);
   color: var(--color-green);
   font-size: 0.72rem;
   padding: 0.35rem 0.75rem;
@@ -809,7 +880,7 @@ a:hover {
 }
 
 .add-contact-btn:hover {
-  background: linear-gradient(135deg, rgba(3, 160, 98, 0.3), rgba(3, 160, 98, 0.15));
+  background: linear-gradient(135deg, var(--color-green-30), var(--color-green-15));
   border-color: var(--color-green);
   box-shadow: 0 0 12px rgba(6, 236, 144, 0.3);
 }
@@ -822,18 +893,18 @@ a:hover {
 .contact-item {
   background: transparent !important;
   border: none !important;
-  border-bottom: 1px solid rgba(3, 160, 98, 0.15) !important;
+  border-bottom: 1px solid var(--color-green-15) !important;
   padding: 0.75rem 1rem !important;
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .contact-item:hover {
-  background: rgba(3, 160, 98, 0.05) !important;
+  background: var(--color-green-05) !important;
 }
 
 .contact-item--selected {
-  background: rgba(3, 160, 98, 0.08) !important;
+  background: var(--color-green-08) !important;
 }
 
 .contact-actions {
@@ -898,7 +969,7 @@ a:hover {
 }
 
 .contact-action-btn--add:hover:not(:disabled) {
-  background: rgba(3, 160, 98, 0.08);
+  background: var(--color-green-08);
 }
 
 .contact-action-btn--add:disabled {
@@ -907,9 +978,9 @@ a:hover {
 }
 
 .contact-action-btn--chat {
-  background: linear-gradient(135deg, rgba(3, 160, 98, 0.1), rgba(3, 160, 98, 0.05));
-  border-color: rgba(3, 160, 98, 0.2);
-  color: rgba(3, 160, 98, 0.35);
+  background: linear-gradient(135deg, var(--color-green-10), var(--color-green-05));
+  border-color: var(--color-green-20);
+  color: var(--color-green-35);
   cursor: not-allowed;
   opacity: 0.5;
 }
@@ -926,12 +997,12 @@ a:hover {
 }
 
 .contact-action-btn--chat-active:hover {
-  background: rgba(3, 160, 98, 0.1);
+  background: var(--color-green-10);
 }
 
 .contact-action-btn--confirm {
-  background: linear-gradient(135deg, rgba(3, 160, 98, 0.35), rgba(3, 160, 98, 0.2));
-  border-color: rgba(3, 160, 98, 0.7);
+  background: linear-gradient(135deg, var(--color-green-35), var(--color-green-20));
+  border-color: var(--color-green-70);
   color: var(--color-green);
   font-size: 0.9rem;
   font-weight: 700;
@@ -940,9 +1011,9 @@ a:hover {
 }
 
 .contact-action-btn--confirm:hover:not(:disabled) {
-  background: linear-gradient(135deg, rgba(3, 160, 98, 0.55), rgba(3, 160, 98, 0.35));
+  background: linear-gradient(135deg, var(--color-green-55), var(--color-green-35));
   border-color: var(--color-green);
-  box-shadow: 0 0 10px rgba(3, 160, 98, 0.4);
+  box-shadow: 0 0 10px var(--color-green-40);
 }
 
 .contact-action-btn--confirm:disabled {
@@ -951,14 +1022,14 @@ a:hover {
 }
 
 .contact-action-btn--cancel {
-  background: linear-gradient(135deg, rgba(3, 160, 98, 0.1), rgba(3, 160, 98, 0.05));
-  border-color: rgba(3, 160, 98, 0.3);
-  color: rgba(3, 160, 98, 0.7);
+  background: linear-gradient(135deg, var(--color-green-10), var(--color-green-05));
+  border-color: var(--color-green-30);
+  color: var(--color-green-70);
 }
 
 .contact-action-btn--cancel:hover {
-  background: linear-gradient(135deg, rgba(3, 160, 98, 0.2), rgba(3, 160, 98, 0.1));
-  border-color: rgba(3, 160, 98, 0.5);
+  background: linear-gradient(135deg, var(--color-green-20), var(--color-green-10));
+  border-color: var(--color-green-50);
 }
 
 .contact-action-btn--pending {
@@ -974,7 +1045,7 @@ a:hover {
 .contact-action-btn--blocked {
   background: transparent;
   border-color: transparent;
-  color: rgba(3, 160, 98, 0.3);
+  color: var(--color-green-30);
   font-size: 0.95rem;
   padding: 0 0.3rem;
   line-height: 1;
@@ -994,14 +1065,14 @@ a:hover {
 }
 
 .contact-item .contact-meta {
-  color: rgba(3, 160, 98, 0.5);
+  color: var(--color-green-50);
   font-size: 0.75rem;
 }
 
 .sort-btn {
-  background: linear-gradient(135deg, rgba(3, 160, 98, 0.15), rgba(3, 160, 98, 0.05));
-  border: 1px solid rgba(3, 160, 98, 0.3);
-  color: rgba(3, 160, 98, 0.7);
+  background: linear-gradient(135deg, var(--color-green-15), var(--color-green-05));
+  border: 1px solid var(--color-green-30);
+  color: var(--color-green-70);
   padding: 0.35rem 0.75rem;
   font-size: 0.72rem;
   cursor: pointer;
@@ -1009,12 +1080,12 @@ a:hover {
 }
 
 .sort-btn:hover {
-  border-color: rgba(3, 160, 98, 0.5);
+  border-color: var(--color-green-50);
   color: var(--color-green);
 }
 
 .sort-btn.active {
-  background: linear-gradient(135deg, rgba(3, 160, 98, 0.3), rgba(3, 160, 98, 0.2));
+  background: linear-gradient(135deg, var(--color-green-30), var(--color-green-20));
   border-color: var(--color-green);
   color: var(--color-green);
   box-shadow: 0 0 8px rgba(6, 236, 144, 0.2);
@@ -1033,7 +1104,7 @@ a:hover {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem;
-  border-bottom: 1px solid rgba(3, 160, 98, 0.15);
+  border-bottom: 1px solid var(--color-green-15);
   background: transparent;
 }
 
@@ -1047,8 +1118,8 @@ a:hover {
 }
 
 .user-add-btn {
-  background: linear-gradient(135deg, rgba(3, 160, 98, 0.25), rgba(3, 160, 98, 0.15));
-  border: 1px solid rgba(3, 160, 98, 0.4);
+  background: linear-gradient(135deg, var(--color-green-25), var(--color-green-15));
+  border: 1px solid var(--color-green-40);
   color: var(--color-green);
   padding: 0.35rem 0.85rem;
   font-size: 0.8rem;
@@ -1059,7 +1130,7 @@ a:hover {
 }
 
 .user-add-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, rgba(3, 160, 98, 0.35), rgba(3, 160, 98, 0.25));
+  background: linear-gradient(135deg, var(--color-green-35), var(--color-green-25));
   border-color: var(--color-green);
   box-shadow: 0 0 10px rgba(6, 236, 144, 0.3);
 }
@@ -1083,7 +1154,7 @@ a:hover {
 
 .cube-contact-actions {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid rgba(3, 160, 98, 0.15);
+  border-bottom: 1px solid var(--color-green-15);
   display: flex;
   gap: 0.5rem;
   justify-content: center;
@@ -1102,7 +1173,7 @@ a:hover {
 
 .modal-box {
   background: linear-gradient(145deg, var(--color-panel), var(--color-panel-muted));
-  border: 1px solid rgba(3, 160, 98, 0.4);
+  border: 1px solid var(--color-green-40);
   border-radius: 0.5rem;
   max-width: 500px;
   width: 100%;
@@ -1114,7 +1185,7 @@ a:hover {
 
 .modal-header-custom {
   padding: 1rem 1.25rem;
-  border-bottom: 1px solid rgba(3, 160, 98, 0.2);
+  border-bottom: 1px solid var(--color-green-20);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1129,7 +1200,7 @@ a:hover {
 
 .modal-close-btn {
   background: transparent;
-  border: 1px solid rgba(3, 160, 98, 0.3);
+  border: 1px solid var(--color-green-30);
   color: var(--color-green);
   font-size: 1.5rem;
   width: 32px;
@@ -1144,7 +1215,7 @@ a:hover {
 }
 
 .modal-close-btn:hover {
-  background: rgba(3, 160, 98, 0.15);
+  background: var(--color-green-15);
   border-color: var(--color-green);
 }
 
@@ -1156,15 +1227,15 @@ a:hover {
 
 .modal-footer-custom {
   padding: 1rem 1.25rem;
-  border-top: 1px solid rgba(3, 160, 98, 0.2);
+  border-top: 1px solid var(--color-green-20);
   display: flex;
   gap: 0.75rem;
   justify-content: flex-end;
 }
 
 .modal-action-btn {
-  background: linear-gradient(135deg, rgba(3, 160, 98, 0.25), rgba(3, 160, 98, 0.15));
-  border: 1px solid rgba(3, 160, 98, 0.4);
+  background: linear-gradient(135deg, var(--color-green-25), var(--color-green-15));
+  border: 1px solid var(--color-green-40);
   color: var(--color-green);
   padding: 0.5rem 1rem;
   font-size: 0.9rem;
@@ -1175,7 +1246,7 @@ a:hover {
 }
 
 .modal-action-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, rgba(3, 160, 98, 0.35), rgba(3, 160, 98, 0.25));
+  background: linear-gradient(135deg, var(--color-green-35), var(--color-green-25));
   border-color: var(--color-green);
   box-shadow: 0 0 10px rgba(6, 236, 144, 0.3);
 }
@@ -1187,16 +1258,16 @@ a:hover {
 
 .modal-action-btn.secondary {
   background: transparent;
-  border-color: rgba(3, 160, 98, 0.3);
+  border-color: var(--color-green-30);
 }
 
 .modal-action-btn.secondary:hover {
-  background: rgba(3, 160, 98, 0.1);
+  background: var(--color-green-10);
 }
 
 .modal-message {
   text-align: center;
-  color: rgba(3, 160, 98, 0.7);
+  color: var(--color-green-70);
   padding: 2rem;
 }
 
@@ -1206,11 +1277,11 @@ a:hover {
   align-items: center;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(3, 160, 98, 0.15);
+  border-bottom: 1px solid var(--color-green-15);
 }
 
 .sort-label {
-  color: rgba(3, 160, 98, 0.7);
+  color: var(--color-green-70);
   font-size: 0.85rem;
 }
 
@@ -1221,20 +1292,20 @@ a:hover {
 
 .list-group-item.flex {
   background: transparent;
-  border-color: rgba(3, 160, 98, 0.2);
+  border-color: var(--color-green-20);
   color: var(--color-green);
 }
 
 .chats-list .list-group-item {
-  border-color: rgba(3, 160, 98, 0.2);
-  border-bottom: 1px solid rgba(3, 160, 98, 0.2);
+  border-color: var(--color-green-20);
+  border-bottom: 1px solid var(--color-green-20);
   padding: 0.4rem 1rem;
   cursor: pointer;
   transition: background-color 0.15s;
 }
 
 .chats-list .list-group-item:hover {
-  background-color: rgba(3, 160, 98, 0.08);
+  background-color: var(--color-green-08);
 }
 
 .chats-list .list-group-item:last-child {
@@ -1273,28 +1344,28 @@ a:hover {
 }
 
 .chats-list::-webkit-scrollbar-track {
-  background: rgba(3, 160, 98, 0.05);
+  background: var(--color-green-05);
   border-radius: 6px;
 }
 
 .chats-list::-webkit-scrollbar-thumb {
-  background: rgba(3, 160, 98, 0.3);
+  background: var(--color-green-30);
   border-radius: 6px;
   transition: background 0.2s ease;
 }
 
 .chats-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(3, 160, 98, 0.5);
+  background: var(--color-green-50);
 }
 
 /* Custom scrollbar for Firefox */
 .chats-list {
   scrollbar-width: auto;
-  scrollbar-color: rgba(3, 160, 98, 0.3) rgba(3, 160, 98, 0.05);
+  scrollbar-color: var(--color-green-30) var(--color-green-05);
 }
 
 .last-Message-text {
-  color: rgba(3, 160, 98, 0.85);
+  color: var(--color-green-85);
 }
 
 .empty-state {
@@ -1315,7 +1386,7 @@ a:hover {
 }
 
 .empty-state p {
-  color: rgba(3, 160, 98, 0.8);
+  color: var(--color-green-85);
   margin: 0;
 }
 
@@ -1323,7 +1394,7 @@ a:hover {
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  border: 2px dashed rgba(3, 160, 98, 0.35);
+  border: 2px dashed var(--color-green-35);
   box-shadow: var(--shadow-soft);
 }
 

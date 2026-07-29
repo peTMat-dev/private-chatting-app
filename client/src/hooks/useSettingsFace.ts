@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState, Dispatch, SetStateAction, FormEvent }
 import { getApi, fetchApiCustom } from "../services/api.service";
 import { getLang, setLang, type LangCode } from "../lib/i18n";
 import type { UserSettings, ApiSettingsResponse, ApiTimezonesResponse } from "../lib/formTypes";
+import { useTheme, type ThemeName } from "../theme";
 
-// Theme type
-export type ColorTheme = 'light' | 'dark';
+// Theme type (re-export from theme module for backwards compatibility)
+export type ColorTheme = ThemeName;
 
 // Default cube color
 export const DEFAULT_CUBE_COLOR = '#06ec90';
@@ -20,18 +21,6 @@ export const PRESET_COLORS = [
   { name: 'Red', hex: '#EF4444' },
   { name: 'Yellow', hex: '#EAB308' },
 ];
-
-// Helper to apply theme to document
-const applyTheme = (theme: ColorTheme) => {
-  document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem('cubcha_theme', theme);
-};
-
-// Helper to get stored theme
-const getStoredTheme = (): ColorTheme => {
-  const stored = localStorage.getItem('cubcha_theme');
-  return (stored === 'light' || stored === 'dark') ? stored : 'dark';
-};
 
 // Helper to apply cube color to document
 const applyCubeColor = (color: string) => {
@@ -82,6 +71,7 @@ export function useSettingsFace({
   activeFace,
   showAlert,
 }: UseSettingsFaceOptions): UseSettingsFaceReturn {
+  const { setTheme: setThemeContext, themeName } = useTheme();
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [savingSettings, setSavingSettings] = useState(false);
@@ -94,11 +84,10 @@ export function useSettingsFace({
   const [showThemeSelect, setShowThemeSelect] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
 
-  // Initialize lang, theme, and cube color from storage
+  // Initialize lang and cube color from storage
+  // Note: Theme is now managed by ThemeContext (reads from cookie, detects system preference)
   useEffect(() => {
     setLangState(getLang());
-    // Apply stored theme on mount
-    applyTheme(getStoredTheme());
     // Apply stored cube color on mount
     applyCubeColor(getStoredCubeColor());
   }, []);
@@ -114,9 +103,9 @@ export function useSettingsFace({
         const data = await getApi<ApiSettingsResponse>("/settings");
         if (!aborted && data.data) {
           setSettings(data.data);
-          // Apply theme from server settings
-          if (data.data.system_color_theme) {
-            applyTheme(data.data.system_color_theme);
+          // Apply theme from server settings via ThemeContext
+          if (data.data.system_color_theme && data.data.system_color_theme !== themeName) {
+            setThemeContext(data.data.system_color_theme);
           }
           // Apply cube color from server settings
           if (data.data.cube_color) {
@@ -178,10 +167,11 @@ export function useSettingsFace({
   }, [settings]);
 
   const handleThemeChange = useCallback((theme: ColorTheme) => {
-    applyTheme(theme);
+    // Update theme via ThemeContext (handles cookie, CSS variables, data-theme attribute)
+    setThemeContext(theme);
     if (settings) setSettings({ ...settings, system_color_theme: theme });
     setShowThemeSelect(false);
-  }, [settings]);
+  }, [settings, setThemeContext]);
 
   const handleCubeColorChange = useCallback((color: string) => {
     // Validate hex color format

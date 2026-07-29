@@ -65,7 +65,7 @@ export default function SettingsFace({
                 ) : (
                   <form onSubmit={handleSaveSettings} className="d-flex flex-column" style={{ gap: "1rem" }}>
                     {settingsSaved && (
-                      <div className="auth-alert" style={{ background: "rgba(3, 160, 98, 0.12)", border: "1px solid rgba(3, 160, 98, 0.4)" }}>
+                      <div className="auth-alert" style={{ background: "var(--color-green-10)", border: "1px solid var(--color-green-40)" }}>
                         <strong>{tr.settingsSaved}</strong> {tr.settingsSavedMsg}
                       </div>
                     )}
@@ -107,12 +107,12 @@ export default function SettingsFace({
                               style={{
                                 padding: "0.5rem 0.75rem",
                                 cursor: "pointer",
-                                backgroundColor: lang === l.code ? "rgba(3, 160, 98, 0.15)" : "transparent",
+                                backgroundColor: lang === l.code ? "var(--color-green-15)" : "transparent",
                                 color: lang === l.code ? "#00FFFF" : "var(--color-green)",
-                                borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                                borderBottom: "1px solid var(--color-green-10)",
                                 transition: "background-color 0.2s",
                               }}
-                              onMouseEnter={(e) => { if (lang !== l.code) e.currentTarget.style.backgroundColor = "rgba(3, 160, 98, 0.08)"; }}
+                              onMouseEnter={(e) => { if (lang !== l.code) e.currentTarget.style.backgroundColor = "var(--color-green-08)"; }}
                               onMouseLeave={(e) => { if (lang !== l.code) e.currentTarget.style.backgroundColor = "transparent"; }}
                             >
                               {l.label}{lang === l.code ? " ✓" : ""}
@@ -157,15 +157,15 @@ export default function SettingsFace({
                                 padding: "0.5rem 0.75rem",
                                 cursor: "pointer",
                                 backgroundColor: settings.default_max_chat_participants === num 
-                                  ? "rgba(3, 160, 98, 0.15)" 
+                                  ? "var(--color-green-15)" 
                                   : "transparent",
                                 color: "var(--color-green)",
-                                borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                                borderBottom: "1px solid var(--color-green-10)",
                                 transition: "background-color 0.2s"
                               }}
                               onMouseEnter={(e) => {
                                 if (settings.default_max_chat_participants !== num) {
-                                  e.currentTarget.style.backgroundColor = "rgba(3, 160, 98, 0.08)";
+                                  e.currentTarget.style.backgroundColor = "var(--color-green-08)";
                                 }
                               }}
                               onMouseLeave={(e) => {
@@ -216,16 +216,16 @@ export default function SettingsFace({
                                 padding: "0.5rem 0.75rem",
                                 cursor: "pointer",
                                 backgroundColor: settings.user_timezone === tz.timezone_name 
-                                  ? "rgba(3, 160, 98, 0.15)" 
+                                  ? "var(--color-green-15)" 
                                   : "transparent",
                                 color: "var(--color-green)",
-                                borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                                borderBottom: "1px solid var(--color-green-10)",
                                 transition: "background-color 0.2s",
                                 fontSize: "0.85rem"
                               }}
                               onMouseEnter={(e) => {
                                 if (settings.user_timezone !== tz.timezone_name) {
-                                  e.currentTarget.style.backgroundColor = "rgba(3, 160, 98, 0.08)";
+                                  e.currentTarget.style.backgroundColor = "var(--color-green-08)";
                                 }
                               }}
                               onMouseLeave={(e) => {
@@ -269,15 +269,15 @@ export default function SettingsFace({
                               padding: "0.5rem 0.75rem",
                               cursor: "pointer",
                               backgroundColor: settings.system_color_theme === 'dark' 
-                                ? "rgba(3, 160, 98, 0.15)" 
+                                ? "var(--color-green-15)" 
                                 : "transparent",
                               color: "var(--color-green)",
-                              borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                              borderBottom: "1px solid var(--color-green-10)",
                               transition: "background-color 0.2s"
                             }}
                             onMouseEnter={(e) => {
                               if (settings.system_color_theme !== 'dark') {
-                                e.currentTarget.style.backgroundColor = "rgba(3, 160, 98, 0.08)";
+                                e.currentTarget.style.backgroundColor = "var(--color-green-08)";
                               }
                             }}
                             onMouseLeave={(e) => {
@@ -294,14 +294,14 @@ export default function SettingsFace({
                               padding: "0.5rem 0.75rem",
                               cursor: "pointer",
                               backgroundColor: settings.system_color_theme === 'light' 
-                                ? "rgba(3, 160, 98, 0.15)" 
+                                ? "var(--color-green-15)" 
                                 : "transparent",
                               color: "var(--color-green)",
                               transition: "background-color 0.2s"
                             }}
                             onMouseEnter={(e) => {
                               if (settings.system_color_theme !== 'light') {
-                                e.currentTarget.style.backgroundColor = "rgba(3, 160, 98, 0.08)";
+                                e.currentTarget.style.backgroundColor = "var(--color-green-08)";
                               }
                             }}
                             onMouseLeave={(e) => {

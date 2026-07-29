@@ -166,7 +166,7 @@ export default function MessagesFace({
                       <div ref={messagesEndRef} />
                     </div>
 
-                    <div style={{ padding: "0.5rem 0.75rem", borderTop: "1px solid rgba(3, 160, 98, 0.15)", display: "flex", gap: "0.4rem", alignItems: "flex-end" }}>
+                    <div style={{ padding: "0.5rem 0.75rem", borderTop: "1px solid var(--color-green-15)", display: "flex", gap: "0.4rem", alignItems: "flex-end" }}>
                       <textarea
                         value={messageInput}
                         onChange={(e) => setMessageInput(e.target.value)}

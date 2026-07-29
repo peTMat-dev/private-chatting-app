@@ -118,7 +118,7 @@ export default function ContactsFace({
                   <h2>{tr.contacts}</h2>
                 </div>
                 
-                <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid rgba(3, 160, 98, 0.15)" }}>
+                <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid var(--color-green-15)" }}>
                   <div style={{ marginBottom: "1rem" }}>
                     <button
                       className="add-contact-btn"
@@ -218,7 +218,7 @@ export default function ContactsFace({
                                   cursor: "default",
                                   backgroundColor: "transparent",
                                   color: user.isAlreadyContact ? "rgba(180,180,180,0.5)" : "var(--color-green)",
-                                  borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                                  borderBottom: "1px solid var(--color-green-10)",
                                   display: "flex",
                                   justifyContent: "space-between",
                                   alignItems: "center",
@@ -394,7 +394,7 @@ export default function ContactsFace({
                                   display: "flex",
                                   alignItems: "center",
                                   padding: "0.45rem 0.75rem",
-                                  borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                                  borderBottom: "1px solid var(--color-green-10)",
                                   gap: "0.4rem",
                                 }}
                               >
@@ -469,7 +469,7 @@ export default function ContactsFace({
                                     display: "flex",
                                     alignItems: "center",
                                     padding: "0.45rem 0.75rem",
-                                    borderBottom: groupChatTitleEdit?.groupId === g.id ? "none" : "1px solid rgba(3, 160, 98, 0.1)",
+                                    borderBottom: groupChatTitleEdit?.groupId === g.id ? "none" : "1px solid var(--color-green-10)",
                                     gap: "0.4rem",
                                   }}
                                 >
@@ -498,7 +498,7 @@ export default function ContactsFace({
                                   <div style={{
                                     display: "flex", gap: "0.4rem", alignItems: "center",
                                     padding: "0.4rem 0.75rem 0.5rem",
-                                    borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                                    borderBottom: "1px solid var(--color-green-10)",
                                     background: "rgba(3,160,98,0.05)",
                                   }}>
                                     <input
@@ -697,7 +697,7 @@ export default function ContactsFace({
                                         display: "flex",
                                         alignItems: "center",
                                         padding: "0.45rem 0.75rem",
-                                        borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                                        borderBottom: "1px solid var(--color-green-10)",
                                         gap: "0.4rem",
                                       }}
                                     >
@@ -745,7 +745,7 @@ export default function ContactsFace({
                                         display: "flex",
                                         alignItems: "center",
                                         padding: "0.45rem 0.75rem",
-                                        borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                                        borderBottom: "1px solid var(--color-green-10)",
                                         gap: "0.4rem",
                                       }}
                                     >
@@ -811,7 +811,7 @@ export default function ContactsFace({
                                 style={{
                                   padding: "0.5rem 0.75rem",
                                   color: "var(--color-green)",
-                                  borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                                  borderBottom: "1px solid var(--color-green-10)",
                                   fontSize: "0.85rem",
                                   display: "flex",
                                   justifyContent: "space-between",

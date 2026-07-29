@@ -55,12 +55,12 @@ export default function LanguageFace({ onNavigate }: Props) {
 													style={{
 														padding: "0.5rem 0.75rem",
 														cursor: "pointer",
-														backgroundColor: lang === l.code ? "rgba(3, 160, 98, 0.15)" : "transparent",
+														backgroundColor: lang === l.code ? "var(--color-green-15)" : "transparent",
 														color: lang === l.code ? "#00FFFF" : "var(--color-green)",
-														borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+														borderBottom: "1px solid var(--color-green-10)",
 														transition: "background-color 0.2s",
 													}}
-													onMouseEnter={(e) => { if (lang !== l.code) e.currentTarget.style.backgroundColor = "rgba(3, 160, 98, 0.08)"; }}
+													onMouseEnter={(e) => { if (lang !== l.code) e.currentTarget.style.backgroundColor = "var(--color-green-08)"; }}
 													onMouseLeave={(e) => { if (lang !== l.code) e.currentTarget.style.backgroundColor = "transparent"; }}
 												>
 													{l.label}{lang === l.code ? " ✓" : ""}

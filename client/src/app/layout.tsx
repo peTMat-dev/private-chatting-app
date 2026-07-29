@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 import { LanguageProvider } from "../lib/LanguageContext";
 import { LANGUAGES, DEFAULT_LANG, type LangCode } from "../lib/i18n";
+import { ThemeProvider, isValidTheme, DEFAULT_THEME, THEME_COOKIE_NAME, type ThemeName } from "../theme";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -26,17 +27,25 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const cookieStore = await cookies();
+  
+  // Language cookie
   const cookieLang = cookieStore.get("cubcha_lang")?.value as LangCode | undefined;
   const initialLang: LangCode = cookieLang && LANGUAGES.some(l => l.code === cookieLang) ? cookieLang : DEFAULT_LANG;
+  
+  // Theme cookie
+  const cookieTheme = cookieStore.get(THEME_COOKIE_NAME)?.value;
+  const initialTheme: ThemeName = cookieTheme && isValidTheme(cookieTheme) ? cookieTheme : DEFAULT_THEME;
 
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <LanguageProvider initialLang={initialLang}>
-          {children}
-        </LanguageProvider>
+        <ThemeProvider initialTheme={initialTheme}>
+          <LanguageProvider initialLang={initialLang}>
+            {children}
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

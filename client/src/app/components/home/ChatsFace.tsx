@@ -43,7 +43,7 @@ export default function ChatsFace({
                   </div>
 
                   {/* New Chat accordion */}
-                  <div style={{ padding: "0.6rem 1.25rem", borderBottom: "1px solid rgba(3, 160, 98, 0.15)" }}>
+                  <div style={{ padding: "0.6rem 1.25rem", borderBottom: "1px solid var(--color-green-15)" }}>
                     <button
                       className="add-contact-btn"
                       onClick={() => {
@@ -77,7 +77,7 @@ export default function ChatsFace({
                                   style={{
                                     display: "flex", alignItems: "center", gap: "0.5rem",
                                     padding: "0.45rem 0.75rem",
-                                    borderBottom: "1px solid rgba(3, 160, 98, 0.1)",
+                                    borderBottom: "1px solid var(--color-green-10)",
                                     cursor: "pointer",
                                     color: newChatSelectedIds.includes(c.id) ? "#00FFFF" : "var(--color-green)",
                                     backgroundColor: newChatSelectedIds.includes(c.id) ? "rgba(3,160,98,0.1)" : "transparent",

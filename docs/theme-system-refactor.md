@@ -131,13 +131,44 @@ Follow the LanguageContext pattern for SSR:
 // Read initial theme from cookie in layout.tsx (server-side)
 const cookieStore = await cookies();
 const cookieTheme = cookieStore.get("cubcha_theme")?.value;
-const initialTheme = cookieTheme && isValidTheme(cookieTheme) ? cookieTheme : DEFAULT_THEME;
+const initialTheme = cookieTheme && isValidTheme(cookieTheme) ? cookieTheme : 'dark';
 
 // Pass to ThemeProvider
 <ThemeProvider initialTheme={initialTheme}>
   {children}
 </ThemeProvider>
 ```
+
+### System Preference Detection (First-Time Visitors)
+
+When no cookie exists (first visit), detect the user's system preference:
+
+```typescript
+// In ThemeContext.tsx (client-side only)
+useEffect(() => {
+  // Only check system preference on first visit (no cookie)
+  if (!document.cookie.includes('cubcha_theme')) {
+    const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    if (prefersLight) {
+      setTheme('light');
+    }
+  }
+}, []);
+```
+
+**Flow:**
+1. Server renders with dark theme (safe default)
+2. Client checks if cookie exists
+3. If no cookie → check `prefers-color-scheme`
+4. If user prefers light → switch to light theme
+5. Save choice to cookie for next visit
+
+### Database Persistence
+
+Theme preference is saved to the database column `system_color_theme` (values: 'light' or 'dark') in the `user_system_details` table:
+- Saved when user logs in
+- Saved when user changes theme in settings
+- Restored when user logs in (overrides cookie/system preference)
 
 ### Success Criteria
 
@@ -217,7 +248,6 @@ Current codebase has **118+ hardcoded color instances** that won't respond to th
 
 ---
 
-## Phase 2 – Temporary CSS Bridge
 ## Phase 2 – Temporary CSS Bridge
 
 **Goal:** Keep CSS working during migration while Theme manages values.
@@ -347,13 +377,27 @@ Current `[data-theme="light"]` only overrides 12 CSS variables. The 89+ hardcode
 
 ### Key Principle
 
-**Preferred approach:** CSS variables generated from Theme.
+**Current approach (Option B):** CSS variables generated from Theme.
 
 Components use CSS variables as before, but values come from Theme-generated CSS variables.
 
-**Exception:** Use `theme.colors.xxx` directly when a value must be computed in JavaScript.
+**Future approach (Option A):** Direct theme access via `useTheme()` hook.
 
-This ensures consistency across the codebase. Don't mix multiple approaches - pick one and stick with it.
+Option A will be introduced later for specific cases that require JavaScript calculations or when preparing for React Native migration. This includes:
+- Dynamic color computations
+- Conditional styling based on theme values
+- React Native components (which don't use CSS variables)
+
+**Why Option B now:**
+- 3D cube UI requires CSS animations and transforms
+- Components already work this way (no migration needed)
+- Better performance (browser handles updates, not React re-renders)
+- CSS variables work in all CSS contexts (animations, transforms, pseudo-elements)
+
+**Why Option A later:**
+- Type safety and IDE autocomplete for new components
+- React Native compatibility
+- Easier refactoring of theme structure
 
 ### Migration Pattern Examples
 
@@ -584,6 +628,21 @@ const theme = useTheme(); // Same API
 
 ---
 
+## Future Improvements (Deferred)
+
+### Error Boundary for Theme System
+
+**Status:** Deferred to Phase 4
+
+Add a React error boundary that catches ThemeContext failures and falls back to dark theme. Currently not needed because:
+- ThemeContext is simple (state + useEffect)
+- CSS variables have defaults in `globals.css`
+- Worst case: theme toggle stops working, but app looks fine
+
+**When to implement:** Phase 4, when user-customizable colors add complexity.
+
+---
+
 ## Related Files
 
 - `client/src/app/globals.css` - Current global styles
@@ -605,6 +664,60 @@ const theme = useTheme(); // Same API
 
 ---
 
+## React Native Conversion Strategy
+
+**Decision:** The frontend will be fully rewritten in React Native (single codebase for web and mobile).
+
+### What's Already Built (KEEP - Platform-Agnostic)
+
+These files work in both web and React Native:
+
+| File | Purpose | React Native Ready? |
+|------|---------|---------------------|
+| `tokens.ts` | Theme contract/types | ✅ Yes |
+| `dark.ts` | Dark theme values | ✅ Yes |
+| `light.ts` | Light theme values | ✅ Yes |
+| `ThemeContext.tsx` | Theme state management | ✅ Yes (remove CSS bridge) |
+| System preference detection | `prefers-color-scheme` | ✅ Yes |
+| Database persistence | `system_color_theme` column | ✅ Yes |
+
+### What to SKIP (Web-Specific, Wasted Effort)
+
+| Phase | Why Skip |
+|-------|----------|
+| Phase 1.5 (CSS variable conversion) | CSS variables don't exist in React Native |
+| Phase 2 (CSS bridge) | Not needed — use `theme.colors.xxx` directly |
+| Phase 2.5 (Light theme CSS fixes) | Theme values done, CSS part not needed |
+| Phase 3 (Component migration) | Components will be rewritten in React Native |
+| Phase 4 (Settings CSS integration) | Will be different in React Native |
+
+### React Native Conversion Impact
+
+| Component | Current (Next.js) | React Native |
+|-----------|-------------------|--------------|
+| Styling | CSS variables, `globals.css` | `StyleSheet`, inline styles |
+| Components | `<div>`, `<span>`, `<input>` | `<View>`, `<Text>`, `<TextInput>` |
+| 3D Cube | CSS `transform-style: preserve-3d` | `react-native-reanimated` or `react-three-fiber` |
+| Animations | `@keyframes` | `Animated` API or Reanimated |
+| Theme access | CSS variables bridge | Direct `theme.colors.xxx` |
+| Gestures | Touch events | `react-native-gesture-handler` |
+
+### Backend (No Changes Required)
+
+The Express.js server, API routes, database, Socket.io, and LDAP authentication remain unchanged. React Native will use the same API endpoints.
+
+### Recommended Next Steps
+
+1. **Stop CSS-related theme work** — Foundation is complete
+2. **Start React Native project** (Expo recommended for easier setup)
+3. **Copy `theme/` folder** into new React Native project
+4. **Remove CSS bridge** from ThemeContext (keep state management)
+5. **Build components** using `theme.colors.xxx` directly
+6. **Rebuild 3D cube** with `react-native-reanimated` or `react-three-fiber`
+7. **Connect to existing Express server** (same API, no changes needed)
+
+---
+
 ## Changelog
 
 | Date | Change |
@@ -612,3 +725,5 @@ const theme = useTheme(); // Same API
 | 2026-07-28 | Initial plan created |
 | 2026-07-28 | Reverted cube_color2 (commit d2aee57) - will re-implement in Phase 4 |
 | 2026-07-28 | Added Phase 1.5 (convert hardcoded colors) and Phase 2.5 (fix light theme) |
+| 2026-07-29 | Completed Phases 0-2.5: Theme infrastructure, system preference detection, database persistence |
+| 2026-07-29 | Decision: Stop CSS work, prepare for React Native frontend conversion |
