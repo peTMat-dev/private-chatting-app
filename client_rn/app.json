@@ -25,8 +25,7 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      "expo-splash-screen",
-      "react-native-reanimated"
+      "expo-splash-screen"
     ]
   }
 }
