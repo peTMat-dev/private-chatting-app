@@ -15,7 +15,7 @@ const FACE_TICKS: Record<CubeFace, number> = {
 };
 
 const BASE_X = 0;
-const BASE_Y = -15;b 
+const BASE_Y = -15;
 const ANIMATION_DURATION = 500;
 const ANIMATION_EASING = Easing.bezier(0.2, 0.8, 0.2, 1);
 
