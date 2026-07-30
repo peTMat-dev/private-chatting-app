@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import Animated, {
   useAnimatedStyle,
-  SharedValue,
   configureReanimatedLogger,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
