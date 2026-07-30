@@ -1,3 +1,5 @@
+import { useRef, useEffect } from "react";
+import {
   View,
   Text,
   StyleSheet,
@@ -38,8 +40,8 @@ function getCubeDimensions() {
     const cubeHeight = Math.min(520, screenH * 0.78);
     return { cubeWidth, cubeHeight };
   }
-  const cubeWidth = Math.min(screenW * 0.9, screenW - 48);
-  const cubeHeight = Math.min(screenH * 0.78, screenH - 120);
+  const cubeWidth = screenW;
+  const cubeHeight = screenH;
   return { cubeWidth, cubeHeight };
 }
 
