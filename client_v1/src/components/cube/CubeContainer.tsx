@@ -10,6 +10,7 @@ import {
 import Animated, {
   useAnimatedStyle,
   configureReanimatedLogger,
+  type SharedValue,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import type { CubeFace } from "./useCubeNavigation";
@@ -119,7 +120,7 @@ export function CubeContainer({
       { rotateX: `${rotationX.value}deg` as `${number}deg` },
       { rotateY: `${rotationY.value}deg` as `${number}deg` },
     ],
-  }), []);
+  }));
 
   // Face transforms — positioned in 3D space
   const faceTransforms: Record<CubeFace, object[]> = {
