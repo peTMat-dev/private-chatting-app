@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { Platform } from "react-native";
 import { useSharedValue, withTiming, Easing } from "react-native-reanimated";
 
 export type CubeFace = "front" | "left" | "right" | "back" | "top" | "bottom";
@@ -15,7 +16,10 @@ const FACE_TICKS: Record<CubeFace, number> = {
 };
 
 const BASE_X = 0;
-const BASE_Y = -15;
+// The gentle -15° rest tilt is a "cube shape" affordance we only want on larger
+// web (tablet/laptop) screens. On mobile the active face must fill the screen
+// edge-to-edge, so it sits perpendicular to the screen (tilt = 0).
+const BASE_Y = Platform.OS === "web" ? -15 : 0;
 const ANIMATION_DURATION = 500;
 const ANIMATION_EASING = Easing.bezier(0.2, 0.8, 0.2, 1);
 
