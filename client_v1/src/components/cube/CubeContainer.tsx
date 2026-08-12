@@ -33,16 +33,87 @@ interface CubeContainerProps {
 }
 
 const SWIPE_THRESHOLD = 40;
+const PERSPECTIVE = 1200;
+
+// === 4x4 matrix helpers (column-major, as RN `transform: [{ matrix }]` expects) ===
+// multiplyMatrices(a, b) returns the product a·b. In the product, the RIGHTMOST
+// factor is applied to the point FIRST (matching CSS/RN transform ordering).
+function multiplyMatrices(a: number[], b: number[]): number[] {
+  "worklet";
+  const out = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  for (let c = 0; c < 4; c++) {
+    for (let r = 0; r < 4; r++) {
+      out[r + c * 4] =
+        a[r + 0 * 4] * b[0 + c * 4] +
+        a[r + 1 * 4] * b[1 + c * 4] +
+        a[r + 2 * 4] * b[2 + c * 4] +
+        a[r + 3 * 4] * b[3 + c * 4];
+    }
+  }
+  return out;
+}
+
+function translateMatrix(dx: number, dy: number, dz: number): number[] {
+  "worklet";
+  return [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    dx, dy, dz, 1,
+  ];
+}
+
+function translateZMatrix(dz: number): number[] {
+  "worklet";
+  return translateMatrix(0, 0, dz);
+}
+
+function rotateXMatrix(a: number): number[] {
+  "worklet";
+  const c = Math.cos(a);
+  const s = Math.sin(a);
+  return [
+    1, 0, 0, 0,
+    0, c, s, 0,
+    0, -s, c, 0,
+    0, 0, 0, 1,
+  ];
+}
+
+function rotateYMatrix(a: number): number[] {
+  "worklet";
+  const c = Math.cos(a);
+  const s = Math.sin(a);
+  return [
+    c, 0, -s, 0,
+    0, 1, 0, 0,
+    s, 0, c, 0,
+    0, 0, 0, 1,
+  ];
+}
+
+function perspectiveMatrix(p: number): number[] {
+  "worklet";
+  return [
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, -1 / p, 1,
+  ];
+}
 
 function getCubeDimensions() {
   const { width: screenW, height: screenH } = Dimensions.get("window");
-  // Cap the cube size on every platform. Full-screen-ish faces carrying live
-  // 3D matrices are a classic trigger for the Android renderer StackOverflow
-  // (ViewGroup.recreateChildDisplayList) on some devices, so keep the cube
-  // within a bounded on-screen area.
-  const cubeWidth = Math.min(340, screenW * 0.85);
-  const cubeHeight = Math.min(520, screenH * 0.78);
-  return { cubeWidth, cubeHeight };
+  // Keep the web build within the same bounded area as the desktop CSS cube.
+  // On native (Android/iOS) the cube should fill the screen like the reference
+  // `client_rn` implementation does.
+  if (Platform.OS === "web") {
+    return {
+      cubeWidth: Math.min(340, screenW * 0.85),
+      cubeHeight: Math.min(520, screenH * 0.78),
+    };
+  }
+  return { cubeWidth: screenW, cubeHeight: screenH };
 }
 
 interface CubeFaceViewProps {
@@ -72,47 +143,80 @@ function CubeFaceView({
   faceXOffset,
   faceYOffset,
 }: CubeFaceViewProps) {
-  // Reanimated does not support translateZ inside animated transforms on
-  // Android, so we split the transform across two nested views:
-  //
-  //   OUTER (animated) : perspective + shared rotation
-  //   INNER (static)   : per-face offset + translateZ depth
-  //
-  // Correct matrix order: perspective -> rotation -> offset -> translateZ,
-  // which makes each face orbit the cube center instead of rotating in place.
   const depth = faceName === "top" || faceName === "bottom" ? halfH : halfW;
-  const staticTransform = [
-    { rotateX: `${faceXOffset[faceName]}deg` },
-    { rotateY: `${faceYOffset[faceName]}deg` },
-    { translateZ: depth },
-  ] as any;
+  const cx = cubeWidth / 2;
+  const cy =
+    faceName === "top" || faceName === "bottom" ? cubeWidth / 2 : cubeHeight / 2;
+  // Resolve per-face static values to plain numbers OUTSIDE the worklet so only
+  // primitives are captured by the UI-thread worklet closure.
+  const oxDeg = faceXOffset[faceName];
+  const oyDeg = faceYOffset[faceName];
 
-  // Shared rotation (with perspective) drives the whole cube turn.
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { perspective: 1200 },
-      { rotateX: `${rotationX.value}deg` },
-      { rotateY: `${rotationY.value}deg` },
-    ] as any,
-  }));
+  // Reanimated cannot express translateZ in an animated `transform` on Android
+  // (RuntimeException: Unsupported transform: translateZ). We therefore build
+  // the FULL 3D transform as a single 4x4 matrix every frame. It replicates the
+  // exact cube-orbit order of the working web/iOS `preserve-3d` path:
+  //   M = P · T(c) · [Rx(rx)·Ry(ry)] · [Ry(oy)·Rx(ox)·Tz(depth)] · T(-c)
+  // where c=(cx,cy) is the face/cube centre (transform-origin), P is the stage
+  // perspective, and each factor applies right-to-left to the point. Because
+  // Android ignores translateZ for z-ordering (no preserve-3d = draw order wins),
+  // we additionally transform each face's CENTROID into view space and assign a
+  // zIndex so near faces paint over far ones.
+  const animatedStyle = useAnimatedStyle(() => {
+    const rx = (rotationX.value * Math.PI) / 180;
+    const ry = (rotationY.value * Math.PI) / 180;
+    const ox = (oxDeg * Math.PI) / 180;
+    const oy = (oyDeg * Math.PI) / 180;
 
+    const cubeRot = multiplyMatrices(
+      rotateXMatrix(rx),
+      rotateYMatrix(ry)
+    ); // Rx·Ry (global spin+tilt)
+    const faceRot = multiplyMatrices(
+      rotateYMatrix(oy),
+      rotateXMatrix(ox)
+    ); // Ry·Rx (per-face offset)
+    const faceTrans = multiplyMatrices(faceRot, translateZMatrix(depth)); // ·Tz(depth)
+
+    let m = perspectiveMatrix(PERSPECTIVE);
+    m = multiplyMatrices(m, translateMatrix(cx, cy, 0)); // ·T(c)
+    m = multiplyMatrices(m, cubeRot); // ·Rx·Ry
+    m = multiplyMatrices(m, faceTrans); // ·Ry·Rx·Tz
+    m = multiplyMatrices(m, translateMatrix(-cx, -cy, 0)); // ·T(-c)
+
+    // View-space Z of the face CENTROID (local point = (cx, cy, 0)), used only
+    // for draw-order. Apply the same transform without perspective (Z ordering
+    // is monotonic under it) and read out the transformed Z component.
+    const sortM = multiplyMatrices(
+      multiplyMatrices(
+        multiplyMatrices(translateMatrix(cx, cy, 0), cubeRot),
+        faceTrans
+      ),
+      translateMatrix(-cx, -cy, 0)
+    );
+    const centroidZ = sortM[2] * cx + sortM[6] * cy + sortM[14];
+
+    return {
+      transform: [{ matrix: m } as any],
+      zIndex: Math.round(centroidZ),
+    };
+  });
+
+  // Perspective does not affect face draw ordering on Android, so we force
+  // zIndex (above) so near faces paint over far ones.
   return (
     <Animated.View
-      style={[{ ...styles.cubeFace, borderWidth: 0 }, animatedStyle]}
+      style={[
+        styles.cubeFace,
+        {
+          width: cubeWidth,
+          height: faceName === "top" || faceName === "bottom" ? cubeWidth : cubeHeight,
+          backfaceVisibility: "hidden",
+        },
+        animatedStyle,
+      ]}
     >
-      <View
-        style={[
-          styles.cubeFace,
-          {
-            width: cubeWidth,
-            height: faceName === "top" || faceName === "bottom" ? cubeWidth : cubeHeight,
-            transform: staticTransform,
-            backfaceVisibility: "hidden",
-          },
-        ]}
-      >
-        {faces[faceName]}
-      </View>
+      {faces[faceName]}
     </Animated.View>
   );
 }
