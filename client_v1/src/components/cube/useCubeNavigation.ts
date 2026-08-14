@@ -20,7 +20,7 @@ const BASE_X = 0;
 // web (tablet/laptop) screens. On mobile the active face must fill the screen
 // edge-to-edge, so it sits perpendicular to the screen (tilt = 0).
 const BASE_Y = Platform.OS === "web" ? -15 : 0;
-const ANIMATION_DURATION = 500;
+const ANIMATION_DURATION = 100;
 const ANIMATION_EASING = Easing.bezier(0.2, 0.8, 0.2, 1);
 const SWIPE_THRESHOLD = 40;
 const AXIS_LOCK_THRESHOLD = 5; // px before the drag commits to an axis (kept tiny so the cube follows the thumb almost at once)
@@ -88,52 +88,36 @@ export function useCubeNavigation(initialFace: CubeFace = "front") {
   const goDown = useCallback(() => {
     if (activeFace === "top") return;
     if (activeFace === "bottom") {
-      // Go back from bottom: snap Y back, then animate X back
+      // Back to the side face we came from: tween X→0 and Y→rest in one smooth motion
       const savedY = savedYTicksRef.current;
-      "worklet";
-      rotationY.value = BASE_Y + savedY * 90; // instant snap
-      setTimeout(() => {
-        const face = FACES_BY_TICKS[((savedY % 4) + 4) % 4];
-        setActiveFace(face);
-        setYTicks(savedY);
-        animateRotation(BASE_X, BASE_Y + savedY * 90);
-      }, 16);
+      const face = FACES_BY_TICKS[((savedY % 4) + 4) % 4];
+      setActiveFace(face);
+      setYTicks(savedY);
+      animateRotation(BASE_X, BASE_Y + savedY * 90);
       return;
     }
+    // Front/left/right/back → top: tween both X→(-90°) and Y→0 in one smooth motion
     savedYTicksRef.current = yTicks;
-    // Snap Y to 0 instantly, then animate X to top
-    "worklet";
-    rotationY.value = BASE_Y; // instant snap
-    setTimeout(() => {
-      setActiveFace("top");
-      animateRotation(BASE_X - 90, BASE_Y);
-    }, 16);
-  }, [activeFace, yTicks, rotationY, animateRotation]);
+    setActiveFace("top");
+    animateRotation(BASE_X - 90, BASE_Y);
+  }, [activeFace, yTicks, animateRotation]);
 
   const goUp = useCallback(() => {
     if (activeFace === "bottom") return;
     if (activeFace === "top") {
-      // Go back from top: snap Y back, then animate X back
+      // Back to the side face we came from: tween X→0 and Y→rest in one smooth motion
       const savedY = savedYTicksRef.current;
-      "worklet";
-      rotationY.value = BASE_Y + savedY * 90; // instant snap
-      setTimeout(() => {
-        const face = FACES_BY_TICKS[((savedY % 4) + 4) % 4];
-        setActiveFace(face);
-        setYTicks(savedY);
-        animateRotation(BASE_X, BASE_Y + savedY * 90);
-      }, 16);
+      const face = FACES_BY_TICKS[((savedY % 4) + 4) % 4];
+      setActiveFace(face);
+      setYTicks(savedY);
+      animateRotation(BASE_X, BASE_Y + savedY * 90);
       return;
     }
-    // Normal face → go to bottom
+    // Front/left/right/back → bottom: tween both X→(+90°) and Y→0 in one smooth motion
     savedYTicksRef.current = yTicks;
-    "worklet";
-    rotationY.value = BASE_Y; // instant snap
-    setTimeout(() => {
-      setActiveFace("bottom");
-      animateRotation(BASE_X + 90, BASE_Y);
-    }, 16);
-  }, [activeFace, yTicks, rotationY, animateRotation]);
+    setActiveFace("bottom");
+    animateRotation(BASE_X + 90, BASE_Y);
+  }, [activeFace, yTicks, animateRotation]);
 
   // --- Finger-following drag (smoother sweep) ---
   // The drag is locked to a SINGLE axis (horizontal OR vertical) as soon as the
