@@ -29,10 +29,12 @@ interface CubeContainerProps {
   goRight: () => void;
   goUp: () => void;
   goDown: () => void;
+  beginDrag: () => void;
+  updateDrag: (dx: number, dy: number) => void;
+  endDrag: (dx: number, dy: number) => void;
   activeFace: CubeFace;
 }
 
-const SWIPE_THRESHOLD = 40;
 const PERSPECTIVE = 1200;
 
 // === 4x4 matrix helpers (column-major, as RN `transform: [{ matrix }]` expects) ===
@@ -196,9 +198,19 @@ function CubeFaceView({
     );
     const centroidZ = sortM[2] * cx + sortM[6] * cy + sortM[14];
 
+    // Precise back-face culling computed in view space, because Android's
+    // `backfaceVisibility` prop on a 3D-matrix child is unreliable. R is the
+    // combined face rotation (cube spin x per-face offset); a face's outward
+    // normal starts at +Z (toward the viewer at rest), so its view-space Z is
+    // the 0-indexed [10] entry. We hide the face the instant its normal turns
+    // away from the camera, so it never lingers or pops late behind the front.
+    const R = multiplyMatrices(cubeRot, faceRot);
+    const facingViewer = R[10] > 0;
+
     return {
       transform: [{ matrix: m } as any],
       zIndex: Math.round(centroidZ),
+      opacity: facingViewer ? 1 : 0,
     };
   });
 
@@ -229,10 +241,11 @@ export function CubeContainer({
   goRight,
   goUp,
   goDown,
+  beginDrag,
+  updateDrag,
+  endDrag,
   activeFace,
 }: CubeContainerProps) {
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
-
   // Keyboard support (web only)
   useEffect(() => {
     if (Platform.OS !== "web") return;
@@ -262,29 +275,13 @@ export function CubeContainer({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [goLeft, goRight, goUp, goDown]);
 
-  // Pan gesture for swipe
+  // Pan gesture for swipe — the cube follows the finger during the drag and
+  // settles smoothly onto the nearest face on release.
   const panGesture = Gesture.Pan()
     .runOnJS(true)
-    .onBegin((e) => {
-      touchStartRef.current = { x: e.x, y: e.y };
-    })
-    .onEnd((e) => {
-      const start = touchStartRef.current;
-      if (!start) return;
-      const dx = e.translationX;
-      const dy = e.translationY;
-      const absDx = Math.abs(dx);
-      const absDy = Math.abs(dy);
-      if (absDx < SWIPE_THRESHOLD && absDy < SWIPE_THRESHOLD) return;
-      if (absDx > absDy) {
-        if (dx < 0) goRight();
-        else goLeft();
-      } else {
-        if (dy > 0) goUp();
-        else goDown();
-      }
-      touchStartRef.current = null;
-    });
+    .onBegin(() => beginDrag())
+    .onUpdate((e) => updateDrag(e.translationX, e.translationY))
+    .onEnd((e) => endDrag(e.translationX, e.translationY));
 
   const { cubeWidth, cubeHeight } = getCubeDimensions();
   const halfW = cubeWidth / 2;

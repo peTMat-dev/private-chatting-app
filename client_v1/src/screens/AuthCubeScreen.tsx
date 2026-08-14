@@ -23,6 +23,9 @@ export default function AuthCubeScreen() {
     goRight,
     goDown,
     goUp,
+    beginDrag,
+    updateDrag,
+    endDrag,
   } = useCubeNavigation("front");
 
   const faces: Record<CubeFace, React.ReactNode> = {
@@ -43,6 +46,9 @@ export default function AuthCubeScreen() {
       goRight={goRight}
       goUp={goUp}
       goDown={goDown}
+      beginDrag={beginDrag}
+      updateDrag={updateDrag}
+      endDrag={endDrag}
       activeFace={activeFace}
     />
   );
