@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from "react-native";
 import { CubeContainer } from "../components/cube/CubeContainer";
-import { useCubeNavigation, CubeFace } from "../components/cube/useCubeNavigation";
+import { useCubeNavigation, CubeFace } from "../lib/useCubeNavigation";
 
 /**
  * Placeholder face component — just a colored box with a label.

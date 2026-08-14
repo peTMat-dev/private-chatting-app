@@ -13,7 +13,7 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import type { CubeFace } from "./useCubeNavigation";
+import type { CubeFace } from "../../lib/useCubeNavigation";
 
 // Disable strict mode to suppress false-positive warnings about shared value access
 // The code is already optimized - this is safe and won't affect performance
