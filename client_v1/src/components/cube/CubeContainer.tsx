@@ -180,12 +180,8 @@ function CubeFaceView({
     ); // Ry·Rx (per-face offset)
     const faceTrans = multiplyMatrices(faceRot, translateZMatrix(depth)); // ·Tz(depth)
 
-    // ORTHOGRAPHIC Android path: no baked-in perspective factor. Android does
-    // not perform true homogeneous perspective division per view, so faces
-    // receding behind the camera plane were clipped/distorted (the "gap on
-    // one side" bug). A purely affine transform is rendered exactly, which
-    // guarantees shared edges coincide at any rotation angle.
-    let m = translateMatrix(cx, cy, 0); // T(c)
+    let m = perspectiveMatrix(PERSPECTIVE);
+    m = multiplyMatrices(m, translateMatrix(cx, cy, 0)); // ·T(c)
     m = multiplyMatrices(m, cubeRot); // ·Rx·Ry
     m = multiplyMatrices(m, faceTrans); // ·Ry·Rx·Tz
     m = multiplyMatrices(m, translateMatrix(-cx, -cy, 0)); // ·T(-c)
