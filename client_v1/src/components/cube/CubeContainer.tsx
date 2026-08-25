@@ -205,12 +205,18 @@ function CubeFaceView({
     // the 0-indexed [10] entry. We hide the face the instant its normal turns
     // away from the camera, so it never lingers or pops late behind the front.
     const R = multiplyMatrices(cubeRot, faceRot);
-    const facingViewer = R[10] > 0;
+    // Smooth culling: fade out as the outward normal turns away from the
+    // camera instead of a hard 0/1 toggle, so faces never pop at 90°.
+    // R[10] is cos(angle between normal and view direction); remap it from
+    // [0..0.15] -> [1..0] with a soft margin so the fade starts slightly
+    // before the face becomes edge-on.
+    const facing = R[10];
+    const opacity = Math.max(0, Math.min(1, facing / 0.15));
 
     return {
       transform: [{ matrix: m } as any],
       zIndex: Math.round(centroidZ),
-      opacity: facingViewer ? 1 : 0,
+      opacity,
     };
   });
 
@@ -224,6 +230,10 @@ function CubeFaceView({
           width: cubeWidth,
           height: faceName === "top" || faceName === "bottom" ? cubeWidth : cubeHeight,
           backfaceVisibility: "hidden",
+          // No border radius on native: rounded corners leave gaps at the
+          // shared edges while the cube rotates. Web keeps its styling.
+          borderRadius: 0,
+          borderWidth: 0,
         },
         animatedStyle,
       ]}
