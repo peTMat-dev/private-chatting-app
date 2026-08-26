@@ -1,7 +1,10 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { CubeContainer } from "../src/components/cube/CubeContainer";
-import { useCubeNavigation, CubeFace } from "../src/components/cube/useCubeNavigation";
+import {
+  useCubeNavigation,
+  type CubeFace,
+} from "../src/lib/useCubeNavigation";
 
 /**
  * Placeholder face component — just a colored box with a label.
@@ -24,6 +27,9 @@ export default function AuthCubeScreen() {
     goRight,
     goDown,
     goUp,
+    beginDrag,
+    updateDrag,
+    endDrag,
   } = useCubeNavigation("front");
 
   const faces: Record<CubeFace, React.ReactNode> = {
@@ -44,6 +50,9 @@ export default function AuthCubeScreen() {
       goRight={goRight}
       goUp={goUp}
       goDown={goDown}
+      beginDrag={beginDrag}
+      updateDrag={updateDrag}
+      endDrag={endDrag}
       activeFace={activeFace}
     />
   );
