@@ -1,15 +1,12 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Alert } from "react-native";
 import { CubeContainer } from "../src/components/cube/CubeContainer";
 import {
   useCubeNavigation,
   type CubeFace,
 } from "../src/lib/useCubeNavigation";
+import LoginFace from "../src/components/auth/LoginFace";
 
-/**
- * Placeholder face component — just a colored box with a label.
- * Will be replaced with real face components during full migration.
- */
 function PlaceholderFace({ label, color }: { label: string; color: string }) {
   return (
     <View style={[styles.placeholderFace, { backgroundColor: color }]}>
@@ -30,13 +27,18 @@ export default function AuthCubeScreen() {
     beginDrag,
     updateDrag,
     endDrag,
+    setFace,
   } = useCubeNavigation("front");
 
+  const handleLoginSuccess = () => {
+    Alert.alert("Login Successful", "Redirecting to home...");
+  };
+
   const faces: Record<CubeFace, React.ReactNode> = {
-    front: <PlaceholderFace label="Login" color="#1a2a1a" />,
+    front: <LoginFace onLoginSuccess={handleLoginSuccess} onNavigate={setFace} />,
     right: <PlaceholderFace label="Register" color="#1a1a2a" />,
-    left: <PlaceholderFace label="Language" color="#2a1a1a" />,
-    back: <PlaceholderFace label="Reset Password" color="#2a2a1a" />,
+    left: <PlaceholderFace label="Reset Password" color="#2a2a1a" />,
+    back: <PlaceholderFace label="Language" color="#2a1a1a" />,
     top: <PlaceholderFace label="Logout" color="#1a2a2a" />,
     bottom: <PlaceholderFace label="Info" color="#2a1a2a" />,
   };

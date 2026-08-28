@@ -630,3 +630,66 @@ During swipe (before release):
 6. The **server needs minimal changes** (add Bearer token auth alongside cookies)
 7. **Expo** is the ideal framework for single-codebase Android + Web deployment
 8. **Responsive sizing**: compact cube on desktop (~340px), larger cube on mobile (~90vw), same 3D behavior everywhere
+
+---
+
+## 14. Readiness Review (2026-08-28)
+
+### Current State of `client_rn`
+
+The Expo project has been initialized and the core cube infrastructure is in place. Here is where things stand against the planned phases:
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| Phase 1 | Project Setup | ✅ Done — Expo project created, deps installed, `_layout.tsx` + `index.tsx` screens exist |
+| Phase 2 | UI Component Library | ❌ Not started — `src/components/ui/` does not exist yet |
+| Phase 3 | Cube Container + Navigation | ✅ Done — `CubeContainer.tsx` (3D matrix math for Android, `preserve-3d` for web/iOS) and `useCubeNavigation.ts` (shared values, gestures, triple-tap, finger-following drag) are fully implemented and working |
+| Phase 4 | Auth Cube Faces | ❌ Not started — `app/index.tsx` uses placeholder colored boxes, no real face components |
+| Phase 5 | Home Cube Faces | ❌ Not started — `app/home/` does not exist |
+| Phase 6 | Server API Updates | ❌ Not started — `auth.middleware.ts` only reads cookies, no Bearer token support |
+| Phase 7 | Polish & Testing | ❌ Not started |
+
+### What Exists in `client_rn`
+
+```
+client_rn/
+├── app/
+│   ├── _layout.tsx                  # Root layout (GestureHandlerRootView, StatusBar, Stack)
+│   └── index.tsx                    # Auth cube screen (placeholder faces only)
+├── src/
+│   ├── components/cube/
+│   │   └── CubeContainer.tsx        # Full 3D cube (matrix math for Android, preserve-3d elsewhere)
+│   ├── lib/
+│   │   └── useCubeNavigation.ts     # Navigation hook (Reanimated shared values, gestures, drag, triple-tap)
+│   ├── theme/                       # empty
+│   ├── services/                    # empty
+│   └── hooks/                       # empty
+├── app.json                         # Android config, adaptive icons, Expo plugins
+├── package.json                     # All deps installed
+└── restore-android-config.sh        # Gradle config for low-memory builds
+```
+
+### Corrections to This Plan
+
+The following inaccuracies were found in the document and are noted here for reference:
+
+1. **§1 table** says auth storage is "AsyncStorage on native" — this contradicts §4.3 which correctly specifies `expo-secure-store`. **Use `expo-secure-store`** as described in §4.3.
+
+2. **§5 Dependencies** lists outdated version targets (Expo ~52.x, RN 0.76.x, Reanimated ~3.x). The actual installed versions are **Expo ~57.0.16, React Native 0.86.2, Reanimated 4.5.1**. The dependency list should be updated to reflect these.
+
+3. **Phase 3 is already complete** — the checklist items in §8 Phase 3 should be marked as done. The cube container, navigation hook, gestures, and keyboard support are all implemented.
+
+4. **§4.3 / Phase 1 — API base URL** needs attention: the current `client/src/lib/api.ts` relies on `process.env.NEXT_PUBLIC_API_BASE_URL` and `window.location.origin`, neither of which works in React Native. A platform-aware URL resolver is needed (e.g., `expo-constants` or a hardcoded URL for native).
+
+### Verdict: Ready to Start Migration
+
+**The plan is comprehensive and ready to execute.** The logical next step is **Phase 4 (Auth Cube Faces)**, starting with `LoginFace` since it is the simplest face (90 lines in `client/`) and the front face of the auth cube.
+
+Before beginning face components, these prerequisites from earlier phases should be done first:
+
+1. **Port theme files** (`tokens.ts`, `dark.ts`, `light.ts`) — copy as-is, they are platform-agnostic
+2. **Port `i18n.ts`** — copy as-is, translations are pure data
+3. **Port hooks** — `useLoginFace.ts` (75 lines) is the starting point
+4. **Port services** — `api.service.ts` + `auth.service.ts` with platform-aware Bearer token support
+5. **Build minimal UI primitives** — `Button`, `Input`, `Alert` (needed by LoginFace)
+6. **Server: add Bearer token auth** (Phase 6) — critical blocker for any authenticated API call on Android

@@ -60,7 +60,7 @@ router.post("/login", async (req: Request, res: Response) => {
     });
 
     const userLang = await getUserLanguage(user.userId);
-    res.json({ success: true, message: "Login successful", user: { username: user.username, user_language: userLang } });
+    res.json({ success: true, message: "Login successful", user: { username: user.username, user_language: userLang }, token: sessionToken });
   } catch (error) {
     // If we reached bindUser, username is valid, so error must be password
     res.status(401).json({ success: false, error: "Invalid password" });
@@ -161,7 +161,13 @@ router.get("/me", authMiddleware, (req: Request, res: Response) => {
 });
 
 router.post("/logout", authMiddleware, async (req: Request, res: Response) => {
-  const token = req.cookies?.cubcha_session as string | undefined;
+  let token = req.cookies?.cubcha_session as string | undefined;
+  if (!token) {
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith("Bearer ")) {
+      token = authHeader.slice(7);
+    }
+  }
   if (token) {
     try {
       await query("DELETE FROM user_sessions WHERE token = ?", [token]);

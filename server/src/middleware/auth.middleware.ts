@@ -15,7 +15,13 @@ export const authMiddleware = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  const token = req.cookies?.cubcha_session as string | undefined;
+  let token = req.cookies?.cubcha_session as string | undefined;
+  if (!token) {
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith("Bearer ")) {
+      token = authHeader.slice(7);
+    }
+  }
   if (!token) {
     res.status(401).json({ success: false, error: "Unauthorized" });
     return;
