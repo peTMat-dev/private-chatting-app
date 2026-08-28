@@ -641,33 +641,62 @@ The Expo project has been initialized and the core cube infrastructure is in pla
 
 | Phase | Description | Status |
 |-------|-------------|--------|
-| Phase 1 | Project Setup | ✅ Done — Expo project created, deps installed, `_layout.tsx` + `index.tsx` screens exist |
-| Phase 2 | UI Component Library | ❌ Not started — `src/components/ui/` does not exist yet |
-| Phase 3 | Cube Container + Navigation | ✅ Done — `CubeContainer.tsx` (3D matrix math for Android, `preserve-3d` for web/iOS) and `useCubeNavigation.ts` (shared values, gestures, triple-tap, finger-following drag) are fully implemented and working |
-| Phase 4 | Auth Cube Faces | ❌ Not started — `app/index.tsx` uses placeholder colored boxes, no real face components |
-| Phase 5 | Home Cube Faces | ❌ Not started — `app/home/` does not exist |
-| Phase 6 | Server API Updates | ❌ Not started — `auth.middleware.ts` only reads cookies, no Bearer token support |
-| Phase 7 | Polish & Testing | ❌ Not started |
+| Phase 1 | Project Setup | ✅ Done — Expo project created, deps installed, providers wired, platform-aware API base URL |
+| Phase 2 | UI Component Library | ⚠️ Skipped by design — `src/components/ui/` does not exist; faces use inline RN primitives (TouchableOpacity/TextInput/StyleSheet) with a lightweight ad-hoc toast in `app/index.tsx`. Acceptable; extract primitives later if duplication grows |
+| Phase 3 | Cube Container + Navigation | ✅ Done — `CubeContainer.tsx` (3D matrix math for Android, `preserve-3d` for web/iOS) and `useCubeNavigation.ts` (shared values, gestures, triple-tap, finger-following drag). ⚠️ Haptic feedback not yet wired (`expo-haptics` installed but unused) |
+| Phase 4 | Auth Cube Faces | ✅ Done — all 6 faces (`LoginFace`, `RegisterFace`, `ResetPasswordFace`, `LanguageFace`, `LogoutFace`, `InfoFace`) + hooks ported and wired in `app/index.tsx`. TSC passes with 0 errors |
+| Phase 5 | Home Cube Faces | ❌ Not started — `app/home/` does not exist. ⚠️ Note: login success already does `router.push("/home")`, so tapping "Go home" currently has no destination |
+| Phase 6 | Server API Updates | ✅ Done — `auth.middleware.ts` accepts `Authorization: Bearer` headers, login response returns `token: sessionToken` in body |
+| Phase 7 | Polish & Testing | ❌ Not started — no device/emulator test pass yet, no haptics, no error boundaries, no accessibility audit |
 
-### What Exists in `client_rn`
+### What Exists in `client_rn` (updated 2026-08-28)
 
 ```
 client_rn/
 ├── app/
-│   ├── _layout.tsx                  # Root layout (GestureHandlerRootView, StatusBar, Stack)
-│   └── index.tsx                    # Auth cube screen (placeholder faces only)
+│   ├── _layout.tsx                  # Root layout (GestureHandlerRootView, StatusBar, Stack, providers)
+│   └── index.tsx                    # Auth cube screen — all 6 real faces wired
 ├── src/
-│   ├── components/cube/
-│   │   └── CubeContainer.tsx        # Full 3D cube (matrix math for Android, preserve-3d elsewhere)
+│   ├── components/
+│   │   ├── auth/
+│   │   │   ├── LoginFace.tsx        # ✅ ported
+│   │   │   ├── RegisterFace.tsx     # ✅ ported
+│   │   │   ├── ResetPasswordFace.tsx# ✅ ported
+│   │   │   ├── LanguageFace.tsx     # ✅ ported
+│   │   │   ├── LogoutFace.tsx       # ✅ ported
+│   │   │   └── InfoFace.tsx         # ✅ ported (heading_cube + null-safe date fix)
+│   │   └── cube/
+│   │       └── CubeContainer.tsx    # Full 3D cube (matrix math for Android, preserve-3d elsewhere); face label removed per user request
+│   ├── hooks/
+│   │   ├── useLoginFace.ts          # ✅ ported
+│   │   ├── useRegisterFace.ts       # ✅ ported
+│   │   ├── useResetPasswordFace.ts  # ✅ ported
+│   │   ├── useLanguageFace.ts       # ✅ ported
+│   │   ├── useLogoutFace.ts         # ✅ ported
+│   │   └── useInfoFace.ts           # ✅ ported
 │   ├── lib/
+│   │   ├── api.ts                   # Platform-aware base URL + Bearer token + clearToken()
+│   │   ├── i18n.ts                  # ✅ ported
+│   │   ├── formTypes.ts             # ✅ ported
+│   │   ├── LanguageContext.tsx      # ✅ ported (platform-aware storage)
 │   │   └── useCubeNavigation.ts     # Navigation hook (Reanimated shared values, gestures, drag, triple-tap)
-│   ├── theme/                       # empty
-│   ├── services/                    # empty
-│   └── hooks/                       # empty
+│   ├── services/
+│   │   ├── api.service.ts           # ✅ ported
+│   │   └── auth.service.ts          # ✅ ported
+│   └── theme/
+│       ├── tokens.ts / dark.ts / light.ts / index.ts  # ✅ ported
+│       └── ThemeContext.tsx         # ✅ ported
 ├── app.json                         # Android config, adaptive icons, Expo plugins
-├── package.json                     # All deps installed
+├── package.json                     # All deps installed (incl. expo-haptics, not yet used)
 └── restore-android-config.sh        # Gradle config for low-memory builds
 ```
+
+### Known Deviations From the Plan
+
+1. **No `useAuthCube.ts` hook** — auth cube wiring (face map, login/logout callbacks, toast) is done directly in `app/index.tsx` instead of a dedicated hook. Functionally equivalent.
+2. **No `CubeNavigationContext.tsx`** — the web client has it; the RN port passes navigation values as props. Fine for now.
+3. **No shared UI primitives (`src/components/ui/`)** — faces use inline RN components. Deviation from Phase 2, acceptable short-term.
+4. **`/home` route missing** — `app/index.tsx` pushes `/home` on login success but `app/home/index.tsx` does not exist yet (Phase 5). This is the most critical gap: a successful login currently dead-ends.
 
 ### Corrections to This Plan
 
@@ -681,15 +710,14 @@ The following inaccuracies were found in the document and are noted here for ref
 
 4. **§4.3 / Phase 1 — API base URL** needs attention: the current `client/src/lib/api.ts` relies on `process.env.NEXT_PUBLIC_API_BASE_URL` and `window.location.origin`, neither of which works in React Native. A platform-aware URL resolver is needed (e.g., `expo-constants` or a hardcoded URL for native).
 
-### Verdict: Ready to Start Migration
+### Verdict (updated 2026-08-28)
 
-**The plan is comprehensive and ready to execute.** The logical next step is **Phase 4 (Auth Cube Faces)**, starting with `LoginFace` since it is the simplest face (90 lines in `client/`) and the front face of the auth cube.
+**Phases 1, 3, 4, 6 are complete. Phase 2 was deliberately skipped (inline RN primitives instead of a shared UI library).**
 
-Before beginning face components, these prerequisites from earlier phases should be done first:
+The logical next step is **Phase 5 (Home Cube Faces)** — it is the most critical gap because a successful login in `app/index.tsx` already does `router.push("/home")`, but `app/home/index.tsx` does not exist, so authenticated users currently hit a dead end.
 
-1. **Port theme files** (`tokens.ts`, `dark.ts`, `light.ts`) — copy as-is, they are platform-agnostic
-2. **Port `i18n.ts`** — copy as-is, translations are pure data
-3. **Port hooks** — `useLoginFace.ts` (75 lines) is the starting point
-4. **Port services** — `api.service.ts` + `auth.service.ts` with platform-aware Bearer token support
-5. **Build minimal UI primitives** — `Button`, `Input`, `Alert` (needed by LoginFace)
-6. **Server: add Bearer token auth** (Phase 6) — critical blocker for any authenticated API call on Android
+Recommended order for Phase 5:
+1. Create `app/home/index.tsx` with a minimal shell (reuse the cube + nav infra from the auth screen)
+2. Port `useHomeCube` + `ChatsFace` (front face) first
+3. Then `MessagesFace` (socket.io real-time), `ContactsFace` (largest, 841 lines on web), `SettingsFace`, `InfoFace`, `LogoutFace`
+4. Follow with Phase 7 polish: wire haptics (`expo-haptics` already installed), test on device/emulator and Expo Web
