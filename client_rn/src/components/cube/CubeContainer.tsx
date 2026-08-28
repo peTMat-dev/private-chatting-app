@@ -383,8 +383,6 @@ export function CubeContainer({
           </Animated.View>
         )}
 
-        {/* Active face indicator */}
-        <Text style={styles.faceLabel}>{activeFace}</Text>
       </View>
     </GestureDetector>
   );

@@ -1,21 +1,24 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import { View, Text, StyleSheet, Alert } from "react-native";
+import { useRouter } from "expo-router";
 import { CubeContainer } from "../src/components/cube/CubeContainer";
 import {
   useCubeNavigation,
   type CubeFace,
 } from "../src/lib/useCubeNavigation";
 import LoginFace from "../src/components/auth/LoginFace";
-
-function PlaceholderFace({ label, color }: { label: string; color: string }) {
-  return (
-    <View style={[styles.placeholderFace, { backgroundColor: color }]}>
-      <Text style={styles.placeholderText}>{label}</Text>
-    </View>
-  );
-}
+import RegisterFace from "../src/components/auth/RegisterFace";
+import ResetPasswordFace from "../src/components/auth/ResetPasswordFace";
+import LanguageFace from "../src/components/auth/LanguageFace";
+import AuthLogoutFace from "../src/components/auth/LogoutFace";
+import AuthInfoFace from "../src/components/auth/InfoFace";
+import { logout } from "../src/services/auth.service";
+import { clearToken } from "../src/lib/api";
 
 export default function AuthCubeScreen() {
+  const router = useRouter();
+  const [toast, setToast] = useState<{ title: string; body: string } | null>(null);
+
   const {
     activeFace,
     rotationX,
@@ -30,48 +33,75 @@ export default function AuthCubeScreen() {
     setFace,
   } = useCubeNavigation("front");
 
-  const handleLoginSuccess = () => {
+  const handleLoginSuccess = useCallback(() => {
     Alert.alert("Login Successful", "Redirecting to home...");
-  };
+    setTimeout(() => {
+      router.push("/home");
+    }, 1500);
+  }, [router]);
+
+  const handleLoggedOut = useCallback(async () => {
+    await clearToken();
+    try { await logout(); } catch {}
+  }, []);
+
+  const showToast = useCallback((message: { title: string; body: string }) => {
+    setToast(message);
+    setTimeout(() => setToast(null), 4500);
+  }, []);
 
   const faces: Record<CubeFace, React.ReactNode> = {
     front: <LoginFace onLoginSuccess={handleLoginSuccess} onNavigate={setFace} />,
-    right: <PlaceholderFace label="Register" color="#1a1a2a" />,
-    left: <PlaceholderFace label="Reset Password" color="#2a2a1a" />,
-    back: <PlaceholderFace label="Language" color="#2a1a1a" />,
-    top: <PlaceholderFace label="Logout" color="#1a2a2a" />,
-    bottom: <PlaceholderFace label="Info" color="#2a1a2a" />,
+    right: <RegisterFace onNavigate={setFace} />,
+    left: <ResetPasswordFace resetToken="" showToast={showToast} onNavigate={setFace} />,
+    back: <LanguageFace onNavigate={setFace} />,
+    top: <AuthLogoutFace onLogoutNavigate={goUp} onLoggedOut={handleLoggedOut} onNavigate={setFace} />,
+    bottom: <AuthInfoFace activeFace={activeFace} onNavigate={setFace} />,
   };
 
   return (
-    <CubeContainer
-      faces={faces}
-      rotationX={rotationX}
-      rotationY={rotationY}
-      goLeft={goLeft}
-      goRight={goRight}
-      goUp={goUp}
-      goDown={goDown}
-      beginDrag={beginDrag}
-      updateDrag={updateDrag}
-      endDrag={endDrag}
-      activeFace={activeFace}
-    />
+    <View style={styles.screen}>
+      <CubeContainer
+        faces={faces}
+        rotationX={rotationX}
+        rotationY={rotationY}
+        goLeft={goLeft}
+        goRight={goRight}
+        goUp={goUp}
+        goDown={goDown}
+        beginDrag={beginDrag}
+        updateDrag={updateDrag}
+        endDrag={endDrag}
+        activeFace={activeFace}
+      />
+      {toast && (
+        <View style={styles.toastContainer}>
+          <View style={styles.toastBox}>
+            <Text style={styles.toastTitle}>{toast.title}</Text>
+            <Text style={styles.toastBody}>{toast.body}</Text>
+          </View>
+        </View>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  placeholderFace: {
-    flex: 1,
-    width: "100%",
+  screen: { flex: 1 },
+  toastContainer: {
+    position: "absolute",
+    bottom: 40,
+    left: 16,
+    right: 16,
     alignItems: "center",
-    justifyContent: "center",
   },
-  placeholderText: {
-    color: "#67c6a0",
-    fontSize: 24,
-    fontWeight: "bold",
-    textTransform: "uppercase",
-    letterSpacing: 3,
+  toastBox: {
+    backgroundColor: "rgba(6, 236, 144, 0.95)",
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    maxWidth: 360,
   },
+  toastTitle: { color: "#020202", fontWeight: "700", fontSize: 13 },
+  toastBody: { color: "#020202", fontSize: 12, marginTop: 2 },
 });
