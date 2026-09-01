@@ -21,7 +21,7 @@ export default function HomeCubeScreen() {
     router.replace('/');
   }, [router]);
 
-  const home = useHomeCube(handleLogout);
+  const home = useHomeCube();
   const {
     cubeNav, username, authChecked, chats, contacts, messages,
     settings, info, logout, alertDialog, setAlertDialog,

@@ -78,11 +78,11 @@ export default function MessagesFace({
           <>
             <View style={[styles.chatHeader, { borderBottomColor: theme.colors.green15 }]}>
               <Text style={[styles.chatName, { color: theme.colors.text }]} numberOfLines={1}>{activeChatName}</Text>
-              {activeChatIsGroup && <Text style={[styles.groupLabel, { color: theme.colors.green55 }]}>{tr.groupChat}</Text>}
+              {activeChatIsGroup && <Text style={[styles.groupLabel, { color: theme.colors.green55 }]}>{tr.createGroup}</Text>}
             </View>
 
             {chatLoading ? (
-              <View style={styles.empty}><Text style={{ color: theme.colors.textMuted }}>{tr.loadingMessages}</Text></View>
+              <View style={styles.empty}><Text style={{ color: theme.colors.textMuted }}>{tr.loadingInfo}</Text></View>
             ) : chatError ? (
               <View style={styles.empty}><Text style={{ color: theme.colors.error }}>{chatError}</Text></View>
             ) : (
