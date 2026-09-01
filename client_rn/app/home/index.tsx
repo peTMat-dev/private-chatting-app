@@ -11,10 +11,12 @@ import HomeInfoFace from '../../src/components/home/InfoFace';
 import HomeLogoutFace from '../../src/components/home/LogoutFace';
 import { t } from '../../src/lib/i18n';
 import { useLanguage } from '../../src/lib/LanguageContext';
+import { useTheme } from '../../src/theme';
 
 export default function HomeCubeScreen() {
   const router = useRouter();
   const { lang } = useLanguage();
+  const { theme } = useTheme();
   const [toast, setToast] = useState<{ title: string; body: string } | null>(null);
 
   const handleLogout = useCallback(() => {
@@ -159,11 +161,11 @@ export default function HomeCubeScreen() {
       {/* Alert Dialog */}
       {alertDialog?.show && (
         <TouchableOpacity style={styles.alertOverlay} onPress={() => setAlertDialog(null)} activeOpacity={1}>
-          <View style={[styles.alertCard, { backgroundColor: '#0a1a14' }]}>
-            {alertDialog.title && <Text style={styles.alertTitle}>{alertDialog.title}</Text>}
-            <Text style={styles.alertMessage}>{alertDialog.message}</Text>
-            <TouchableOpacity style={styles.alertBtn} onPress={() => setAlertDialog(null)} activeOpacity={0.7}>
-              <Text style={styles.alertBtnText}>{tr.cancel}</Text>
+          <View style={[styles.alertCard, { backgroundColor: theme.colors.panel, borderColor: theme.colors.border, borderWidth: 1 }]}>
+            {alertDialog.title && <Text style={[styles.alertTitle, { color: theme.colors.green }]}>{alertDialog.title}</Text>}
+            <Text style={[styles.alertMessage, { color: theme.colors.green }]}>{alertDialog.message}</Text>
+            <TouchableOpacity style={[styles.alertBtn, { backgroundColor: theme.colors.green }]} onPress={() => setAlertDialog(null)} activeOpacity={0.7}>
+              <Text style={[styles.alertBtnText, { color: theme.colors.greenLabel }]}>{tr.cancel}</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -172,9 +174,9 @@ export default function HomeCubeScreen() {
       {/* Toast */}
       {toast && (
         <View style={styles.toastContainer}>
-          <View style={styles.toastBox}>
-            <Text style={styles.toastTitle}>{toast.title}</Text>
-            <Text style={styles.toastBody}>{toast.body}</Text>
+          <View style={[styles.toastBox, { backgroundColor: theme.colors.successBg }]}>
+            <Text style={[styles.toastTitle, { color: theme.colors.greenLabel }]}>{toast.title}</Text>
+            <Text style={[styles.toastBody, { color: theme.colors.greenLabel }]}>{toast.body}</Text>
           </View>
         </View>
       )}

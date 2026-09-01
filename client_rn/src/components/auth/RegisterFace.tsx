@@ -94,8 +94,8 @@ export default function RegisterFace({ onNavigate }: Props) {
           </View>
           {registrationSuccess && (
             <View style={[styles.alert, { backgroundColor: theme.colors.successBg, marginTop: 12 }]}>
-              <Text style={[styles.successTitle, { color: theme.colors.background }]}>{tr.registrationSuccess}</Text>
-              <Text style={[styles.successText, { color: theme.colors.background }]}>{tr.redirectingLogin}</Text>
+              <Text style={[styles.successTitle, { color: theme.colors.greenLabel }]}>{tr.registrationSuccess}</Text>
+              <Text style={[styles.successText, { color: theme.colors.greenLabel }]}>{tr.redirectingLogin}</Text>
             </View>
           )}
         </View>

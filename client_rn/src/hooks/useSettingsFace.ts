@@ -3,10 +3,10 @@ import { getApi, fetchApiCustom } from '../services/api.service';
 import { type LangCode } from '../lib/i18n';
 import { useLanguage } from '../lib/LanguageContext';
 import type { UserSettings, ApiSettingsResponse, ApiTimezonesResponse } from '../lib/formTypes';
-import { useTheme, type ThemeName } from '../theme';
+import { useTheme, type ThemeName, isValidHexColor, DEFAULT_CUBE_COLOR } from '../theme';
 
 export type ColorTheme = ThemeName;
-export const DEFAULT_CUBE_COLOR = '#06ec90';
+export { DEFAULT_CUBE_COLOR };
 export const PRESET_COLORS = [
   { name: 'Green', hex: '#06ec90' }, { name: 'Cyan', hex: '#00FFFF' },
   { name: 'Blue', hex: '#3B82F6' }, { name: 'Purple', hex: '#8B5CF6' },
@@ -39,7 +39,7 @@ interface UseSettingsFaceReturn {
 }
 
 export function useSettingsFace({ username, activeFace, showAlert }: UseSettingsFaceOptions): UseSettingsFaceReturn {
-  const { setTheme: setThemeCtx, themeName } = useTheme();
+  const { setTheme: setThemeCtx, themeName, setAccentColor } = useTheme();
   const { setLang: setLangCtx } = useLanguage();
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [settingsError, setSettingsError] = useState<string | null>(null);
@@ -64,6 +64,10 @@ export function useSettingsFace({ username, activeFace, showAlert }: UseSettings
           if (data.data.system_color_theme && data.data.system_color_theme !== themeName)
             setThemeCtx(data.data.system_color_theme);
           if (data.data.user_language) setLangState(data.data.user_language as LangCode);
+          // Apply cube accent color from server settings
+          if (data.data.cube_color && isValidHexColor(data.data.cube_color)) {
+            setAccentColor(data.data.cube_color);
+          }
         }
       } catch (err) { if (!aborted) setSettingsError((err as Error).message); }
     })();
@@ -74,7 +78,7 @@ export function useSettingsFace({ username, activeFace, showAlert }: UseSettings
       } catch (err) { console.error('Failed to fetch timezones:', err); }
     })();
     return () => { aborted = true; };
-  }, [activeFace, username]);
+  }, [activeFace, username, setAccentColor]);
 
   const handleSaveSettings = useCallback(async () => {
     if (!settings || !username) return;
@@ -99,9 +103,11 @@ export function useSettingsFace({ username, activeFace, showAlert }: UseSettings
   }, [settings, setThemeCtx]);
 
   const handleCubeColorChange = useCallback((color: string) => {
-    if (!/^#[0-9A-Fa-f]{6}$/.test(color)) return;
+    if (!isValidHexColor(color)) return;
+    // Apply immediately (and persist locally), like the web client's applyCubeColor()
+    setAccentColor(color);
     if (settings) setSettings({ ...settings, cube_color: color });
-  }, [settings]);
+  }, [settings, setAccentColor]);
 
   const handleColorDoubleTap = useCallback((_c: string) => { setShowColorPicker(false); }, []);
 

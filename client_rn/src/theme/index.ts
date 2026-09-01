@@ -25,8 +25,12 @@ export {
   type ThemeAnimation,
   type ThemeName,
   DEFAULT_THEME,
+  DEFAULT_CUBE_COLOR,
   THEME_COOKIE_NAME,
   isValidTheme,
+  isValidHexColor,
+  hexToRgba,
+  withAccentColor,
 } from './tokens';
 
 // Theme objects

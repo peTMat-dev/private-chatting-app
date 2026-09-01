@@ -60,7 +60,7 @@ export default function SettingsFace(props: Props) {
             <View style={styles.form}>
               {settingsSaved && (
                 <View style={[styles.alert, { backgroundColor: theme.colors.successBg }]}>
-                  <Text style={[styles.alertText, { color: theme.colors.green }]}>{tr.settingsSaved} {tr.settingsSavedMsg}</Text>
+                  <Text style={[styles.alertText, { color: theme.colors.greenLabel }]}>{tr.settingsSaved} {tr.settingsSavedMsg}</Text>
                 </View>
               )}
               {settingsError && (

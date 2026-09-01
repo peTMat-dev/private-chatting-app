@@ -42,8 +42,8 @@ export default function ResetPasswordFace({ resetToken, showToast, onNavigate }:
               <Text style={[styles.subheading, { color: theme.colors.textMuted }]}>{tr.enterNewPassword}</Text>
               {resetSuccess && (
                 <View style={[styles.alert, { backgroundColor: theme.colors.successBg }]}>
-                  <Text style={[styles.alertTitle, { color: theme.colors.background }]}>{tr.passwordUpdated}</Text>
-                  <Text style={[styles.alertText, { color: theme.colors.background }]}>{tr.signInNewPassword}</Text>
+                  <Text style={[styles.alertTitle, { color: theme.colors.greenLabel }]}>{tr.passwordUpdated}</Text>
+                  <Text style={[styles.alertText, { color: theme.colors.greenLabel }]}>{tr.signInNewPassword}</Text>
                 </View>
               )}
               {resetError && !resetSuccess && (

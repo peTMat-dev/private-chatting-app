@@ -152,3 +152,105 @@ export const THEME_COOKIE_NAME = 'cubcha_theme';
 export function isValidTheme(value: string): value is ThemeName {
   return value === 'dark' || value === 'light';
 }
+
+/**
+ * Default cube accent color (#06ec90 green)
+ */
+export const DEFAULT_CUBE_COLOR = '#06ec90';
+
+const HEX_COLOR_REGEX = /^#[0-9A-Fa-f]{6}$/;
+
+/**
+ * Validate a hex color string in #RRGGBB format
+ * (same rule enforced by the server for the cube_color setting)
+ */
+export function isValidHexColor(value: string): boolean {
+  return HEX_COLOR_REGEX.test(value);
+}
+
+/**
+ * Convert a #RRGGBB hex color to an rgba() string with the given alpha
+ */
+export function hexToRgba(hex: string, alpha: number): string {
+  if (!isValidHexColor(hex)) return hex;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/**
+ * Relative luminance (0..1) of a #RRGGBB color (WCAG formula).
+ * Used to pick a readable text color for placement on top of the accent.
+ */
+function relativeLuminance(hex: string): number {
+  const lin = (c: number) => {
+    const v = c / 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  };
+  return (
+    0.2126 * lin(parseInt(hex.slice(1, 3), 16)) +
+    0.7152 * lin(parseInt(hex.slice(3, 5), 16)) +
+    0.0722 * lin(parseInt(hex.slice(5, 7), 16))
+  );
+}
+
+/** Extract the alpha value from an rgba() string, or the fallback if not rgba */
+function extractAlpha(color: string, fallback: number): number {
+  const match = /rgba\([^)]+,\s*([\d.]+)\)/.exec(color);
+  return match ? parseFloat(match[1]) : fallback;
+}
+
+/**
+ * Return a copy of the theme with every accent-derived token recalculated
+ * from the given cube accent color (the `cube_color` user setting).
+ *
+ * Follows the accent: the main accent + all of its opacity variants, ALL text
+ * (headings, field labels, body, muted text), standard borders/input borders
+ * and the success status color. Text placed ON accent backgrounds (greenLabel)
+ * is computed as an automatic contrast color (dark text on bright accents,
+ * white text on dark accents). Cube-specific tokens (cubeBorder/cubeGlow/
+ * cubeShadow) are intentionally left untouched - they belong to the separate
+ * cube_color2 setting.
+ */
+export function withAccentColor(theme: Theme, accent: string): Theme {
+  if (!isValidHexColor(accent)) return theme;
+  // Keep each base theme's alphas when re-tinting rgba tokens (dark/light differ)
+  const retint = (color: string, fallback: number) =>
+    hexToRgba(accent, extractAlpha(color, fallback));
+  return {
+    ...theme,
+    colors: {
+      ...theme.colors,
+      green: accent,
+      greenStrong: accent,
+      greenSoft: accent,
+      green02: hexToRgba(accent, 0.02),
+      green05: hexToRgba(accent, 0.05),
+      green08: hexToRgba(accent, 0.08),
+      green10: hexToRgba(accent, 0.1),
+      green15: hexToRgba(accent, 0.15),
+      green20: hexToRgba(accent, 0.2),
+      green25: hexToRgba(accent, 0.25),
+      green30: hexToRgba(accent, 0.3),
+      green35: hexToRgba(accent, 0.35),
+      green40: hexToRgba(accent, 0.4),
+      green50: hexToRgba(accent, 0.5),
+      green55: hexToRgba(accent, 0.55),
+      green70: hexToRgba(accent, 0.7),
+      green85: hexToRgba(accent, 0.85),
+      // All text follows the chosen accent color
+      text: accent,
+      textMuted: retint(theme.colors.textMuted, 0.7),
+      // Text placed on accent backgrounds: automatic contrast (was static #67c6a0)
+      greenLabel: relativeLuminance(accent) > 0.5 ? '#020202' : '#ffffff',
+      // Standard borders + input borders tinted with accent (cube* excluded)
+      border: retint(theme.colors.border, 0.4),
+      borderStrong: retint(theme.colors.borderStrong, 0.7),
+      inputBorder: retint(theme.colors.inputBorder, 0.4),
+      // Success status follows accent
+      success: accent,
+      successBg: hexToRgba(accent, 0.95),
+    },
+  };
+}

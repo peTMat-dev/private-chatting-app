@@ -94,8 +94,8 @@ export default function LoginFace({ onLoginSuccess, onNavigate }: Props) {
           </View>
           {loginSuccess && (
             <View style={[styles.alert, { backgroundColor: theme.colors.successBg }]}>
-              <Text style={[styles.alertTitle, { color: theme.colors.background }]}>{tr.loginSuccess}</Text>
-              <Text style={[styles.alertText, { color: theme.colors.background }]}>{tr.redirectingHome}</Text>
+              <Text style={[styles.alertTitle, { color: theme.colors.greenLabel }]}>{tr.loginSuccess}</Text>
+              <Text style={[styles.alertText, { color: theme.colors.greenLabel }]}>{tr.redirectingHome}</Text>
             </View>
           )}
           {loginError && (

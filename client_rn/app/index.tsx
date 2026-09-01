@@ -14,9 +14,11 @@ import AuthLogoutFace from "../src/components/auth/LogoutFace";
 import AuthInfoFace from "../src/components/auth/InfoFace";
 import { logout } from "../src/services/auth.service";
 import { clearToken } from "../src/lib/api";
+import { useTheme } from "../src/theme";
 
 export default function AuthCubeScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
   const [toast, setToast] = useState<{ title: string; body: string } | null>(null);
 
   const {
@@ -76,9 +78,9 @@ export default function AuthCubeScreen() {
       />
       {toast && (
         <View style={styles.toastContainer}>
-          <View style={styles.toastBox}>
-            <Text style={styles.toastTitle}>{toast.title}</Text>
-            <Text style={styles.toastBody}>{toast.body}</Text>
+          <View style={[styles.toastBox, { backgroundColor: theme.colors.successBg }]}>
+            <Text style={[styles.toastTitle, { color: theme.colors.greenLabel }]}>{toast.title}</Text>
+            <Text style={[styles.toastBody, { color: theme.colors.greenLabel }]}>{toast.body}</Text>
           </View>
         </View>
       )}
