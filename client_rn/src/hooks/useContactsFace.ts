@@ -196,9 +196,12 @@ export function useContactsFace({
     if (!username) return;
     setLoadingRequests(true);
     try {
-      const data = await getApi<{ success: boolean; incoming?: ContactRequest[]; outgoing?: ContactRequest[] }>('/contacts/requests');
-      setIncomingRequests(data.incoming || []);
-      setOutgoingRequests(data.outgoing || []);
+      const [incomingData, outgoingData] = await Promise.all([
+        getApi<{ success: boolean; data?: ContactRequest[]; error?: string }>('/contacts/requests/incoming'),
+        getApi<{ success: boolean; data?: ContactRequest[]; error?: string }>('/contacts/requests/outgoing'),
+      ]);
+      if (incomingData.success) setIncomingRequests(incomingData.data || []);
+      if (outgoingData.success) setOutgoingRequests(outgoingData.data || []);
     } catch (err) { showAlert((err as Error).message, 'Error'); }
     finally { setLoadingRequests(false); }
   }, [username, showAlert]);
