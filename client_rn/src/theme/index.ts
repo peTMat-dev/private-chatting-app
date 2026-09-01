@@ -36,6 +36,7 @@ export {
 // Theme objects
 export { darkTheme } from './dark';
 export { lightTheme } from './light';
+export { beigeTheme } from './beige';
 
 // Context and hooks
 export { ThemeProvider, useTheme } from './ThemeContext';

@@ -118,6 +118,7 @@ export type Translations = {
   colorTheme: string;
   darkTheme: string;
   lightTheme: string;
+  beigeTheme: string;
   cubeColor: string;
   customColor: string;
   enterHexColor: string;
@@ -267,6 +268,7 @@ const translations: Record<LangCode, Translations> = {
     colorTheme: "Color Theme",
     darkTheme: "Dark",
     lightTheme: "Light",
+    beigeTheme: "Beige",
     cubeColor: "Accent Color",
     customColor: "Custom",
     enterHexColor: "Enter hex color (e.g. #FF5733)",
@@ -406,6 +408,7 @@ const translations: Record<LangCode, Translations> = {
     colorTheme: "Tema de color",
     darkTheme: "Oscuro",
     lightTheme: "Claro",
+    beigeTheme: "Beige",
     cubeColor: "Color de acento",
     customColor: "Personalizado",
     enterHexColor: "Ingrese color hex (ej. #FF5733)",
@@ -543,6 +546,7 @@ const translations: Record<LangCode, Translations> = {
     colorTheme: "Thème de couleur",
     darkTheme: "Sombre",
     lightTheme: "Clair",
+    beigeTheme: "Beige",
     cubeColor: "Couleur d'accent",
     customColor: "Personnalisé",
     enterHexColor: "Entrez la couleur hex (ex. #FF5733)",
@@ -682,6 +686,7 @@ const translations: Record<LangCode, Translations> = {
     colorTheme: "Farbthema",
     darkTheme: "Dunkel",
     lightTheme: "Hell",
+    beigeTheme: "Beige",
     cubeColor: "Akzentfarbe",
     customColor: "Benutzerdefiniert",
     enterHexColor: "Hex-Farbe eingeben (z.B. #FF5733)",
@@ -821,6 +826,7 @@ const translations: Record<LangCode, Translations> = {
     colorTheme: "Farebná téma",
     darkTheme: "Tmavá",
     lightTheme: "Svetlá",
+    beigeTheme: "Béžová",
     cubeColor: "Farba akcentu",
     customColor: "Vlastná",
     enterHexColor: "Zadajte hex farbu (napr. #FF5733)",
@@ -960,6 +966,7 @@ const translations: Record<LangCode, Translations> = {
     colorTheme: "Barevné schéma",
     darkTheme: "Tmavé",
     lightTheme: "Světlé",
+    beigeTheme: "Béžová",
     cubeColor: "Barva akcentu",
     customColor: "Vlastní",
     enterHexColor: "Zadejte hex barvu (např. #FF5733)",

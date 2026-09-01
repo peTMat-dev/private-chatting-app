@@ -13,11 +13,14 @@ import {
 } from './tokens';
 import { darkTheme } from './dark';
 import { lightTheme } from './light';
+import { beigeTheme } from './beige';
 
 function getThemeByName(name: ThemeName): Theme {
   switch (name) {
     case 'light':
       return lightTheme;
+    case 'beige':
+      return beigeTheme;
     case 'dark':
     default:
       return darkTheme;

@@ -129,15 +129,15 @@ export default function SettingsFace(props: Props) {
                 onPress={() => setShowThemeSelect(!showThemeSelect)} activeOpacity={0.7}>
                 <Text style={[styles.label, { color: theme.colors.text }]}>{tr.colorTheme}</Text>
                 <Text style={[styles.value, { color: theme.colors.green }]}>
-                  {settings.system_color_theme === 'light' ? tr.lightTheme : tr.darkTheme} {'\u25BC'}
+                  {settings.system_color_theme === 'beige' ? tr.beigeTheme : settings.system_color_theme === 'light' ? tr.lightTheme : tr.darkTheme} {'\u25BC'}
                 </Text>
               </TouchableOpacity>
               {showThemeSelect && (
                 <View style={[styles.dropdown, { backgroundColor: theme.colors.panel, borderColor: theme.colors.border }]}>
-                  {(['dark', 'light'] as const).map((t) => (
+                  {(['dark', 'light', 'beige'] as const).map((t) => (
                     <TouchableOpacity key={t} style={[styles.dropItem, settings.system_color_theme === t && { backgroundColor: theme.colors.green15 }]}
                       onPress={() => handleThemeChange(t)} activeOpacity={0.7}>
-                      <Text style={[styles.dropText, { color: theme.colors.green }]}>{t === 'dark' ? tr.darkTheme : tr.lightTheme}</Text>
+                      <Text style={[styles.dropText, { color: theme.colors.green }]}>{t === 'dark' ? tr.darkTheme : t === 'beige' ? tr.beigeTheme : tr.lightTheme}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>

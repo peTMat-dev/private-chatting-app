@@ -115,7 +115,7 @@ export type UserSettings = {
 	public_st: boolean;
 	user_timezone: string;
 	can_be_added_to_contacts: boolean;
-	system_color_theme: 'light' | 'dark';
+	system_color_theme: 'light' | 'dark' | 'beige';
 	cube_color?: string;
 	display_name?: string;
 };

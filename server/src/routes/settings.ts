@@ -9,7 +9,7 @@ type UserSystemDetails = {
   public_st: boolean;
   user_timezone: string;
   can_be_added_to_contacts: boolean;
-  system_color_theme: 'light' | 'dark';
+  system_color_theme: 'light' | 'dark' | 'beige';
   cube_color: string;
 };
 
@@ -125,7 +125,7 @@ router.put("/", async (req: Request, res: Response) => {
       values.push(user_timezone);
     }
 
-    if (system_color_theme !== undefined && (system_color_theme === 'light' || system_color_theme === 'dark')) {
+    if (system_color_theme !== undefined && (system_color_theme === 'light' || system_color_theme === 'dark' || system_color_theme === 'beige')) {
       updates.push("system_color_theme = ?");
       values.push(system_color_theme);
     }

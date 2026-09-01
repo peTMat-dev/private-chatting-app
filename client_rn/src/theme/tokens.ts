@@ -134,7 +134,7 @@ export interface Theme {
 /**
  * Theme type identifiers
  */
-export type ThemeName = 'dark' | 'light';
+export type ThemeName = 'dark' | 'light' | 'beige';
 
 /**
  * Default theme name
@@ -150,7 +150,7 @@ export const THEME_COOKIE_NAME = 'cubcha_theme';
  * Validate theme name
  */
 export function isValidTheme(value: string): value is ThemeName {
-  return value === 'dark' || value === 'light';
+  return value === 'dark' || value === 'light' || value === 'beige';
 }
 
 /**
