@@ -41,17 +41,18 @@ export const beigeTheme: Theme = {
     cubeGlow: 'rgba(150, 120, 70, 0.25)',
     cubeShadow: 'rgba(0, 0, 0, 0.1)',
 
-    // Background colors (user-requested beige #fff0db)
+    // Background colors (user-requested beige #fff0db; panels blend into the
+    // background, separation comes from borders - like the dark theme style)
     background: '#fff0db',
-    panel: '#fff8ea',
+    panel: '#fff0db',
     panelMuted: '#f7e7cc',
 
     // Text colors (dark warm brown)
     text: '#4a3b28',
     textMuted: 'rgba(74, 59, 40, 0.7)',
 
-    // Input/Form colors
-    inputBg: '#fffaef',
+    // Input/Form colors (same beige as background; inputBorder separates)
+    inputBg: '#fff0db',
     inputBorder: 'rgba(120, 96, 60, 0.3)',
 
     // Border colors

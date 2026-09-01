@@ -156,7 +156,7 @@ export default function SettingsFace(props: Props) {
                 <View style={[styles.colorGrid, { backgroundColor: theme.colors.panel, borderColor: theme.colors.border }]}>
                   {PRESET_COLORS.map((c) => (
                     <TouchableOpacity key={c.hex}
-                      style={[styles.colorBtn, { backgroundColor: c.hex, borderColor: c.hex === currentColor ? '#fff' : 'transparent' }]}
+                      style={[styles.colorBtn, { backgroundColor: c.hex, borderColor: c.hex === currentColor ? theme.colors.greenLabel : 'transparent' }]}
                       onPress={() => handleCubeColorChange(c.hex)} activeOpacity={0.7} />
                   ))}
                   <View style={styles.customRow}>
