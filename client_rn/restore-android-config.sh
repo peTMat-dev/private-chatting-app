@@ -49,7 +49,8 @@ set_prop() { # set_prop <key> <value>  -> replace existing or append
 set_prop "org.gradle.jvmargs"          "-Xmx1536m -XX:MaxMetaspaceSize=512m"
 set_prop "org.gradle.workers.max"      "$WORKERS"
 set_prop "kotlin.daemon.jvmargs"       "-Xmx1024m"
-set_prop "reactNativeArchitectures"    "arm64-v8a"
+# real phones only (modern 64-bit ARM + legacy 32-bit ARM) - halves APK size vs all 4 ABIs
+set_prop "reactNativeArchitectures"    "arm64-v8a,armeabi-v7a"
 
 # pin the daemon JVM to a real JDK 17+ if we can find one
 if [ -d "$JDK17_HOME" ]; then
