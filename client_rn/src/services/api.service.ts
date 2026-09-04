@@ -18,10 +18,8 @@ export async function getApi<T extends ApiBaseResponse>(
   const url = buildApiUrl(endpoint);
   const headers: Record<string, string> = { Accept: 'application/json' };
 
-  if (Platform.OS !== 'web') {
-    const token = await getToken();
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-  }
+  const token = await getToken();
+  if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const res = await fetch(url, {
     ...(Platform.OS === 'web' ? { credentials: 'include' as const } : {}),
@@ -67,10 +65,8 @@ export async function fetchApiCustom<T extends ApiBaseResponse>(
     ...((options.headers as Record<string, string>) || {}),
   };
 
-  if (Platform.OS !== 'web') {
-    const token = await getToken();
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-  }
+  const token = await getToken();
+  if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const res = await fetch(url, {
     ...options,

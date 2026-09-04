@@ -24,6 +24,22 @@ const toMySqlDateTime = (date: Date): string => {
   return date.toISOString().slice(0, 19).replace("T", " ");
 };
 
+const isSecureRequest = (req: Request): boolean => {
+  return req.secure || req.headers["x-forwarded-proto"] === "https";
+};
+
+// The web clients live on a different site than this API (e.g. http://<ip>:8081
+// or the Next.js app vs api.lenez.dev). SameSite=Strict cookies are never sent
+// on cross-site requests, so use SameSite=None; Secure for HTTPS traffic and
+// fall back to Lax for plain-HTTP local development.
+const sessionCookieOptions = (req: Request, expires?: Date) => ({
+  httpOnly: true,
+  ...(isSecureRequest(req)
+    ? { sameSite: "none" as const, secure: true }
+    : { sameSite: "lax" as const, secure: false }),
+  ...(expires ? { expires } : {}),
+});
+
 router.post("/login", async (req: Request, res: Response) => {
   const { username, password } = req.body as { username?: string; password?: string };
   if (!username || !password) {
@@ -52,12 +68,7 @@ router.post("/login", async (req: Request, res: Response) => {
       [sessionToken, user.userId, toMySqlDateTime(expiresAt)]
     );
 
-    res.cookie("cubcha_session", sessionToken, {
-      httpOnly: true,
-      sameSite: "strict",
-      expires: expiresAt,
-      secure: process.env.NODE_ENV === "production",
-    });
+    res.cookie("cubcha_session", sessionToken, sessionCookieOptions(req, expiresAt));
 
     const userLang = await getUserLanguage(user.userId);
     res.json({ success: true, message: "Login successful", user: { username: user.username, user_language: userLang }, token: sessionToken });
@@ -175,7 +186,7 @@ router.post("/logout", authMiddleware, async (req: Request, res: Response) => {
       // Proceed with logout even if DB delete fails
     }
   }
-  res.clearCookie("cubcha_session", { httpOnly: true, sameSite: "strict" });
+  res.clearCookie("cubcha_session", sessionCookieOptions(req));
   res.json({ success: true });
 });
 

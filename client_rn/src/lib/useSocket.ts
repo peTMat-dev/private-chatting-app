@@ -14,7 +14,7 @@ export function useSocket(username: string | null | undefined): { socket: Socket
     let mounted = true;
 
     const connect = async () => {
-      const token = Platform.OS !== 'web' ? await getToken() : null;
+      const token = await getToken();
       if (!mounted) return;
 
       const socket = io(WS_URL, {
