@@ -34,9 +34,12 @@ export default function ResetPasswordScreen() {
     }
   }, [lang, setLang]);
 
-  // If source=app, try to redirect to the app via deep link
+  // If source=app on mobile, try to redirect to the app via deep link
   useEffect(() => {
-    if (source === "app" && token) {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+    if (source === "app" && token && isMobile) {
       setRedirecting(true);
       const deepLink = `cubcha://reset-password?token=${encodeURIComponent(token)}&lang=${encodeURIComponent(lang || "en")}`;
       window.location.href = deepLink;
