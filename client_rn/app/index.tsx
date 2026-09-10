@@ -2,6 +2,7 @@ import React, { useState, useCallback } from "react";
 import { View, Text, StyleSheet, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { CubeContainer } from "../src/components/cube/CubeContainer";
+import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import {
   useCubeNavigation,
   type CubeFace,
@@ -62,29 +63,31 @@ export default function AuthCubeScreen() {
   };
 
   return (
-    <View style={styles.screen}>
-      <CubeContainer
-        faces={faces}
-        rotationX={rotationX}
-        rotationY={rotationY}
-        goLeft={goLeft}
-        goRight={goRight}
-        goUp={goUp}
-        goDown={goDown}
-        beginDrag={beginDrag}
-        updateDrag={updateDrag}
-        endDrag={endDrag}
-        activeFace={activeFace}
-      />
-      {toast && (
-        <View style={styles.toastContainer}>
-          <View style={[styles.toastBox, { backgroundColor: theme.colors.successBg }]}>
-            <Text style={[styles.toastTitle, { color: theme.colors.greenLabel }]}>{toast.title}</Text>
-            <Text style={[styles.toastBody, { color: theme.colors.greenLabel }]}>{toast.body}</Text>
+    <ErrorBoundary fallbackLabel="Authentication screen crashed. Please try again.">
+      <View style={styles.screen}>
+        <CubeContainer
+          faces={faces}
+          rotationX={rotationX}
+          rotationY={rotationY}
+          goLeft={goLeft}
+          goRight={goRight}
+          goUp={goUp}
+          goDown={goDown}
+          beginDrag={beginDrag}
+          updateDrag={updateDrag}
+          endDrag={endDrag}
+          activeFace={activeFace}
+        />
+        {toast && (
+          <View style={styles.toastContainer}>
+            <View style={[styles.toastBox, { backgroundColor: theme.colors.successBg }]}>
+              <Text style={[styles.toastTitle, { color: theme.colors.greenLabel }]}>{toast.title}</Text>
+              <Text style={[styles.toastBody, { color: theme.colors.greenLabel }]}>{toast.body}</Text>
+            </View>
           </View>
-        </View>
-      )}
-    </View>
+        )}
+      </View>
+    </ErrorBoundary>
   );
 }
 

@@ -2,6 +2,7 @@ import React, { useMemo, useCallback, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { CubeContainer } from '../../src/components/cube/CubeContainer';
+import { ErrorBoundary } from '../../src/components/ErrorBoundary';
 import { useHomeCube } from '../../src/hooks/useHomeCube';
 import ChatsFace from '../../src/components/home/ChatsFace';
 import ContactsFace from '../../src/components/home/ContactsFace';
@@ -148,17 +149,18 @@ export default function HomeCubeScreen() {
   };
 
   return (
-    <View style={styles.screen}>
-      <CubeContainer
-        faces={faces}
-        rotationX={cubeNav.rotationX} rotationY={cubeNav.rotationY}
-        goLeft={cubeNav.goLeft} goRight={cubeNav.goRight}
-        goUp={cubeNav.goUp} goDown={cubeNav.goDown}
-        beginDrag={cubeNav.beginDrag} updateDrag={cubeNav.updateDrag} endDrag={cubeNav.endDrag}
-        activeFace={cubeNav.activeFace}
-      />
+    <ErrorBoundary fallbackLabel="Home screen crashed. Please try again.">
+      <View style={styles.screen}>
+        <CubeContainer
+          faces={faces}
+          rotationX={cubeNav.rotationX} rotationY={cubeNav.rotationY}
+          goLeft={cubeNav.goLeft} goRight={cubeNav.goRight}
+          goUp={cubeNav.goUp} goDown={cubeNav.goDown}
+          beginDrag={cubeNav.beginDrag} updateDrag={cubeNav.updateDrag} endDrag={cubeNav.endDrag}
+          activeFace={cubeNav.activeFace}
+        />
 
-      {/* Alert Dialog */}
+        {/* Alert Dialog */}
       {alertDialog?.show && (
         <TouchableOpacity style={styles.alertOverlay} onPress={() => setAlertDialog(null)} activeOpacity={1}>
           <View style={[styles.alertCard, { backgroundColor: theme.colors.panel, borderColor: theme.colors.border, borderWidth: 1 }]}>
@@ -181,6 +183,7 @@ export default function HomeCubeScreen() {
         </View>
       )}
     </View>
+    </ErrorBoundary>
   );
 }
 
