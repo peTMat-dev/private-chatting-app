@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { View, Text, StyleSheet, Alert, Platform } from "react-native";
+import { View, Text, StyleSheet, Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { CubeContainer } from "../src/components/cube/CubeContainer";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
@@ -36,7 +36,7 @@ export default function ResetPasswordScreen() {
 
   // If source=app, try to redirect to the app via deep link
   useEffect(() => {
-    if (source === "app" && token && Platform.OS !== "web") {
+    if (source === "app" && token) {
       setRedirecting(true);
       const deepLink = `cubcha://reset-password?token=${encodeURIComponent(token)}&lang=${encodeURIComponent(lang || "en")}`;
       window.location.href = deepLink;
