@@ -127,11 +127,13 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
         if (dbRecord) userLang = await getUserLanguage(dbRecord.userId);
       }
       const resetUrl = buildResetUrl(token, userLang);
-      await sendPasswordResetEmail(upperEmail, resetUrl);
+      const appResetUrl = env.app.appDeepLinkScheme ? buildAppResetUrl(token, userLang) : null;
+      await sendPasswordResetEmail(upperEmail, resetUrl, appResetUrl);
       if (env.app.exposeResetUrl) {
         res.json({
           success: true,
           resetUrl,
+          ...(appResetUrl ? { appResetUrl } : {}),
         });
         return;
       }
@@ -227,6 +229,12 @@ const buildResetUrl = (token: string, lang = "en"): string => {
   const path = "/";
   const query = `token=${encodeURIComponent(token)}&lang=${encodeURIComponent(lang)}`;
   return base ? `${base}${path}?${query}` : `${path}?${query}`;
+};
+
+const buildAppResetUrl = (token: string, lang = "en"): string => {
+  const scheme = env.app.appDeepLinkScheme;
+  const query = `token=${encodeURIComponent(token)}&lang=${encodeURIComponent(lang)}`;
+  return `${scheme}://reset-password?${query}`;
 };
 
 export default router;

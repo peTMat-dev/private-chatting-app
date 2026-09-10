@@ -13,6 +13,7 @@ export default function RootLayout() {
           <StatusBar style="auto" />
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
+            <Stack.Screen name="reset-password" />
             <Stack.Screen name="home" />
           </Stack>
         </LanguageProvider>

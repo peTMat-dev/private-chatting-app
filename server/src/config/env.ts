@@ -62,6 +62,7 @@ export const env = {
     allowGroupCreation: boolFromEnv(process.env.ALLOW_GROUP_CREATION, false),
     resetPasswordBaseUrl: process.env.RESET_PASSWORD_BASE_URL ?? "",
     exposeResetUrl: boolFromEnv(process.env.EXPOSE_RESET_URL, false),
+    appDeepLinkScheme: process.env.APP_DEEP_LINK_SCHEME ?? "cubcha",
   },
   mail: {
     enabled: boolFromEnv(process.env.MAIL_ENABLED, false),

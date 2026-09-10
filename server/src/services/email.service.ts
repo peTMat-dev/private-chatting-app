@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import { env } from "../config/env";
 
-export const sendPasswordResetEmail = async (to: string, resetUrl: string): Promise<void> => {
+export const sendPasswordResetEmail = async (to: string, webResetUrl: string, appResetUrl: string | null = null): Promise<void> => {
   if (!env.mail.enabled) {
     return;
   }
@@ -23,10 +23,19 @@ export const sendPasswordResetEmail = async (to: string, resetUrl: string): Prom
   });
 
   const subject = "Reset your Cubcha password";
-  const text = `We received a request to reset your password.\n\nReset link: ${resetUrl}\n\nIf you did not request this, you can ignore this email.`;
-  const html = `
+  const text = appResetUrl
+    ? `We received a request to reset your password.\n\nReset in the app: ${appResetUrl}\n\nOr reset on the web: ${webResetUrl}\n\nIf you did not request this, you can ignore this email.`
+    : `We received a request to reset your password.\n\nReset link: ${webResetUrl}\n\nIf you did not request this, you can ignore this email.`;
+  const html = appResetUrl
+    ? `
     <p>We received a request to reset your password.</p>
-    <p><a href="${resetUrl}">Reset your password</a></p>
+    <p><a href="${appResetUrl}">Reset your password in the app</a></p>
+    <p>Or <a href="${webResetUrl}">reset your password on the web</a>.</p>
+    <p>If you did not request this, you can ignore this email.</p>
+  `
+    : `
+    <p>We received a request to reset your password.</p>
+    <p><a href="${webResetUrl}">Reset your password</a></p>
     <p>If you did not request this, you can ignore this email.</p>
   `;
 
