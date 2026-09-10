@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import { env } from "../config/env";
 
-export const sendPasswordResetEmail = async (to: string, webResetUrl: string, appResetUrl: string | null = null): Promise<void> => {
+export const sendPasswordResetEmail = async (to: string, resetUrl: string, source: "app" | "web" = "web"): Promise<void> => {
   if (!env.mail.enabled) {
     return;
   }
@@ -24,20 +24,11 @@ export const sendPasswordResetEmail = async (to: string, webResetUrl: string, ap
 
   const subject = "Reset your Cubcha password";
 
-  const text = appResetUrl
-    ? `We received a request to reset your password.\n\nTap the link below to reset it. It will open the Cubcha app on your device:\n\n${appResetUrl}\n\nIf the link above doesn't work, paste this URL into your browser:\n${webResetUrl}\n\nIf you did not request this, you can ignore this email. Your password will not be changed.`
-    : `We received a request to reset your password.\n\nReset link: ${webResetUrl}\n\nIf you did not request this, you can ignore this email. Your password will not be changed.`;
+  const text = `We received a request to reset your password.\n\nReset link:\n${resetUrl}\n\nIf you did not request this, you can ignore this email. Your password will not be changed.`;
 
-  const html = appResetUrl
-    ? `
+  const html = `
     <p>We received a request to reset your password.</p>
-    <p><a href="${appResetUrl}">Reset your password</a></p>
-    <p style="font-size: 13px; color: #888;">If the button doesn't work, copy and paste this link into your browser:<br><a href="${webResetUrl}">${webResetUrl}</a></p>
-    <p style="font-size: 12px; color: #999;">If you did not request this, you can ignore this email. Your password will not be changed.</p>
-  `
-    : `
-    <p>We received a request to reset your password.</p>
-    <p><a href="${webResetUrl}">Reset your password</a></p>
+    <p>Reset link:<br><a href="${resetUrl}">${resetUrl}</a></p>
     <p style="font-size: 12px; color: #999;">If you did not request this, you can ignore this email. Your password will not be changed.</p>
   `;
 

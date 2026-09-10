@@ -107,12 +107,13 @@ router.post("/register", async (req: Request, res: Response) => {
 });
 
 router.post("/forgot-password", async (req: Request, res: Response) => {
-  const { email } = req.body as { email?: string };
+  const { email, source } = req.body as { email?: string; source?: "app" | "web" };
   if (!email) {
     return res.status(400).json({ success: false, error: "Email is required" });
   }
 
   const upperEmail = email.trim();
+  const resetSource = source === "app" ? "app" : "web";
   try {
     const user = await findUserByEmail(upperEmail);
     if (user) {
@@ -126,14 +127,12 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
         const dbRecord = await findUserByIdentifier(ldapUid);
         if (dbRecord) userLang = await getUserLanguage(dbRecord.userId);
       }
-      const resetUrl = buildResetUrl(token, userLang);
-      const appResetUrl = env.app.appDeepLinkScheme ? buildAppResetUrl(token, userLang) : null;
-      await sendPasswordResetEmail(upperEmail, resetUrl, appResetUrl);
+      const resetUrl = buildResetUrl(token, userLang, resetSource);
+      await sendPasswordResetEmail(upperEmail, resetUrl, resetSource);
       if (env.app.exposeResetUrl) {
         res.json({
           success: true,
           resetUrl,
-          ...(appResetUrl ? { appResetUrl } : {}),
         });
         return;
       }
@@ -222,19 +221,13 @@ const validateRegistrationPayload = (payload: RegistrationInput): string[] => {
 
 const normalizeBaseUrl = (value: string): string => value.replace(/\/+$/, "");
 
-const buildResetUrl = (token: string, lang = "en"): string => {
+const buildResetUrl = (token: string, lang = "en", source = "web"): string => {
   const baseFromEnv = env.app.resetPasswordBaseUrl;
   const fallback = env.app.clientOrigins[0] ?? "";
   const base = normalizeBaseUrl(baseFromEnv || fallback);
-  const path = "/";
-  const query = `token=${encodeURIComponent(token)}&lang=${encodeURIComponent(lang)}`;
+  const path = "/reset-password";
+  const query = `token=${encodeURIComponent(token)}&lang=${encodeURIComponent(lang)}&source=${encodeURIComponent(source)}`;
   return base ? `${base}${path}?${query}` : `${path}?${query}`;
-};
-
-const buildAppResetUrl = (token: string, lang = "en"): string => {
-  const scheme = env.app.appDeepLinkScheme;
-  const query = `token=${encodeURIComponent(token)}&lang=${encodeURIComponent(lang)}`;
-  return `${scheme}://reset-password?${query}`;
 };
 
 export default router;

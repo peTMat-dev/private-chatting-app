@@ -42,8 +42,8 @@ export async function register(form: RegisterFormData): Promise<LoginResult> {
   return postJson('/auth/register', payload);
 }
 
-export async function forgotPassword(email: string): Promise<LoginResult> {
-  return postJson('/auth/forgot-password', { email });
+export async function forgotPassword(email: string, source: "app" | "web" = "app"): Promise<LoginResult> {
+  return postJson('/auth/forgot-password', { email, source });
 }
 
 export async function resetPassword(token: string, password: string): Promise<LoginResult> {
