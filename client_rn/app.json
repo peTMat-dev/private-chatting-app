@@ -8,7 +8,8 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.cubcha"
     },
     "android": {
       "adaptiveIcon": {
@@ -29,7 +30,9 @@
       "expo-splash-screen"
     ],
     "linking": {
-      "prefixes": ["cubcha://"]
+      "prefixes": [
+        "cubcha://"
+      ]
     }
   }
 }
