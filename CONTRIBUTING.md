@@ -8,7 +8,7 @@ Welcome! We're excited you're interested in contributing to **CUBCHA** — a pri
 
 **CUBCHA (Cubical Chat)** is a privacy-first, self-hosted chat platform designed for independent hosting on VPS, home servers, or other infrastructure. What makes it special is the **cube-based navigation UI**: users move left, right, up, or down to navigate between "screens" — like rotating and exploring faces of a cube. **No traditional menus or dropdowns**, just an immersive, spatial navigation experience.
 
-This is a **non-commercial** project focused on community benefit, personal use, and long-term possibilities including Android support.
+This is a **non-commercial** project focused on community benefit, personal use, and cross-platform availability (Android + Web).
 
 ---
 
@@ -17,24 +17,32 @@ This is a **non-commercial** project focused on community benefit, personal use,
 ### Technology Stack
 
 **Frontend:**
-- **Next.js** with **TypeScript**
-- **Bootstrap** for styling
-- Currently static messaging UI (more features to be built)
+- **React Native (Expo)** with **TypeScript**
+- **React Native StyleSheet** + token-based theming (dark/light/beige)
+- **react-native-reanimated** for 3D cube animations
+- **Socket.io** for real-time messaging
+- **expo-secure-store** for secure token storage
+- i18n support with 6 languages (EN, ES, FR, DE, SK, CS)
 
 **Backend:**
 - **Express.js** with **TypeScript**
-- RESTful API endpoints
+- RESTful API endpoints + Socket.io for real-time messaging
 
 **Services & Infrastructure:**
 - **MariaDB/MySQL** database (fully operational on VPS)
 - **OpenLDAP v3** for user account management (fully operational on VPS)
-- **PBKDF2** password encryption (planned, not yet implemented)
+- **Argon2** password encryption (implemented)
 
 ### Project Status
 - Backend and database services are running on VPS
-- Frontend is in early stages with static messaging components
+- Frontend is a fully functional React Native (Expo) app with interactive 3D cube navigation
+- Real-time messaging, contacts management, and user settings are operational
+- Cross-platform support (Android + Web) via Expo
 - OpenLDAP and MariaDB configurations are managed by the project owner
-- Long-term vision includes Android app development
+
+### Repository Structure
+- `client_rn/` — React Native (Expo) frontend
+- `server/` — Express.js backend
 
 ---
 
@@ -56,7 +64,7 @@ This approach streamlines onboarding and ensures everyone works with the same, f
 We welcome contributions in many forms:
 
 ### Code Contributions
-- **Frontend Development**: Build UI components in Next.js + TypeScript + Bootstrap, implement cube navigation
+- **Frontend Development**: Build UI components in React Native (Expo) + TypeScript, improve cube navigation
 - **Backend Development**: Create API endpoints, business logic in Express.js + TypeScript
 - **Testing**: Write and improve test coverage
 - **Bug Fixes**: Identify and fix issues
@@ -136,8 +144,9 @@ Your typical workflow will be:
    - Add comments where necessary
 
 5. **Test Your Changes**
-   - Run `pnpm install` in both `client/` and `server/` directories
-   - Test locally if possible: `pnpm run dev`
+   - Run `npm install` in `client_rn/` and `pnpm install` in `server/`
+   - Test locally: `npx expo start` (client_rn/) and `pnpm run dev` (server/)
+   - For web testing: `npx expo start --web`
    - Verify on VPS before submitting
 
 6. **Commit Your Work**
@@ -181,11 +190,12 @@ Your typical workflow will be:
 - **Comments**: Explain complex logic, not obvious code
 - **DRY principle**: Don't Repeat Yourself
 
-### Frontend (Next.js + Bootstrap)
-- **Component-based**: Build reusable components
-- **Responsive design**: Ensure mobile compatibility
-- **Accessibility**: Follow WCAG guidelines where possible
-- **Bootstrap utilities**: Leverage Bootstrap classes appropriately
+### Frontend (React Native + Expo)
+- **Component-based**: Build reusable React Native components
+- **Cross-platform**: Ensure compatibility across Android and Web
+- **Accessibility**: Follow React Native accessibility best practices
+- **StyleSheet + theme tokens**: Use the token-based theming system (dark/light/beige)
+- **Animations**: Use react-native-reanimated for cube transitions and UI animations
 
 ### Backend (Express.js)
 - **RESTful APIs**: Follow REST conventions
@@ -197,6 +207,9 @@ Your typical workflow will be:
 - **Spatial consistency**: Navigation should feel intuitive
 - **No menus/dropdowns**: Honor the unique cube navigation concept
 - **Smooth transitions**: Ensure good UX when "rotating" between screens
+- **Platform awareness**: Android uses 4x4 matrix math; web/iOS uses CSS `preserve-3d`
+- **Gestures**: Swipe with axis locking, triple-tap (header → down, footer → up), keyboard arrows on web
+- **6 faces per cube**: front, left, right, back, top, bottom
 
 ---
 
