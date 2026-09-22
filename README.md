@@ -1,22 +1,22 @@
 # private-chatting-app
 Self-hosted private messaging for VPS — MariaDB backed; OpenLDAP account management with Argon2 encryption, privacy-first. 
 Users will be able to install and run it privately based on the given configuration, thanks to its straightforward design. 
-The long-term vision includes adapting it into a free, open-source app for Android phones.
+Available as a cross-platform app (Android + Web) built with Expo / React Native.
 
 ---
 
-## 🚀 Looking for a Collaborator! [Next.js + TypeScript + Bootstrap + Express.js]
+## 🚀 Looking for a Collaborator! [React Native / Expo + TypeScript + Express.js]
 
 Hi all,
 
 I'm working on an open-source, self-hosted chat application aimed at privacy and independent hosting (VPS, home server, etc).  
-The tech stack is Next.js, TypeScript, and Bootstrap for the frontend, and Express.js with TypeScript for the backend, with MariaDB for data storage plus OpenLDAP for user management.
+The tech stack is React Native (Expo) with TypeScript for the cross-platform client (Android + Web), and Express.js with TypeScript for the backend, with MariaDB for data storage plus OpenLDAP for user management.
 
-It’s a non-commercial project—just something for community benefit and personal use. **I'm looking for one or two collaborators who would take care of building the frontend in Next.js/TypeScript/Bootstrap and also help with the Express.js backend.  
+It’s a non-commercial project—just something for community benefit and personal use. **I'm looking for one or two collaborators who would take care of building the client in React Native/Expo/TypeScript and also help with the Express.js backend.  
 I'll handle the OpenLDAP and MariaDB parts.**
 
 What you would help with:
-- Creating the frontend UI in Next.js/TypeScript/Bootstrap, adding features and improving UX
+- Building the cross-platform client UI in React Native/Expo/TypeScript, adding features and improving UX
 - Handling the backend logic in Express.js/TypeScript
 - Suggesting ideas, troubleshooting, or code reviewing for the app
 - Documentation or testing
@@ -46,7 +46,12 @@ For questions, collaboration, or any other inquiries, feel free to:
 
 ## Stack
 
-- Frontend: Next.js + Bootstrap + TypeScript
+- Frontend (`client_rn`): Expo (React Native) + TypeScript
+  - React Native Reanimated — animations
+  - React Native Gesture Handler — gestures
+  - Expo Router — file-based navigation
+  - expo-secure-store — secure token storage
+  - react-native-web — web support
 - Backend: Express.js + TypeScript
 - Database: MariaDB (MySQL compatible)
 - Authentication: OpenLDAP with Argon2 password hashing
@@ -71,8 +76,16 @@ For questions, collaboration, or any other inquiries, feel free to:
 3. Run `pnpm install` .
 4. Execute `pnpm run dev` for the dev version
 5. Alternatively for the production version run `pnpm build` then  `pnpm start`
-6. Make sure to do this for both the client and server directories.
-7. Visit port `localhost:3000` to see the server in action
+6. Make sure to do this for both the `client` and `server` directories.
+7. Visit port `localhost:3000` to see the web client in action
+
+### Running `client_rn` (Expo / React Native)
+
+1. `cd client_rn`
+2. `npm install`
+3. `npm start` — starts the Expo dev server
+4. `npm run android` — run on Android device/emulator
+5. `npm run web` — run in the browser (Expo Web)
 
 > [!TIP]
 > You can alternatively run the scripts `run-dev.bat` or `run-dev.sh` depending if you are on Windows or Linux (make sure pnpm is installed)
@@ -81,15 +94,20 @@ For questions, collaboration, or any other inquiries, feel free to:
 
 This project uses open-source dependencies including:
 - **Express.js** - Web framework (MIT License)
-- **Next.js** - React framework (MIT License)
 - **React** - UI library (MIT License)
 - **React-DOM** - React rendering (MIT License)
+- **React Native** - Mobile framework (MIT License)
+- **Expo** - App framework and tooling (MIT License)
+- **React Native Reanimated** - Animations (MIT License)
+- **React Native Gesture Handler** - Gesture system (MIT License)
+- **Expo Router** - File-based navigation (MIT License)
+- **expo-secure-store** - Secure token storage (MIT License)
+- **react-native-web** - Web support for React Native (MIT License)
 - **Argon2** - Password hashing (MIT License)
 - **ldapts** - LDAP client (MIT License)
 - **ldapjs** - LDAP protocol client/server (MIT License)
 - **Nodemailer** - Email sending (MIT License)
 - **mysql** - MariaDB/MySQL driver (MIT License)
-- **Bootstrap** - UI framework (MIT License)
 - **cors** - CORS middleware (MIT License)
 - **cookie-parser** - Cookie parsing middleware (MIT License)
 - **dotenv** - Environment configuration (MIT License)
@@ -111,6 +129,8 @@ The database schema includes tables for users, contacts, messages, conversations
 
 ## Additional info
 
-- Server runs on port 8080 and the client runs on port 3000.
+- Server runs on port 8080, the web client (`client`) runs on port 3000, and `client_rn` web runs on port 8081.
 - Database: MariaDB (MySQL-compatible)
+- `client` — original web frontend (Next.js), kept as reference source
+- `client_rn` — cross-platform client (Expo / React Native) for Android + Web
 - In the future we plan to provide a docker container for ease of deployment.
