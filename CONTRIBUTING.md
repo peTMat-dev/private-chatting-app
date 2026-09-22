@@ -239,9 +239,9 @@ Unacceptable behavior includes harassment, discrimination, trolling, or any cond
 
 ## 📄 License
 
-This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
+This project is licensed under the **MIT License**.
 
-By contributing, you agree that your contributions will be licensed under the same GPL-3.0 license. This ensures the project remains free and open-source for everyone.
+By contributing, you agree that your contributions will be licensed under the same MIT License. This ensures the project remains free and open-source for everyone.
 
 For full license details, see the [LICENSE](./LICENSE) file in the repository root.
 
